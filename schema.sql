@@ -5,6 +5,7 @@ DROP TABLE Session;
 DROP TABLE Admin;
 DROP TABLE Friend;
 DROP TABLE User;
+DROP TABLE UserHobby;
 
 
 CREATE TABLE User
@@ -21,7 +22,7 @@ CREATE TABLE Friend
 (
 User1 int NOT NULL FOREIGN KEY REFERENCES User(ID),
 User2 int NOT NULL FOREIGN KEY REFERENCES User(ID),
-Status Varchar(100),
+Status Enum('Relationship', 'Friend') NOT NULL DEFAULT 'Friend',
 PRIMARY KEY (User1, User2)
 );
 
@@ -40,7 +41,7 @@ CREATE TABLE FriendRequest
 (
 	FromUser int NOT NULL FOREIGN KEY REFERENCES User(ID),
 	ToUser int NOT NULL FOREIGN KEY REFERENCES User(ID),
-	Status Varchar(100),
+	Status Enum('Relationship', 'Friend') NOT NULL DEFAULT 'Friend',
 	PRIMARY KEY (FromUser, ToUser)	
 );
 
