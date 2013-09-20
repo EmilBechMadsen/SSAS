@@ -2,7 +2,7 @@ package dk.itu.ssas.page
 
 import akka.actor.{Actor, ActorLogging}
 
-class ProfilePage extends Actor with LoggedInPage with ActorLogging {
+class EmailConfirmationPage extends Actor with LoggedOutPage with ActorLogging {
 	def receive {
 		case _ =>
 	}
