@@ -1,7 +1,7 @@
 package dk.itu.ssas.page
 
-trait Page {
-	def topBar: TopBar
+import akka.actor.{Actor, ActorLogging}
 
-	def content: Page
+abstract class Page extends Actor with ActorLogging with HTMLElement {
+  def topBar: TopBar
 }

@@ -1,9 +1,12 @@
 package dk.itu.ssas.page
 
-import akka.actor.{Actor, ActorLogging}
+import dk.itu.ssas.model._
 
-trait LoggedInPage extends Page {
-  override def topBar: TopBar = {
-  	new TopBar("UNDERCONSTRUCTION.GIF")
+abstract class LoggedInPage(val user: User) extends Page {
+  
+  def topBar: TopBar = {
+    // Implemenetation of appropriate topbar here
+    TopBar("UNDERCONSTRUCTION.GIF")
   }
+
 }

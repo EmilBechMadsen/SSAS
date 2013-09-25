@@ -2,7 +2,7 @@ package dk.itu.ssas.page
 
 import dk.itu.ssas.model._
 
-class RequestPage(user: User) extends LoggedInPage(user) {
+class SearchPage(user: User) extends LoggedInPage(user) {
   def receive = {
     case _ =>
   }

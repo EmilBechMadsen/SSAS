@@ -1,5 +1,3 @@
 package dk.itu.ssas.page
 
-class TopBar(val content: String) {
-
-}
+case class TopBar(asHTML: HTML) extends HTMLElement

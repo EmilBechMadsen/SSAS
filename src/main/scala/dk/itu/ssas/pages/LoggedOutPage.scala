@@ -1,5 +1,10 @@
 package dk.itu.ssas.page
 
-trait LoggedOutPage extends Page {
-  
+abstract class LoggedOutPage extends Page {
+
+  def topBar: TopBar = {
+    // Implemenetation of appropriate topbar here
+    TopBar("UNDERCONSTRUCTION.GIF")
+  }
+
 }

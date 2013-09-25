@@ -1,8 +1,6 @@
 package dk.itu.ssas.page
 
-import dk.itu.ssas.model._
-
-class RequestPage(user: User) extends LoggedInPage(user) {
+class EmailConfirmationPage extends LoggedOutPage {
   def receive = {
     case _ =>
   }
