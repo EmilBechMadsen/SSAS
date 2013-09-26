@@ -21,7 +21,10 @@ libraryDependencies ++= Seq(
   "io.spray" % "spray-routing" % "1.1-M8",
   "io.spray" % "spray-io" % "1.1-M8",
   "io.spray" %% "spray-json" % "1.2.5",
-  "com.typesafe.slick" % "slick_2.10" % "2.0.0-M2",
+  "org.mindrot" % "jbcrypt" % "0.3m",
+  "mysql" % "mysql-connector-java" % "5.1.26",
+  "com.typesafe.slick" % "slick_2.10" % "1.0.1",
+  "org.slf4j" % "slf4j-log4j12" % "1.7.5",
   "com.typesafe" % "config" % "1.0.2"
 )
 

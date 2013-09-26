@@ -19,8 +19,11 @@ object Settings {
   val interface  = conf.getString("ssas.interface")
   val port       = conf.getInt("ssas.port")
   val timeout    = conf.getInt("ssas.timeout")
-  val dbserver   = conf.getString("ssas.dbServer")
+  val dbServer   = conf.getString("ssas.dbServer")
   val db         = conf.getString("ssas.db")
   val dbUser     = conf.getString("ssas.dbUser")
   val dbPassword = conf.getString("ssas.dbPassword")
+
+  val dbString   = s"jdbc:mysql://$dbServer/$db?user=$dbUser&password=$dbPassword"
+  val dbDriver   = "com.mysql.jdbc.Driver"
 }

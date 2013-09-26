@@ -11,3 +11,12 @@ project/plugins/project/
 
 # Scala-IDE specific
 .scala_dependencies
+
+# Ensime
+.ensime*
+
+# Mac OS X
+.DS_Store
+
+# Sublime Text
+*.sublime-*

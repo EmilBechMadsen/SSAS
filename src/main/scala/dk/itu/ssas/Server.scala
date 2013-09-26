@@ -1,6 +1,6 @@
 package dk.itu.ssas
 
-object Server extends App with SsasSslConfiguration {
+object Server extends App with SsasSslConfiguration with dk.itu.ssas.db.DbModels {
   import akka.actor.{ActorSystem, Props}
   import akka.io.IO
 
