@@ -1,0 +1,60 @@
+<html>
+ <head>
+   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+   <link rel="stylesheet" type="text/css" href="style.css" />
+   <title>
+    RaptorDating.com
+   </title>
+ </head>
+ <body>
+  <div id="wrapper">
+    <div id="topBar">
+      <div id="logoBox">
+        RaptorDating.com
+      </div>
+      <div id="topBarProfileBox">
+        <button class="styledButton" type="button">Thorstein Immanuel Højreb</button>
+      </div>
+      <div id="searchBox">
+        <form action="/search" method="POST">
+          <input name="searchTerm" type="text" />
+          <input class="styledSubmitButton" value="Search" type="submit" /> 
+        </form>
+      </div>
+      <div id="logoutBox">
+        <form action="/logout" method="GET">
+          <input class="styledSubmitButton" value="Logout" type="submit" />
+        </form>
+      </div>
+    </div>
+    <div> <!-- body content -->
+      <div id="myFriendsBox">
+        <div id="myFriendsCaption">
+          My Friends
+        </div>
+        <div id="myFriendsListBox">
+          <table cellspacing="0">
+            <tr>
+              <th class="myFriendsListHeaders">Name</th>
+              <th class="myFriendsListHeaders">Status</th>
+              <th></th>
+            </tr>
+            <tr class="friendEntryRow">
+              <td class="friendEntryName"><a href="">Heinrich Luitpold Himmler</a></td><td class="friendEntryStatus">Friendship</td><td><button class="styledButton" type="button">Remove</button></td>
+            </tr>
+            <tr class="friendEntryRow">
+              <td class="friendEntryName"><a href="">Paul Joseph Göbbels</a></td><td class="friendEntryStatus">Friendship</td><td><button class="styledButton" type="button">Remove</button></td>
+            </tr>
+            <tr class="friendEntryRow">
+              <td class="friendEntryName"><a href="">Rudolf Walter Richard Hess<a></td><td class="friendEntryStatus">Friendship</td><td><button class="styledButton" type="button">Remove</button></td>
+            </tr>
+            <tr class="friendEntryRow">
+              <td class="friendEntryName"><a href="">Hermann Wilhelm Göring</a></td><td class="friendEntryStatus">Friendship</td><td><button class="styledButton" type="button">Remove</button></td>
+            </tr>
+          </table>
+        </div>  
+      </div>
+    </div>
+  </div>
+ </body>
+</html>
