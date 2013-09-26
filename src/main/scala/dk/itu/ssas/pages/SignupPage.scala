@@ -1,9 +1,9 @@
 package dk.itu.ssas.page
 
-class SignupPage extends LoggedOutPage {
-  def receive = {
-    case _ =>
-  }
+import dk.itu.ssas.page.request._
 
-  def asHTML: HTML = ""
+object SignupPage extends LoggedOutPage {
+	type RequestType = NoRequest
+
+  def content(request: NoRequest): HTML = ""
 }

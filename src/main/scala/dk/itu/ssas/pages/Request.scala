@@ -1,11 +1,9 @@
-package dk.itu.ssas.page
+package dk.itu.ssas.page.request
 
-import dk.itu.ssas.model._
-
-class RequestPage(user: User) extends LoggedInPage(user) {
-  def receive = {
-    case _ =>
-  }
-
-  def asHTML: HTML = ""
-}
+sealed abstract class Request
+case class EditProfilePageRequest() extends Request
+case class FriendsPageRequest() extends Request
+case class NoRequest() extends Request
+case class ProfilePageRequest() extends Request
+case class SearchPageRequest() extends Request
+case class ViewRequestsPageRequest() extends Request

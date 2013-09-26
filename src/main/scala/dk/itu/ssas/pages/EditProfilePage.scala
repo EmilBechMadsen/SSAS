@@ -1,11 +1,9 @@
 package dk.itu.ssas.page
 
-import dk.itu.ssas.model._
+import dk.itu.ssas.page.request._
 
-class EditProfilePage(user: User) extends LoggedInPage(user) {
-  def receive = {
-    case _ =>
-  }
+object EditProfilePage extends LoggedInPage {
+  type RequestType = EditProfilePageRequest
 
-  def asHTML: HTML = ""
+  def content(request: EditProfilePageRequest): HTML = ""
 }

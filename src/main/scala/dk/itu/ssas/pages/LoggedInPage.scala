@@ -1,12 +1,10 @@
 package dk.itu.ssas.page
 
-import dk.itu.ssas.model._
-
-abstract class LoggedInPage(val user: User) extends Page {
+abstract class LoggedInPage extends Page {
   
-  def topBar: TopBar = {
+  def header: HTML = {
     // Implemenetation of appropriate topbar here
-    TopBar("UNDERCONSTRUCTION.GIF")
+    "UNDERCONSTRUCTION.GIF"
   }
 
 }

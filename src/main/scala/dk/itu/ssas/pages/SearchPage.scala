@@ -1,11 +1,9 @@
 package dk.itu.ssas.page
 
-import dk.itu.ssas.model._
+import dk.itu.ssas.page.request._
 
-class SearchPage(user: User) extends LoggedInPage(user) {
-  def receive = {
-    case _ =>
-  }
+object SearchPage extends LoggedInPage {
+  type RequestType = SearchPageRequest
 
-  def asHTML: HTML = ""
+  def content(request: SearchPageRequest): HTML = ""
 }
