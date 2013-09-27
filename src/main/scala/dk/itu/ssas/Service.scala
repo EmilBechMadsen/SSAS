@@ -17,70 +17,72 @@ class Service
   import akka.util.Timeout
   import java.util.UUID
   import scala.concurrent.Await
+  import dk.itu.ssas.model._
 
   // The default timeout for all requests
   implicit val timeout = Timeout(Settings.timeout)
 
   def actorRefFactory = context
   def receive = runRoute(route)
-  def cookieName : String = "ssas_session"
+  val cookieName : String = "ssas_session"
+
+  import dk.itu.ssas.SSASMessageProtocol._
 
   val route = 
-    path("test") {
-      get {
-        complete {
-          "Hello"
-        }
-      }
-    } ~
-    path("signup") {
+    path("signup") { 
     	get {
     		complete {
     			""
     		}
     	} ~
     	post {
-    		entity(as[String]) { email => 
-    			entity(as[String]) { password =>
-    				complete {
-    					email + password
-    				}
-    			}
+    		entity(as[SignUpMessage]) { message =>
+  				complete { 
+  					message
+  				}
     		}
     	}
     } ~
-    path("confirm") { 
-    	entity(as[String]) {token =>
-	    	get {
-	    			complete {
-	    				token
-	    			}
-	    	} ~
-	    	post {
-	    		entity(as[String]) { password =>
-	    			complete {
-	    				password + token
-	    			}
-	    		}
-	    	}
+    path("confirm" / JavaUUID) { token =>
+    	get {
+    			complete {
+    				""
+    			}
+    	} ~
+    	post {
+    		entity(as[String]) { password =>
+    			complete {
+    				""
+    			}
+    		}
     	}
     } ~
     path("requests") {
     	get {
     		complete {
+    				// SQL Injection Check
+    				// Check User Token
+            // Get requests
     				""
     		}
   		} ~
     	post {
-    		entity(as[String]) { accepted =>
-    			entity(as[String]) { relationship =>
-    				complete {
-		    			// SQL Injection Check
-		    			// Check User Token
-		    			""
-		    		}
-    			}
+    		entity(as[RelationshipRequestMessage]) { message =>
+  				complete {
+	    			// SQL Injection Check
+	    			// Check User Token
+	    			""
+	    		}
     		}
+    	} ~
+    	put {
+    		entity(as[RelationshipConfirmationMessage]) { message =>
+          complete {
+            // SQL Injection Check
+            // Check User Token
+            ""
+          }
+        }
     	}	
     } ~
    	path("profile") {
@@ -125,19 +127,33 @@ class Service
    	}
    	path("login") {
    		post {
-   			entity(as[String]) { email => 
-    			entity(as[String]) { password =>
-    				// SQL Injection Check
-    				// Check password/username
-    				// If match
-    				setCookie(HttpCookie(cookieName, "content")) {
-	    				complete {
-	    					// Redirect to appropiate page
-	    					""
-	    				}
-    				}
-    				// If not match
-    				// 403
+   			entity(as[LogInMessage]) { message => 
+  				val user = User.login(message.email, message.password) 
+          user match {
+            case Some(u) => 
+              // Login was successful
+              val session = u.session
+              session match {
+                case Some(s) =>
+                  setCookie(HttpCookie(cookieName, s.toString())) {
+                    complete {
+                      // TODO: Redirect to appropiate page
+                      ""
+                    }
+                  }
+                case None =>
+                  complete {
+                    // Session did not exist.
+                    HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+                  }
+              }
+              
+            case None =>
+              // Login was not successful.
+              complete {
+                // Reject
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "User or password was incorrect.")
+              }
     			}
     		}
    		}
