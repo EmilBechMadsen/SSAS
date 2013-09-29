@@ -1,0 +1,38 @@
+<html>
+ <head>
+   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+   <link rel="stylesheet" type="text/css" href="style.css" />
+ </head>
+ <body>
+  <div id="wrapper">
+    <div id="topBar">
+      <div id="logoBox">
+        RaptorDating.com
+      </div>
+      <div id="loginBox">
+        <form action="/login" method="POST">
+          Email: <input name="loginEmail" type="text" />
+          Password: <input name="loginPassword" type="password" />
+          <input class="styledSubmitButton" value="Login" type="submit" />
+        </form>
+      </div>
+    </div>
+    <div id="content"> <!-- body content -->
+      <div id="confirmationWrapper">
+        <fieldset>
+          <legend>Confirm Your Email</legend>
+          <div id="confirmationContent">
+            <span>To confirm your email, please enter your password</span>
+            <form method="POST">
+            <div id="confirmationFormContent">
+              <input name="emailConfirmationPassword" id="confirmationInput" type="password" />
+              <input class="styledSubmitButton" type="submit" value="Confirm Email" />
+            </div>
+            </form>
+          </div>
+        </fieldset>
+      </div>
+    </div>
+  </div>
+ </body>
+</html>

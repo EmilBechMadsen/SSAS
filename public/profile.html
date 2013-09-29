@@ -1,0 +1,80 @@
+<html>
+ <head>
+   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+   <link rel="stylesheet" type="text/css" href="style.css" />
+   <title>
+    RaptorDating.com
+   </title>
+ </head>
+ <body>
+  <div id="wrapper">
+    <div id="topBar">
+      <div id="logoBox">
+        RaptorDating.com
+      </div>
+      <div id="topBarProfileBox">
+        <button class="styledButton" type="button">Thorstein Immanuel Højreb</button>
+      </div>
+      <div id="searchBox">
+        <form action="/search" method="POST">
+          <input name="searchTerm" type="text" />
+          <input class="styledSubmitButton" value="Search" type="submit" /> 
+        </form>
+      </div>
+      <div id="logoutBox">
+        <form action="/logout" method="GET">
+          <input class="styledSubmitButton" value="Logout" type="submit" />
+        </form>
+      </div>
+    </div>
+    <div> <!-- body content -->
+      <div id="profileWrapper">
+        <div id="profileHeader">
+          <div id="profileCaption">
+            Thorstein Immanuel Højreb
+          </div>
+          <div id="profileRequestBox">
+          <form>
+            Request <select>
+              <option value="Friendship">Friendship</option>
+              <option value="Romance">Romance</option>
+              <option value="Bromance">Bromance</option>
+            </select>
+            <input class="styledSubmitButton" type="submit" value="Do it" />
+          </form>
+          </div>
+        </div>
+        <div id="profileBox">
+          <div id="profileLeftBox">
+          <div id="relationBox">
+            <span class="profileLabel">Your relation to Thorstein</span><br />
+            <span id="relationStatus">Friendship</span>
+          </div>
+          <div id="addressBox">
+            <span class="profileLabel">Address</span><br />
+            <div id="addressInfoBox">
+              Leningrad Road 24<br />
+              90210 Los Angeles<br />
+              California, USA<br />
+            </div>
+          </div>
+          </div>
+          <div id="profileRightBox">
+            <div id="hobbiesBox">
+              <span class="profileLabel">Thorstein's Hobbies</span>
+              <div id="hobbiesListBox">
+                <ul id="hobbiesList">
+                  <li class="hobbiesListItem">Horses</li>
+                  <li class="hobbiesListItem">Dogs</li>
+                  <li class="hobbiesListItem">Antelopes</li>
+                  <li class="hobbiesListItem">Kitesurfing</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ </body>
+</html>

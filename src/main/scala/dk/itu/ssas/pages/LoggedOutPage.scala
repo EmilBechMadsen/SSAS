@@ -1,14 +1,13 @@
 package dk.itu.ssas.page
 
 import dk.itu.ssas.model._
+import dk.itu.ssas.page.exception._
 
 abstract class LoggedOutPage extends Page {
 
-  def header(title: String, user: Option[User]): HTML = {
-    ""
-    /*
+  def header(title: String, key: Int, user: Option[User]): HTML = {
     user match {
-      case (Some _) => throw UnexpectedUserException()
+      case Some(_) => throw UnexpectedUserException()
       case None =>
         s"""
           <html>
@@ -25,14 +24,15 @@ abstract class LoggedOutPage extends Page {
                 </div>
                 <div id="loginBox">
                   <form action="/login" method="POST">
+                    ${formKeyInput(key)}
                     Email: <input name="loginEmail" type="text" />
                     Password: <input name="loginPassword" type="password" />
                     <input class="styledSubmitButton" value="Login" type="submit" />
                   </form>
                 </div>
               </div>
+              <div> <!-- body content -->
           """
-    }*/
+    }
   }
-
 }

@@ -1,9 +1,47 @@
 package dk.itu.ssas.page
 
-import dk.itu.ssas.page.request._
-
 object SearchPage extends LoggedInPage {
+  import dk.itu.ssas.page.request._
+  import dk.itu.ssas.model._
+
   type RequestType = SearchPageRequest
 
-  def content(request: SearchPageRequest): HTML = ""
+  private def searchResultEntry(user: User, kind: Int): HTML = {
+    s"""
+    <tr class="listEntryRow listEntryColor${kind}">
+      <td class="searchListEntry">
+        <a href="">${user.name}</a>
+      </td>
+    </tr>
+    """   
+  }
+
+  private def searchResultRec(result: List[User], sb: StringBuilder, kind: Int): HTML = {
+    result match {
+      case u :: us =>
+        val entry = searchResultEntry(u, kind)
+        searchResultRec(us, sb.append(entry), if (kind == 1) 2; else 1)
+      case Nil =>
+        sb.toString()
+    }
+  }
+
+  private def searchResult(result: List[User]): HTML = {
+    searchResultRec(result, new StringBuilder(), 1)
+  }
+
+  def content(request: SearchPageRequest, key: Int): HTML = {
+	s"""
+  <div id="searchResultsBox">
+    <div id="searchResultsCaption">
+      Search Results
+    </div>
+    <div id="searchResultsListBox">
+      <table cellspacing="0" style="width: 100%;">
+        ${searchResult(request.result)}
+      </table>
+    </div>  
+  </div>
+	"""  	
+  }
 }

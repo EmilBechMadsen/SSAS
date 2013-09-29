@@ -28,7 +28,7 @@ a:visited {
  margin: 0 auto;
  float: left;
  overflow: hidden;
- font-family: Symbola;
+ font-family: Georgia;
 }
 
 #topBar {
@@ -77,13 +77,13 @@ a:visited {
 
 /* Sign up page */
 #signupBox {
-  width: 26%;
+  width: 27%;
   float: right;
   margin: 5% 10% 0 0;
 }
 
 #signupPageImageBox {
-  width: 55 %;
+  width: 55%;
   float: left;
   margin: 5% 0 0 5%;
 }
@@ -101,6 +101,7 @@ a:visited {
 #myFriendsCaption {
   font-size: 16pt;
   padding-left: 5px;
+  margin-bottom: -3px;
 }
 
 #myFriendsListBox {
@@ -112,11 +113,19 @@ a:visited {
   padding-left: 5px;
 }
 
-.friendEntryRow {
+.listEntryRow {
   height: 35px;
 }
 
-.friendEntryRow:hover {
+.listEntryColor1 {
+  background-color: FFFFFF;
+}
+
+.listEntryColor2 {
+  background-color: DDDDDD;
+}
+
+.listEntryRow:hover {
   background-color: CCCCCC;
 }
 
@@ -128,4 +137,202 @@ a:visited {
 
 .friendEntryStatus {
   width: 20%;
+}
+
+/* Search results page */
+#searchResultsBox {
+  width: 30%;
+  margin: 6% 35% 0 35%;
+}
+
+#searchResultsCaption {
+  font-size: 16pt;
+  padding-left: 5px;
+  margin-bottom: -3px;
+}
+
+.searchListEntry {
+  width: 65%;
+  padding-left: 5px;
+}
+
+#searchResultsListBox {
+  border: 1px solid;
+  width: 100%;
+}
+
+/* Pending requests */
+#requestsBox {
+  width: 50%;
+  margin: 6% 25% 0 25%;
+}
+
+#requestsCaption {
+  font-size: 16pt;
+  padding-left: 5px;
+  margin-bottom: -3px;
+}
+
+#requestsListBox {
+  border: 1px solid;
+}
+
+.requestsEntryName {
+  width: 60%;
+  padding-left: 10px;
+}
+
+.requestsEntryStatus {
+  width: 20%;
+}
+
+.requestsEntryButton {
+  width: 20%;
+  text-align: right;
+}
+
+/* Profile */
+#profileWrapper {
+  width: 80%;
+  margin-left: 10%;
+  margin-right: 10%;
+  margin-top: 6%;
+}
+
+#profileHeader {
+  width: 100%;
+  float: left;
+  margin-bottom: -15px;
+}
+
+#profileCaption {
+  font-size: 16pt;
+  padding-left: 10px;  
+  float: left;
+}
+
+#profileRequestBox, #profileSaveChangesBox {
+  margin-right: 5px;
+  float: right;
+}
+
+#profileSaveChangesBox {
+  padding-top: 10px;
+}
+
+#profileNameInput {
+  font-size: 16pt;
+  width: 400px;
+}
+
+#profileAddressInput {
+  margin-left: 20px;
+  margin-top: 5px;
+  width: 200px;
+  height: 75px;
+}
+
+.profileInput {
+  margin-left: 20px;
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+input.profileInput {
+  width: 150px;
+}
+
+#profileBox {
+  width: 100%;
+  border: 1px solid;
+  border-radius: 10px;
+  float: left;
+}
+
+#profileLeftBox {
+  width: 50%;
+  float: left;
+  padding-left: 5px;
+  padding-top: 5px;
+  padding-bottom: 10px;
+}
+
+#profileRightBox {
+  width: 49%;
+  float: right;
+  padding-right: 5px;
+  padding-top: 5px;
+  padding-bottom: 10px;
+}
+
+.profileLabel {
+  padding-left: 10px;
+  font-weight: bold;
+}
+
+#addressBox, #relationBox, #profilePasswordBox {
+  padding-top: 10px;
+  padding-left: 30px;
+  padding-bottom: 5px;
+}
+
+#addressInfoBox, #relationStatus {
+  padding-left: 20px;
+  padding-top: 5px;
+}
+
+#hobbiesBox {
+  padding-top: 10px;
+}
+
+#hobbiesList {
+  list-style-type: none;
+  margin-top: 10px;
+  margin-left: -20px;
+  float: left;
+}
+
+#hobbiesTable {
+  margin-top: 10px;
+  margin-left: 20px;
+}
+
+#profileNewHobbyInput {
+  width: 100px;
+}
+
+.hobbiesListItem {
+  padding: 5px 100px 5px 10px;
+  margin-bottom: 1px;
+  border: 2px solid;
+  border-radius: 5px;
+}
+
+.hobbiesListItem:hover {
+  background-color: #900;
+  color: #FFF;
+  border: 2px solid;
+  border-color: #000;
+  border-radius: 5px;
+}
+
+/* Email confirmation */
+#confirmationWrapper {
+  width: 35%;
+  margin-left: 32.5%;
+  margin-right: 32.5%;
+  margin-top: 6%;
+}
+
+#confirmationContent {
+  padding-left: 20px;
+  padding-top: 5px;
+}
+
+#confirmationFormContent {
+  padding-top: 10px;
+}
+
+#confirmationInput {
+  width: 150px;
 }

@@ -1,0 +1,78 @@
+<html>
+ <head>
+   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+   <link rel="stylesheet" type="text/css" href="style.css" />
+   <title>
+    RaptorDating.com
+   </title>
+ </head>
+ <body>
+  <div id="wrapper">
+    <div id="topBar">
+      <div id="logoBox">
+        RaptorDating.com
+      </div>
+      <div id="topBarProfileBox">
+        <button class="styledButton" type="button">Thorstein Immanuel Højreb</button>
+      </div>
+      <div id="searchBox">
+        <form action="/search" method="POST">
+          <input name="searchTerm" type="text" />
+          <input class="styledSubmitButton" value="Search" type="submit" /> 
+        </form>
+      </div>
+      <div id="logoutBox">
+        <form action="/logout" method="GET">
+          <input class="styledSubmitButton" value="Logout" type="submit" />
+        </form>
+      </div>
+    </div>
+    <div> <!-- body content -->
+      <div id="requestsBox">
+        <div id="requestsCaption">
+          Pending Requests
+        </div>
+        <div id="requestsListBox">
+          <table cellspacing="0" style="width: 100%;">
+            <tr class="listEntryRow listEntryColor1">
+              <form method="POST">
+                <input name="friendRequestId" type="hidden" value="1" />
+                <td class="requestsEntryName">Juan Carlos Esteban de Cordoba-Olsen</td>
+                <td class="requestsEntryStatus">Friendship</td>
+                <td class="requestsEntryButton">
+                  <button name="friendRequestAccept" class="styledSubmitButton" type="submit">Accept</button>
+                  <button name="friendRequestReject" class="styledSubmitButton" type="submit">Reject</button>
+                </td>
+              </form>
+            </tr>
+            <tr class="listEntryRow listEntryColor2">
+              <td class="requestsEntryName">Don Quatterberg Hansen</td>
+              <td class="requestsEntryStatus">Friendship</td>
+              <td class="requestsEntryButton">
+                <button class="styledButton" type="button">Accept</button>
+                <button class="styledButton" type="button">Reject</button>
+              </td>
+            </tr>
+            <tr class="listEntryRow listEntryColor1">
+              <td class="requestsEntryName">Omar Alanfur-Nicholson</td>
+              <td class="requestsEntryStatus">Friendship</td>
+              <td class="requestsEntryButton">
+                <button class="styledButton" type="button">Accept</button>
+                <button class="styledButton" type="button">Reject</button>
+              </td>
+            </tr>
+            <tr class="listEntryRow listEntryColor2">
+              <td class="requestsEntryName">Viking-Allan den Hellige II</td>
+              <td class="requestsEntryStatus">Friendship</td>
+              <td class="requestsEntryButton">
+                <button class="styledButton" type="button">Accept</button>
+                <button class="styledButton" type="button">Reject</button>
+              </td>
+            </tr>
+          </table>
+        </div>  
+      </div>
+    </div>
+  </div>
+ </body>
+</html>

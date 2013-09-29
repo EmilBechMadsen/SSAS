@@ -1,0 +1,132 @@
+<html>
+ <head>
+   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+   <link rel="stylesheet" type="text/css" href="style.css" />
+   <title>
+    RaptorDating.com
+   </title>
+ </head>
+ <body>
+  <div id="wrapper">
+    <div id="topBar">
+      <div id="logoBox">
+        RaptorDating.com
+      </div>
+      <div id="topBarProfileBox">
+        <button class="styledButton" type="button">Thorstein Immanuel Højreb</button>
+      </div>
+      <div id="searchBox">
+        <form action="/search" method="POST">
+          <input name="searchTerm" type="text" />
+          <input class="styledSubmitButton" value="Search" type="submit" /> 
+        </form>
+      </div>
+      <div id="logoutBox">
+        <form action="/logout" method="POST">
+          <input class="styledSubmitButton" value="Logout" type="submit" />
+        </form>
+      </div>
+    </div>
+    <div> <!-- body content -->
+      <script type="text/javascript">
+      function submitForms() {
+        document.getElementById('profileNameForm').submit()
+        document.getElementById('profileAddressForm').submit()
+        document.getElementById('profilePasswordForm').submit()
+      }
+      </script>
+      <div id="profileWrapper">
+        <div id="profileHeader">
+          <div id="profileCaption">
+          <form id="profileNameForm" method="POST">
+            <input id="profileNameInput" name="profileName" type="text" value="Thorstein Immanuel Højreb" />
+          </form>
+          </div>
+          <div id="profileSaveChangesBox">
+            <button type="submit" class="styledSubmitButton" form="profileNameForm profileAddressForm profilePasswordForm">Save Changes</button>
+          </div>
+        </div>
+        <div id="profileBox">
+          <div id="profileLeftBox">
+            <div id="addressBox">
+              <span class="profileLabel">Address</span><br />
+              <form id="profileAddressForm" method="POST">
+                <textarea id="profileAddressInput">Leningrad Road 24
+90210 Los Angeles
+California, USA
+                </textarea>
+              </form>
+            </div>
+            <div id="profilePasswordBox">
+              <form id="profilePasswordForm" method="POST">
+                <span class="profileLabel">Current Password</span><br />
+                <input class="profileInput" name="profilePasswordInput" type="password" /><br />
+                <span class="profileLabel">New Password</span><br />
+                <input class="profileInput" name="profilePasswordInput" type="password" /><br />
+                <span class="profileLabel">Confirm New Password</span><br />
+                <input class="profileInput" name="profilePasswordInput" type="password" />
+              </form>
+            </div>
+          </div>
+          <div id="profileRightBox">
+            <div id="hobbiesBox">
+              <span class="profileLabel">Your Hobbies</span>
+              <div id="hobbiesListBox">
+                <table id="hobbiesTable">
+                  <tr>
+                    <form method="POST">
+                    <td class="hobbiesListItem">Horses</td>
+                    <td>
+                    <input type="submit" value="X" class="styledSubmitButton" />
+                    <input type="hidden" name="hobbyId" value="1" />
+                    </td>
+                    </form>
+                  </tr>
+                  <tr>
+                    <form method="POST">
+                    <td class="hobbiesListItem">Dogs</td>
+                    <td>
+                    <input type="submit" value="X" class="styledSubmitButton" />
+                    <input type="hidden" name="hobbyId" value="2" />
+                    </td>
+                    </form>
+                  </tr>
+                  <tr>
+                    <form method="POST">
+                    <td class="hobbiesListItem">Antelopes</td>
+                    <td>
+                    <input type="submit" value="X" class="styledSubmitButton" />
+                    <input type="hidden" name="hobbyId" value="3" />
+                    </td>
+                    </form>
+                  </tr>
+                  <tr>
+                    <form method="POST">
+                    <td class="hobbiesListItem">Kitesurfing</td>
+                    <td>
+                    <input type="submit" value="X" class="styledSubmitButton" />
+                    <input type="hidden" name="hobbyId" value="4" />
+                    </td>
+                    </form>
+                  </tr>
+                  <tr>
+                    <form method="POST">
+                    <td class="hobbiesListItem">
+                      <input id="profileNewHobbyInput" type="text" value="New hobby" onfocus="this.value='';" />
+                    </td>
+                    <td>
+                    <input type="submit" value="+" class="styledSubmitButton" />
+                    <input type="hidden" name="hobbyId" value="4" />
+                    </td>
+                    </form>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ </body>
+</html>
