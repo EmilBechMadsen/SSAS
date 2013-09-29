@@ -32,13 +32,16 @@ class Service
     path("signup") { 
     	get {
     		complete {
+          // Get sign up page
     			""
     		}
     	} ~
     	post {
     		entity(as[SignUpMessage]) { message =>
   				complete { 
-  					message
+  					// Create appropiate sign up data
+            // Redirect to appropiate site
+            ""
   				}
     		}
     	}
@@ -46,84 +49,129 @@ class Service
     path("confirm" / JavaUUID) { token =>
     	get {
     			complete {
-    				""
+            // Check confirmation token validity 
+    				// Get confirmation formular
+            ""
     			}
     	} ~
     	post {
     		entity(as[String]) { password =>
     			complete {
-    				""
+    				// Create appropiate user data
+            // Redirect to appropiate site
+            ""
     			}
     		}
     	}
     } ~
     path("requests") {
     	get {
-    		complete {
-    				// SQL Injection Check
-    				// Check User Token
-            // Get requests
-    				""
-    		}
+    		cookie(cookieName) { c => r =>
+            val user = User(UUID.fromString(c.content))
+            user match {
+              case Some(u) =>
+                complete {
+                  //
+                  ""
+                }
+              case None =>
+                // Reject
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+            }
+          }
   		} ~
     	post {
     		entity(as[RelationshipRequestMessage]) { message =>
-  				complete {
-	    			// SQL Injection Check
-	    			// Check User Token
-	    			""
-	    		}
+  				cookie(cookieName) { c => r =>
+            val user = User(UUID.fromString(c.content))
+            user match {
+              case Some(u) =>
+                complete {
+                  //
+                  ""
+                }
+              case None =>
+                // Reject
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+            }
+          }
     		}
     	} ~
     	put {
     		entity(as[RelationshipConfirmationMessage]) { message =>
-          complete {
-            // SQL Injection Check
-            // Check User Token
-            ""
+          cookie(cookieName) { c => r =>
+            val user = User(UUID.fromString(c.content))
+            user match {
+              case Some(u) =>
+                complete {
+                  //
+                  ""
+                }
+              case None =>
+                // Reject
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+            }
           }
         }
     	}	
     } ~
-   	path("profile") {
-   		entity(as[String]) { id =>
-	   		get {
-	    			complete {
-	    				// SQL Injection Check
-	    				// Check User Token
-	    				// If id is user
-	    					// Get self profile page
-	    				// else
-	    					// If users are friends
-	    						// Get friend profile page
-	    					// else
-	    						// Reject
-	    				""
-	    			}
-	    	}
+   	path("profile" / IntNumber) { id =>
+   		get {
+        cookie(cookieName) { c => r =>
+          val user = User(UUID.fromString(c.content))
+          user match {
+            case Some(u) =>
+              complete {
+                if (u.id == id) {
+                  // Get own ID page
+                  ""
+                } else {
+                  // Get requested ID page
+                  ""
+                }
+              }
+            case None =>
+              // Reject
+              HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+          }
+        }
     	}
    	} ~
    	path("friends") {
    		get {
-    			complete {
-    				// SQL Injection Check
-    				// Check User Token
-    				// Get page with friends
-    				""
-    			}
+    		cookie(cookieName) { c => r =>
+          val user = User(UUID.fromString(c.content))
+          user match {
+            case Some(u) =>
+              complete {
+                // Get 
+                ""
+              }
+            case None =>
+              // Reject
+              HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+          }
+        }
     	}
    	} ~
    	path("search") {
-   		post {			
-   			entity(as[String]) { search =>
-    			complete {
-    				// SQL Injeciton Check
-    				// Check User Token
-    				// Get page for search criteria
-    				""
-    			}
-	    	}
-    	}
+      entity(as[String]) { search =>
+     		post {			
+    			cookie(cookieName) { c => r =>
+            val user = User(UUID.fromString(c.content))
+            user match {
+              case Some(u) =>
+                complete {
+                  // Get search page
+                  ""
+                }
+              case None =>
+                // Reject
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+            }
+          }
+      	}
+      }
    	}
    	path("login") {
    		post {
