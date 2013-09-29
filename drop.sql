@@ -1,0 +1,9 @@
+use ssas;
+DROP TABLE IF EXISTS user_hobby;
+DROP TABLE IF EXISTS hobby;
+DROP TABLE IF EXISTS email_confirmation;
+DROP TABLE IF EXISTS friend_request;
+DROP TABLE IF EXISTS session;
+DROP TABLE IF EXISTS admin;
+DROP TABLE IF EXISTS friend;
+DROP TABLE IF EXISTS user;

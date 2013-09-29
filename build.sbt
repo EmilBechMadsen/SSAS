@@ -25,7 +25,9 @@ libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "5.1.26",
   "com.typesafe.slick" % "slick_2.10" % "1.0.1",
   "org.slf4j" % "slf4j-log4j12" % "1.7.5",
-  "com.typesafe" % "config" % "1.0.2"
+  "com.typesafe" % "config" % "1.0.2",
+  "commons-validator" % "commons-validator" % "1.4.0",
+  "org.scalatest" % "scalatest_2.10" % "1.9.2" % "test"
 )
 
 org.scalastyle.sbt.ScalastylePlugin.Settings
