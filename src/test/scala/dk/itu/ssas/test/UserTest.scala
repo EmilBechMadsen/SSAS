@@ -1,45 +1,63 @@
 package dk.itu.ssas.test
 
+import dk.itu.ssas.db.DbAccess
 import org.scalatest.FunSuite
 
-class UserTest extends FunSuite {
+class UserTest extends FunSuite with DatabaseTests {
   import dk.itu.ssas.model.User
 
-  test("Invalid name") {
-    val invalidNames = List(
-      "",
-      "<html>", 
-      "; DROP TABLE USERS")
-    
-    invalidNames foreach (n => assert(User.validName(n) === false))
+  test("Creating user") {
+    val name  = "John Doe"
+    val email = "john@doe.com"
+    val addr  = Some("Road 123\n521614 Place town, Place\nSweden")
+    val pass  = "password1"
+    val user  = User.create(name, addr, email, pass)
+
+    user match {
+      case Some(u) => {
+        assert(u.name     === name)
+        assert(u.email    === email)
+        assert(u.address  === addr)
+      }
+      case None    => assert(false)
+    }
   }
 
-  test("Valid name") {
-    val validNames = List(
-      "Sven", 
-      "Christian Harrington", 
-      "Sune Alkærsig", 
-      "愛藍",
-      "Адам")
+  test("Change name") {
+    val name = "John Doe"
+    val user = User(1)
 
-    validNames foreach (n => assert(User.validName(n) === true))
+    user match {
+      case Some(u) => {
+        u.name = name
+        assert(u.name === name)
+      }
+      case None    => assert(false)
+    }
+
+    val changedUser = User(1)
+    changedUser match {
+      case Some(u) => assert(u.name === name)
+      case None    => assert(false)
+    }
   }
 
-  test("Invalid password") {
-    val invalidPasswords = List(
-      "j",
-      "pass",
-      "432452")
+  test("Change email") {
+    val email = "jane@doe.net"
+    val user  = User(1)
 
-    invalidPasswords foreach (p => assert(User.validPassword(p) === false))
-  }
+    user match {
+      case Some(u) => {
+        u.email = email
+        assert(u.email === email)
+      }
+      case None    => assert(false)
+    }
 
-  test("Valid password") {
-    val validPasswords = List(
-      "dsadasf3a",
-      "password", // FIXME: Should this be valid?
-      "4324543242")
-
-    validPasswords foreach (p => assert(User.validPassword(p) === true))
+    val changedUser = User(1)
+    changedUser match {
+      case Some(u) => assert(u.email === email)
+      case None    => assert(false)
+    }
   }
 }
