@@ -5,7 +5,7 @@ protected trait FriendRequests extends Users with Relationships {
   import scala.slick.lifted.ForeignKeyAction
   import dk.itu.ssas.model.{User, Relationship, Friendship}
 
-  case class FriendRequest(fromUserId: Int, toUserId: Int, relationship: Relationship)
+  case class FriendRequest(fromUser: Int, toUser: Int, relationship: Relationship)
 
   object FriendRequests extends Table [FriendRequest]("friend_request") {
     def fromUserId   = column[Int]("from_user", O.NotNull)

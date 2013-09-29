@@ -20,7 +20,7 @@ object User extends UserExceptions with DbAccess {
     val user = (for (u <- Users if u.email === email) yield u) firstOption
 
     user match {
-      case Some(u) => Security.checkPassword(password, u.password, u._salt) match {
+      case Some(u) => Security.checkPassword(password, u._password, u._salt) match {
         case true  => {
           val q = (for (s <- Sessions if s.userId === u.id) yield s)
 
@@ -169,6 +169,25 @@ case class User(
     (for ((r, u) <- fs.list) yield r -> u) toMap
   }
 
+  def isFriend(u: User): Boolean = isFriend(u.id)
+
+  def isFriend(friendId: Int): Boolean = Db withSession {
+    getFriend(friendId) match {
+      case Some(_) => true
+      case None    => false
+    }
+  }
+
+  private def getFriend(friendId: Int): Option[User] = Db withSession {
+    val u = for {
+      f <- Friends if (f.user1Id === id       && f.user2Id === friendId) || 
+                      (f.user1Id === friendId && f.user2Id === id)
+      u <- Users   if (u.id === f.user1Id     || u.id === f.user2Id)
+    } yield u
+
+    u firstOption
+  }
+
   /** Returns the outstanding friend requests for the user
     *
     * @return A map from the relationship to the user
@@ -180,6 +199,67 @@ case class User(
     } yield (f.relationship, u)
 
     (for ((r, u) <- fs.list) yield r -> u) toMap
+  }
+
+  def acceptFriendRequest(r: Relationship, u: User): Boolean = Db withSession {
+    val fr = for (fr <- FriendRequests if fr.toUserId === id && 
+                                          fr.fromUserId === u.id &&
+                                          fr.relationship === r) yield fr
+
+    fr firstOption match {
+      case Some(req) => {
+        val f = for {
+          f <- Friends if (f.user1Id === id           && f.user2Id === req.fromUser) || 
+                          (f.user1Id === req.fromUser && f.user2Id === id)
+          u <- Users   if (u.id === f.user1Id         || u.id === f.user2Id)
+        } yield f.relationship
+
+        f firstOption match {
+          case Some(_) => { // Updating existing friendship
+            f update req.relationship
+            fr.delete
+            true
+          }
+          case None    => { // New friendship
+            Friends insert Friend(req.fromUser, id, req.relationship)
+            fr.delete
+            true
+          }
+        }
+      }
+      case None => false // No such friend request FIXME: Exception
+    }
+  }
+
+  def rejectFriendRequest(r: Relationship, u: User): Unit = Db withSession {
+    // Deletes all friend requests from the user, even if they are for 
+    // different relationships
+    (for (fr <- FriendRequests if fr.toUserId === id &&
+                                  fr.fromUserId === u.id) yield fr) delete
+  }
+
+  // FIXME: Doesn't check whether two people already are friends
+  def requestFriendship(r: Relationship, u: User): Unit = Db withSession {
+    val fr = for {
+      fr <- FriendRequests if (fr.fromUserId === u.id && fr.toUserId === id) ||
+                              (fr.fromUserId === id   && fr.toUserId === u.id)
+    } yield fr
+
+    fr firstOption match {
+      // No existing friend requests
+      case None     => FriendRequests insert FriendRequest(id, u.id, r)
+      case Some(f) => {
+        // The other person has sent a friend request with the same relationship,
+        // so we can just accept it
+        if (f.relationship == r) 
+          acceptFriendRequest(r, u)
+        else { // The other person has sent a friend request, but for a different
+               // relationship
+          fr.delete
+          FriendRequests insert FriendRequest(id, u.id, r)
+        }
+      }
+    }
   }
 
   /** Returns the a list of the users hobbies
