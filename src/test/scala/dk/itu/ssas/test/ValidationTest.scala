@@ -4,6 +4,7 @@ import org.scalatest.FunSuite
 
 class ValidationTest extends FunSuite {
   import dk.itu.ssas.model.User
+  import dk.itu.ssas.Validate._
 
   test("Invalid name") {
     val invalidNames = List(
@@ -11,7 +12,7 @@ class ValidationTest extends FunSuite {
       "<html>", 
       "; DROP TABLE USERS")
     
-    invalidNames foreach (n => assert(User.validName(n) === false))
+    invalidNames foreach (n => assert(validName(n) === false))
   }
 
   test("Valid name") {
@@ -22,7 +23,7 @@ class ValidationTest extends FunSuite {
       "愛藍",
       "Адам")
 
-    validNames foreach (n => assert(User.validName(n) === true))
+    validNames foreach (n => assert(validName(n) === true))
   }
 
   test("Invalid password") {
@@ -31,7 +32,7 @@ class ValidationTest extends FunSuite {
       "pass",
       "432452")
 
-    invalidPasswords foreach (p => assert(User.validPassword(p) === false))
+    invalidPasswords foreach (p => assert(validPassword(p) === false))
   }
 
   test("Valid password") {
@@ -40,6 +41,6 @@ class ValidationTest extends FunSuite {
       "password", // FIXME: Should this be valid?
       "4324543242")
 
-    validPasswords foreach (p => assert(User.validPassword(p) === true))
+    validPasswords foreach (p => assert(validPassword(p) === true))
   }
 }

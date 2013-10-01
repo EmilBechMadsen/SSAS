@@ -10,7 +10,7 @@ object ProfilePage extends LoggedInPage {
 
   private def isFriend(user: User, other: User): Option[Relationship] = {
     var result: Option[Relationship] = None
-    for ((rel, user) <- user.friends) {
+    for ((user, rel) <- user.friends) {
       if (user == other)
         result = Some(rel)
     }

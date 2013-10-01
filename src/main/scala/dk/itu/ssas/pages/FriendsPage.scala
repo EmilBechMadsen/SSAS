@@ -6,9 +6,9 @@ import dk.itu.ssas.model._
 object FriendsPage extends LoggedInPage {
   type RequestType = FriendsPageRequest
 
-  private def friendEntry(entry: (Relationship, User), kind: Int, key: Int): HTML = {
-    val rel = entry._1
-    val user = entry._2
+  private def friendEntry(entry: (User, Relationship), kind: Int, key: Int): HTML = {
+    val user = entry._1
+    val rel  = entry._2
     s"""
     <tr class="listEntryRow listEntryColor${kind}">
       <form method="POST">
@@ -22,11 +22,11 @@ object FriendsPage extends LoggedInPage {
     """    
   }
 
-  private def friendToHTML(entry: (Relationship, User), kind: Int, key: Int): HTML = {
+  private def friendToHTML(entry: (User, Relationship), kind: Int, key: Int): HTML = {
     friendEntry(entry, if (kind % 2 == 0) 2; else 1, key)
   } 
 
-  private def friendsToHTML(friends: Map[Relationship, User], key: Int): HTML = {
+  private def friendsToHTML(friends: Map[User, Relationship], key: Int): HTML = {
     val sb = new StringBuilder()
     var i = 1
     for (entry <- friends) {

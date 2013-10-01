@@ -6,9 +6,9 @@ object ViewRequestsPage extends LoggedInPage {
 
   type RequestType = ViewRequestsPageRequest
 
-  private def requestEntry(entry: (Relationship, User), kind: Int, key: Int): HTML = {
-    val rel = entry._1
-    val user = entry._2
+  private def requestEntry(entry: (User, Relationship), kind: Int, key: Int): HTML = {
+    val user = entry._1
+    val rel = entry._2
     s"""
     <tr class="listEntryRow listEntryColor${kind}">
       <form method="POST">
@@ -25,17 +25,25 @@ object ViewRequestsPage extends LoggedInPage {
     """    
   }
 
-  private def requestToHTML(entry: (Relationship, User), kind: Int, key: Int): HTML = {
+  private def requestToHTML(entry: (User, Relationship), kind: Int, key: Int): HTML = {
     requestEntry(entry, if (kind % 2 == 0) 2; else 1, key)
   } 
 
-  private def requestsToHTML(requests: Map[Relationship, User], key: Int): HTML = {
+  private def requestsToHTML(requests: Map[User, Relationship], key: Int): HTML = {
     val sb = new StringBuilder()
     var i = 1
     for (entry <- requests) {
       sb.append(requestToHTML(entry, i, key))
       i = i + 1
     }
+
+    // FIXME: Bedre
+    // val rs = requests.zipWithIndex 
+    // rs foreach {case (r, i) => sb.append(requestToHTML(r, i, key))}
+
+    // FIXME: Bedst (hvis det virker :P)
+    // requests.zipWithIndex map {case (r, i) => requestToHTML(r, i, key)} mkString
+
     sb.toString()
   }
 
