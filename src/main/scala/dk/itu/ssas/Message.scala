@@ -7,7 +7,7 @@ import java.util.UUID
 import dk.itu.ssas.model._
 
 abstract class SSASMessage
-case class SignUpMessage(email: String, password: String) extends SSASMessage
+case class SignUpMessage(name: String, email: String, password: String) extends SSASMessage
 case class ConfirmMailMessage(token: UUID, password: String) extends SSASMessage
 case class RelationshipRequestMessage(userId: Int, rel: Relationship) extends SSASMessage
 case class RelationshipConfirmationMessage(userId: Int, accepted: Boolean) extends SSASMessage
@@ -49,7 +49,7 @@ object SSASMessageProtocol extends DefaultJsonProtocol {
 	import dk.itu.ssas.SSASProtocol._
 
   implicit val SignUpMessageFormat = 
-    jsonFormat2(SignUpMessage)
+    jsonFormat3(SignUpMessage)
 
   implicit val ConfirmMailMessageFormat =
   	jsonFormat2(ConfirmMailMessage)

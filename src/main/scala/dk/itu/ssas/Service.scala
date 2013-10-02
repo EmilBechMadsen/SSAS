@@ -39,9 +39,15 @@ class Service
     	post {
     		entity(as[SignUpMessage]) { message =>
   				complete { 
-  					// Create appropiate sign up data
-            // Redirect to appropiate site
-            ""
+  					val user = User.create(message.name, None, message.email, message.password)
+            user match {
+              case Some(u) =>
+                // User created
+                ""
+              case None =>
+                // User not created
+                ""
+            }   
   				}
     		}
     	}
@@ -49,16 +55,35 @@ class Service
     path("confirm" / JavaUUID) { token =>
     	get {
     			complete {
-            // Check confirmation token validity 
-    				// Get confirmation formular
-            ""
-    			}
+            val user = User(token)
+            user match {
+              case Some(u) =>
+                // User exists.
+                // Get page
+                ""
+              case None =>
+                // No token found for user
+                ""                
+            }
+          }
     	} ~
     	post {
     		entity(as[String]) { password =>
     			complete {
-    				// Create appropiate user data
-            // Redirect to appropiate site
+    				val user = User(token)
+            user match {
+              case Some(u) =>
+                if(u.checkPassword(password)) 
+                  if(u.confirm(token)) 
+                    "" // Success
+                  else
+                  HttpResponse(spray.http.StatusCodes.BadRequest, "Confirmation id was invalid.")                  
+                else 
+                  HttpResponse(spray.http.StatusCodes.Unauthorized, "User or password was incorrect.")
+              case None =>
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+                
+            }
             ""
     			}
     		}
@@ -71,7 +96,7 @@ class Service
             user match {
               case Some(u) =>
                 complete {
-                  //
+                  val requests = u.friendRequests
                   ""
                 }
               case None =>
@@ -87,7 +112,13 @@ class Service
             user match {
               case Some(u) =>
                 complete {
-                  //
+                  val otherUser = User(message.userId)
+                  otherUser match {
+                    case Some(ou) =>
+                      u.requestFriendship(ou, message.rel)
+                    case None =>
+                      HttpResponse(spray.http.StatusCodes.BadRequest, "User not found.")      
+                  }
                   ""
                 }
               case None =>
@@ -104,7 +135,7 @@ class Service
             user match {
               case Some(u) =>
                 complete {
-                  //
+                  val otherUser = User(message.userId)
                   ""
                 }
               case None =>
@@ -162,6 +193,7 @@ class Service
             user match {
               case Some(u) =>
                 complete {
+                  var users = User.search(search)
                   // Get search page
                   ""
                 }
@@ -206,4 +238,21 @@ class Service
     		}
    		}
    	}
+    path("logout") {
+      post {      
+          cookie(cookieName) { c => r =>
+            val user = User(UUID.fromString(c.content))
+            user match {
+              case Some(u) =>
+                complete {
+                  u.logout()
+                  ""
+                }
+              case None =>
+                // Reject
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+            }
+          }
+        }
+    }
 }
