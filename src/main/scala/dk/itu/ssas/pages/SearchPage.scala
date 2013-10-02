@@ -13,7 +13,7 @@ object SearchPage extends LoggedInPage {
         <a href="">${user.name}</a>
       </td>
     </tr>
-    """   
+    """
   }
 
   private def searchResult(result: List[User]): HTML = {

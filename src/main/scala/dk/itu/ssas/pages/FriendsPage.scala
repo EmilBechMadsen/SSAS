@@ -1,9 +1,9 @@
 package dk.itu.ssas.page
 
-import dk.itu.ssas.page.request._
-import dk.itu.ssas.model._
-
 object FriendsPage extends LoggedInPage {
+  import dk.itu.ssas.page.request._
+  import dk.itu.ssas.model._
+  
   type RequestType = FriendsPageRequest
 
   private def friendEntry(entry: (User, Relationship), kind: Int, key: Int): HTML = {

@@ -1,7 +1,5 @@
 package dk.itu.ssas.page
 
-import dk.itu.ssas.db._
-
 object ProfilePage extends LoggedInPage {
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.model._

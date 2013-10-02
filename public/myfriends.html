@@ -2,6 +2,21 @@
  <head>
    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
    <link rel="stylesheet" type="text/css" href="style.css" />
+   <script type="text/javascript" src="xregexp-min.js"></script>
+   <script type="text/javascript" src="unicode-base.js"></script>
+  <script type="text/javascript">
+      function validateSearch() {
+        var input = document.forms["searchForm"]["searchTerm"].value;
+        var pattern = XRegExp("^[\\p{L}\\s'.-]+$", 'i');
+        var validLength = input.length > 0 && input.length <= 255
+        if (XRegExp.test(input, pattern) && validLength) {
+          return true;
+        } else {
+          alert("Your search term does not consitute a valid name.")
+          return false;
+        }
+      }
+   </script>
    <title>
     RaptorDating.com
    </title>
@@ -16,7 +31,7 @@
         <button class="styledButton" type="button">Thorstein Immanuel Højreb</button>
       </div>
       <div id="searchBox">
-        <form action="/search" method="POST">
+        <form name="searchForm" action="/search" method="POST" onsubmit="return validateSearch()">
           <input name="searchTerm" type="text" />
           <input class="styledSubmitButton" value="Search" type="submit" /> 
         </form>
