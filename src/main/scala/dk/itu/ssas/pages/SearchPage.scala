@@ -16,18 +16,10 @@ object SearchPage extends LoggedInPage {
     """   
   }
 
-  private def searchResultRec(result: List[User], sb: StringBuilder, kind: Int): HTML = {
-    result match {
-      case u :: us =>
-        val entry = searchResultEntry(u, kind)
-        searchResultRec(us, sb.append(entry), if (kind == 1) 2; else 1)
-      case Nil =>
-        sb.toString()
-    }
-  }
-
   private def searchResult(result: List[User]): HTML = {
-    searchResultRec(result, new StringBuilder(), 1)
+    result mapi { 
+      case (u, i) => searchResultEntry(u, if (i % 2 == 0) 1; else 2) 
+    } mkString("\n")
   }
 
   def content(request: SearchPageRequest, key: Int): HTML = {

@@ -1,6 +1,6 @@
 package dk.itu.ssas.page
 
-  import dk.itu.ssas.db._
+import dk.itu.ssas.db._
 
 object ProfilePage extends LoggedInPage {
   import dk.itu.ssas.page.request._
@@ -8,18 +8,18 @@ object ProfilePage extends LoggedInPage {
 
   type RequestType = ProfilePageRequest
 
-  private def isFriend(user: User, other: User): Option[Relationship] = {
-    var result: Option[Relationship] = None
-    for ((user, rel) <- user.friends) {
-      if (user == other)
-        result = Some(rel)
+  private def relationship(user: User, other: User): Option[Relationship] = {
+    user.friends find {
+      case (u, r) => u == other
+    } match {
+      case Some((u, r)) => Some(r)
+      case None         => None
     }
-    result
   }
 
   private def relationshipOption(rel: Relationship): HTML = {
-    val asString = rel.toString()
-    s"""<option value="$asString">$asString</option>"""
+    val relString = rel.toString()
+    s"""<option value="$relString">$relString</option>"""
   }
 
   private def relationshipText(rel: Option[Relationship]): HTML = {
@@ -31,7 +31,7 @@ object ProfilePage extends LoggedInPage {
 
   private def requestOptions(user: User, other: User): HTML = {
     val sb = new StringBuilder()
-    isFriend(user, other) match {
+    relationship(user, other) match {
       case Some(rel) =>
         rel match {
           case Friendship =>
@@ -56,23 +56,20 @@ object ProfilePage extends LoggedInPage {
     rel match {
       case Some(r) => other.address match {
         case Some(a) => a
-        case None => "Not listed"
+        case None    => "Not listed"
       }
-      case None => "Only available to friends"
+      case None    => "Only available to friends"
     }
   }
 
   private def hobbies(other: User): HTML = {
-    other.hobbies.foldLeft(new StringBuilder())((sb, h) => {
-        val hobby = s"""
-          <li class="hobbiesListItem">${h}</li>
-        """
-        sb.append(hobby)
-      }).toString()
+    other.hobbies map { hobby =>
+      s"""<li class="hobbiesListItem">$hobby</li>"""
+    } mkString("\n")
   }
 
   def content(request: ProfilePageRequest, key: Int): HTML = {
-    val rel = isFriend(request.user, request.other)
+    val rel = relationship(request.user, request.other)
   	s"""
 	    <div id="profileWrapper">
         <div id="profileHeader">
@@ -107,7 +104,7 @@ object ProfilePage extends LoggedInPage {
               <span class="profileLabel">Hobbies</span>
               <div id="hobbiesListBox">
                 <ul id="hobbiesList">
-                  ${hobbies{request.other}}
+                  ${hobbies(request.other)}
                 </ul>
               </div>
             </div>

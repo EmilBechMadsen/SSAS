@@ -15,7 +15,7 @@ object ViewRequestsPage extends LoggedInPage {
         ${formKeyInput(key)}
         <input name="friendRequestId" type="hidden" value="${user.id}" />
         <td class="requestsEntryName">${user.name}</td>
-        <td class="requestsEntryStatus">${rel.toString()}</td>
+        <td class="requestsEntryStatus">$rel</td>
         <td class="requestsEntryButton">
           <input name="friendRequestAccept" class="styledSubmitButton" type="submit" value="Accept" />
           <input name="friendRequestReject" class="styledSubmitButton" type="submit" value="Reject" />
@@ -25,26 +25,10 @@ object ViewRequestsPage extends LoggedInPage {
     """    
   }
 
-  private def requestToHTML(entry: (User, Relationship), kind: Int, key: Int): HTML = {
-    requestEntry(entry, if (kind % 2 == 0) 2; else 1, key)
-  } 
-
   private def requestsToHTML(requests: Map[User, Relationship], key: Int): HTML = {
-    val sb = new StringBuilder()
-    var i = 1
-    for (entry <- requests) {
-      sb.append(requestToHTML(entry, i, key))
-      i = i + 1
-    }
-
-    // FIXME: Bedre
-    // val rs = requests.zipWithIndex 
-    // rs foreach {case (r, i) => sb.append(requestToHTML(r, i, key))}
-
-    // FIXME: Bedst (hvis det virker :P)
-    // requests.zipWithIndex map {case (r, i) => requestToHTML(r, i, key)} mkString
-
-    sb.toString()
+    requests mapi {
+      case (req, i) => requestEntry(req, if (i % 2 == 0) 1; else 2, key) 
+    } mkString("\n")
   }
 
   def content(request: ViewRequestsPageRequest, key: Int): HTML = {

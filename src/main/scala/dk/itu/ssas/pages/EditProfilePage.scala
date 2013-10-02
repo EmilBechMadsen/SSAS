@@ -14,29 +14,25 @@ object EditProfilePage extends LoggedInPage {
     }
   }
 
-  private def hobbiesRec(hobbyList: List[String], sb: StringBuilder, index: Int, key: Int): HTML = {
-    hobbyList match {
-      case h :: hs => 
-        val hobbyHTML = s"""
-        <tr>
-          <form method="POST">
-            ${formKeyInput(key)}
-            <td class="hobbiesListItem">${h}</td>
-            <td>
-              <input name="profileHobbyRemoveSubmit" type="submit" value="X" class="styledSubmitButton" />
-              <input name="hobbyId" type="hidden" value="$index" />
-            </td>
-          </form>
-        </tr>
-        """
-        hobbiesRec(hs, sb.append(hobbyHTML), index + 1, key)
-      case Nil =>
-        sb.toString()
-    }
+  private def hobbyEntry(hobby: String, index: Int, key: Int): HTML = {
+    s"""
+    <tr>
+      <form method="POST">
+        ${formKeyInput(key)}
+        <td class="hobbiesListItem">$hobby</td>
+        <td>
+          <input name="profileHobbyRemoveSubmit" type="submit" value="X" class="styledSubmitButton" />
+          <input name="hobbyId" type="hidden" value="$index" />
+        </td>
+      </form>
+    </tr>
+    """
   }
 
   private def hobbies(user: User, key: Int): HTML = {
-    hobbiesRec(user.hobbies, new StringBuilder(), 1, key)
+    user.hobbies mapi {
+      case (hobby, i) => hobbyEntry(hobby, i, key)
+    } mkString("\n")
   }
 
   def content(request: EditProfilePageRequest, key: Int): HTML = {

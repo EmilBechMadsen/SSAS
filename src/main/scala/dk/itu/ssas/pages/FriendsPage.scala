@@ -15,25 +15,17 @@ object FriendsPage extends LoggedInPage {
         ${formKeyInput(key)}
         <input type="hidden" value="${user.id}" />
         <td class="friendEntryName"><a href="">${user.name}</a></td>
-        <td class="friendEntryStatus">${rel.toString()}</td>
+        <td class="friendEntryStatus">$rel</td>
         <td><input name="friendRemove" class="styledSubmitButton" type="submit" value="Remove" /></td>
       </form>
     </tr>
     """    
   }
 
-  private def friendToHTML(entry: (User, Relationship), kind: Int, key: Int): HTML = {
-    friendEntry(entry, if (kind % 2 == 0) 2; else 1, key)
-  } 
-
   private def friendsToHTML(friends: Map[User, Relationship], key: Int): HTML = {
-    val sb = new StringBuilder()
-    var i = 1
-    for (entry <- friends) {
-      sb.append(friendToHTML(entry, i, key))
-      i = i + 1
-    }
-    sb.toString()
+    friends mapi {
+      case (entry, i) => friendEntry(entry, if (i % 2 == 0) 1; else 2, key)
+    } mkString("\n")
   }
 
   def content(request: FriendsPageRequest, key: Int): HTML = {
