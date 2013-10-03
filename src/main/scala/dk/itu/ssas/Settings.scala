@@ -20,6 +20,12 @@ object Settings {
   val port       = conf.getInt("ssas.port")
   val timeout    = conf.getInt("ssas.timeout")
   val baseUrl    = conf.getString("ssas.baseUrl")
+  val siteName   = conf.getString("ssas.siteName")
+
+  object email {
+    val host    = conf.getString("ssas.email.host")
+    val address = conf.getString("ssas.email.address")
+  }
 
   object db {
     val dbServer   = conf.getString("ssas.db.dbServer")
