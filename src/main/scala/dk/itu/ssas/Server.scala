@@ -15,6 +15,7 @@ object Server extends App with SsasSslConfiguration with DbAccess {
 
   // create and start our service actor
   val service = system.actorOf(Props[Service], "service")
+  val mailer  = system.actorOf(Props[MailSender], "mailer")
 
   // create database if it doesn't exists
   Db withSession {

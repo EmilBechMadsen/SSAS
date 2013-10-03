@@ -34,7 +34,8 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-log4j12" % "1.7.5",
   "com.typesafe" % "config" % "1.0.2",
   "commons-validator" % "commons-validator" % "1.4.0",
-  "org.scalatest" % "scalatest_2.10" % "1.9.2" % "test"
+  "org.scalatest" % "scalatest_2.10" % "1.9.2" % "test",
+  "org.apache.commons" % "commons-email" % "1.3.1"
 )
 
 org.scalastyle.sbt.ScalastylePlugin.Settings

@@ -8,8 +8,10 @@ import scala.slick.driver.MySQLDriver.simple._
 import scala.slick.driver.MySQLDriver.simple.Database.threadLocalSession
 
 object User extends UserExceptions with DbAccess {
-  import dk.itu.ssas.Security
+  import dk.itu.ssas.{ ConfirmationMail, Security, Server }
   import dk.itu.ssas.Validate._
+
+  private val mailer = Server.mailer
 
   /** Returns a user if the id exists
     *
@@ -60,8 +62,12 @@ object User extends UserExceptions with DbAccess {
         val user = (name, address, email, hashedPw, salt)
         val id = Users.forInsert returning Users.id insert user
 
-        val ec = EmailConfirmation(UUID.randomUUID().toString, id)
+        val key = UUID.randomUUID()
+
+        val ec = EmailConfirmation(key.toString(), id)
         EmailConfirmations insert ec
+
+        mailer ! ConfirmationMail(email, name, key)
 
         User(id)
       }
