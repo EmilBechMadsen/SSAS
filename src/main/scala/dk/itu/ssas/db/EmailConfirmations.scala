@@ -5,10 +5,10 @@ protected trait EmailConfirmations extends Users {
   import scala.slick.lifted.ForeignKeyAction
   import java.util.UUID
 
-  protected case class EmailConfirmation(key: UUID, userId: Int)
+  protected case class EmailConfirmation(key: String, userId: Int)
 
   protected object EmailConfirmations extends Table [EmailConfirmation]("email_confirmation") {
-    def guid         = column[UUID]("guid", O.PrimaryKey)
+    def guid         = column[String]("guid", O.PrimaryKey)
     def userId       = column[Int]("user", O.NotNull)
 
     def * = guid ~ userId <> (EmailConfirmation, EmailConfirmation unapply _)

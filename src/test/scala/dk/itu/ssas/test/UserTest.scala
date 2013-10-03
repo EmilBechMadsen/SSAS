@@ -1,6 +1,7 @@
 package dk.itu.ssas.test
 
 import dk.itu.ssas.db.DbAccess
+import java.util.UUID
 import org.scalatest.FunSuite
 import scala.language.postfixOps
 import scala.slick.driver.MySQLDriver.simple._
@@ -71,7 +72,7 @@ class UserTest extends FunSuite with DatabaseTests with DbAccess {
     (user, key) match {
       case (Some(u), Some(k)) => {
         assert(u.isConfirmed === false)
-        u.confirm(k.key)
+        u.confirm(UUID.fromString(k.key))
         assert(u.isConfirmed === true)
       }
       case _    => assert(false)

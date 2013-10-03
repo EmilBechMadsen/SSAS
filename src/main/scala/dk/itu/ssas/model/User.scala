@@ -27,14 +27,14 @@ object User extends UserExceptions with DbAccess {
     */
   def apply(key: UUID): Option[User] = Db withSession {
     val user = (for {
-      s <- Sessions if s.key === key
+      s <- Sessions if s.key === key.toString()
       u <- Users    if s.userId === u.id
     } yield u) firstOption
 
     user match {
       case Some(u) => Some(u)
       case None => (for {
-        e <- EmailConfirmations if e.guid === key
+        e <- EmailConfirmations if e.guid === key.toString()
         u <- Users              if e.userId === u.id
       } yield u) firstOption
     }
@@ -60,7 +60,7 @@ object User extends UserExceptions with DbAccess {
         val user = (name, address, email, hashedPw, salt)
         val id = Users.forInsert returning Users.id insert user
 
-        val ec = EmailConfirmation(UUID.randomUUID(), id)
+        val ec = EmailConfirmation(UUID.randomUUID().toString, id)
         EmailConfirmations insert ec
 
         User(id)
@@ -86,7 +86,7 @@ object User extends UserExceptions with DbAccess {
         case (true, true) => {
           val q = (for (s <- Sessions if s.userId === u.id) yield s)
 
-          val s = Session(UUID.randomUUID(), u.id)
+          val s = Session(UUID.randomUUID().toString(), u.id)
 
           q firstOption match {
             // The user is already logged in, give him a new session
@@ -161,7 +161,7 @@ case class User(
     */
   def confirm(key: UUID): Boolean = Db withSession {
     val ec = for {
-      e <- EmailConfirmations if e.userId === id && e.guid === key.bind
+      e <- EmailConfirmations if e.userId === id && e.guid === key.toString()
     } yield e
 
     ec delete
@@ -329,7 +329,8 @@ case class User(
     */
   def requestFriendship(u: User, r: Relationship): Unit = Db withSession {
     // Only send request if this is a new relationship
-    if (!(isFriend(u) && friends.get(u) == Some(r))) {
+    if (!(isFriend(u) && friends.get(u) == Some(r)) &&
+        u.id != id) {
       val fr = for {
         fr <- FriendRequests if (fr.fromUserId === u.id && fr.toUserId === id) ||
                                 (fr.fromUserId === id && fr.toUserId === u.id)
@@ -556,7 +557,10 @@ case class User(
     * @return The session for the user
     */
   def session: Option[UUID] = Db withSession {
-    (for (s <- Sessions if s.userId === id) yield s.key) firstOption
+    (for (s <- Sessions if s.userId === id) yield s.key) firstOption match {
+      case Some(s) => Some(UUID.fromString(s))
+      case None    => None
+    }
   }
 
   override def toString(): String = {

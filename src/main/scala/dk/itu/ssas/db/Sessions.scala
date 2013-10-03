@@ -5,10 +5,10 @@ protected trait Sessions extends Users {
   import scala.slick.lifted.ForeignKeyAction
   import java.util.UUID
 
-  protected case class Session(key: UUID, userId: Int)
+  protected case class Session(key: String, userId: Int)
 
   protected object Sessions extends Table [Session]("session") {
-    def key          = column[UUID]("session_key", O.PrimaryKey)
+    def key          = column[String]("session_key", O.PrimaryKey)
     def userId       = column[Int]("user", O.NotNull)
 
     def * = key ~ userId <> (Session, Session unapply _)
