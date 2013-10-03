@@ -18,14 +18,14 @@ object Server extends App with SsasSslConfiguration with DbAccess {
   val mailer  = system.actorOf(Props[MailSender], "mailer")
 
   // create database if it doesn't exists
-  Db withSession {
+  /*Db withSession {
     val createDatabase = Q.u + "CREATE DATABASE IF NOT EXISTS ssas;"
     createDatabase.execute()
 
     if (Q.queryNA[String]("SHOW TABLES LIKE 'user'").list.isEmpty) {
       ddl create
     }
-  }
+  }*/
 
   // create a new HttpServer using our handler and tell it where to bind to
   IO(Http) ! Http.Bind(service, Settings.interface, Settings.port)
