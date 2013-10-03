@@ -19,6 +19,7 @@ abstract class LoggedInPage extends Page {
             <link rel="stylesheet" type="text/css" href="style.css" />
             <script type="text/javascript" src="xregexp-min.js"></script>
             <script type="text/javascript" src="unicode-base.js"></script>
+            <script type="text/javascript" src="verimail.js"></script>
             <script type="text/javascript">
               function validateSearch() {
                 var input = document.forms["searchForm"]["searchTerm"].value;

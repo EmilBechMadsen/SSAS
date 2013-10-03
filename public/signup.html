@@ -2,6 +2,7 @@
  <head>
    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
    <link rel="stylesheet" type="text/css" href="style.css" />
+   <script type="text/javascript" src="verimail.js"></script>
  </head>
  <body>
   <div id="wrapper">
@@ -19,21 +20,46 @@
     </div>
     <div id="content"> <!-- body content -->
       <script type="text/javascript">
-        function validate() {
+        function validateSignup() {
+          var email = document.forms["signupForm"]["signupEmail"].value
+          var verimail = new Comfirm.AlphaMail.Verimail();
           var password = document.forms["signupForm"]["signupPassword"].value
           var confirm = document.forms["signupForm"]["signupPasswordConfirm"].value
-          var result = password == confirm
-          if (!result) {
-            alert("Your passwords do not match")
-          }
-          return result
+          var passwordValid = password.length >= 8 && password.length <= 255
+          var confirmationValid = password == confirm
+          var result = false;
+
+          var verify = verimail.verify(email, function(status, message, suggestion) {
+              if(status < 0){
+                  // Incorrect syntax!
+                  alertMessage = "The provided email is invalid."
+                  if(suggestion) {
+                    alertMessage += "\nDid you mean " + suggestion + "?";
+                  }
+                  alert(alertMessage);
+                  result = false;
+              } else { // Email is valid
+                if (confirmationValid) {
+                  if (passwordValid) {
+                    result = true;
+                  } else {
+                    alert("Your password must be at least 8 characters long");
+                    result = false;
+                  }
+                } else {
+                  alert("Your passwords do not match")
+                  result = false;
+                }
+              }
+          });
+          return result;
         }
       </script>
       <div id="signupPageImageBox">
         <img src="http://www.eatthedamncake.com/wordpress/wp-content/uploads/2012/02/velociraptor.jpg"/>
       </div>
       <div id="signupBox">
-        <form name="signupForm" action="/signup" method="POST" onsubmit="return validate()">
+        <form name="signupForm" method="POST" action="/signup" onsubmit="return validateSignup()">
           <fieldset>
             <legend>Sign up</legend>
             <table id="signupTable">

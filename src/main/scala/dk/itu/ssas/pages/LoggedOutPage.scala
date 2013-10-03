@@ -11,7 +11,6 @@ abstract class LoggedOutPage extends Page {
       case None => {
         val minPassword = Settings.security.minPassword
         val maxPassword = Settings.security.maxPassword
-        val emailRegex = """^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$"""
         s"""
           <html>
             <head>
@@ -19,18 +18,33 @@ abstract class LoggedOutPage extends Page {
               <link rel="stylesheet" type="text/css" href="style.css" />
               <script type="text/javascript" src="xregexp-min.js"></script>
               <script type="text/javascript" src="unicode-base.js"></script>
+              <script type="text/javascript" src="verimail.js"></script>
               <script type="text/javascript">
                 function validateLogin() {
                   var email = document.forms["loginForm"]["loginEmail"].value;
                   var password = document.forms["loginForm"]["loginPassword"].value;
-                  var emailPattern = /$emailRegex/i;
-                  var passwordValid = password.length >= $minPassword && password.length <= $maxPassword
-                  if (email.test(emailPattern) && passwordValid) {
-                    return true;
-                  } else {
-                    alert("Your login credentials are invalid.")
-                    return false;
-                  }
+                  var passwordValid = password.length >= $minPassword && password.length <= $maxPassword;
+                  var result = false;
+
+                  var verify = verimail.verify(email, function(status, message, suggestion) {
+                      if(status < 0){
+                          // Incorrect syntax!
+                          alertMessage = "The provided email is invalid."
+                          if(suggestion) {
+                            alertMessage += "\nDid you mean " + suggestion + "?";
+                          }
+                          alert(alertMessage);
+                          result = false;
+                      } else { // Email is valid
+                        if (passwordValid) {
+                          result = true;
+                        } else {
+                          alert("Your password must be at least $minPassword characters long");
+                          result = false;
+                        }
+                      }
+                      return result;
+                  });
                 }                
               </script>
               <title>$title</title>

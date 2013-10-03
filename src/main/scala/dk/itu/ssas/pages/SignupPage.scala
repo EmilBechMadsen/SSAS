@@ -9,33 +9,41 @@ object SignupPage extends LoggedOutPage {
   def content(request: NoRequest, key: Int): HTML = {
     val minPassword = Settings.security.minPassword
     val maxPassword = Settings.security.maxPassword
-    val emailRegex = """^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$"""
     s"""
       <script type="text/javascript">
         function validateSignup() {
           var email = document.forms["signupForm"]["signupEmail"].value
-          var emailPattern = /$emailRegex/i;
-          var emailValid = input.test(pattern)
-
+          var verimail = new Comfirm.AlphaMail.Verimail();
           var password = document.forms["signupForm"]["signupPassword"].value
           var confirm = document.forms["signupForm"]["signupPasswordConfirm"].value
-          var passwordValid = password.length >= $minPassword && password.length <= $maxPassword
+          var passwordValid = password.length >= 8 && password.length <= 255
           var confirmationValid = password == confirm
+          var result = false;
 
-          if (confirmationValid) {
-            if (emailValid) {
-              if (passwordValid) {
-                return true
-              } else {
-                alert("Your password must be at least $minPassword characters long")
+          var verify = verimail.verify(email, function(status, message, suggestion) {
+              if(status < 0){
+                  // Incorrect syntax!
+                  alertMessage = "The provided email is invalid."
+                  if(suggestion) {
+                    alertMessage += "\nDid you mean " + suggestion + "?";
+                  }
+                  alert(alertMessage);
+                  result = false;
+              } else { // Email is valid
+                if (confirmationValid) {
+                  if (passwordValid) {
+                    result = true;
+                  } else {
+                    alert("Your password must be at least $minPassword characters long");
+                    result = false;
+                  }
+                } else {
+                  alert("Your passwords do not match")
+                  result = false;
+                }
               }
-            } else {
-              alert("The provided email is invalid")
-            } 
-          else {
-            alert("Your passwords do not match")
-          }
-          return false
+          });
+          return result;
         }
       </script>
       <div id="signupPageImageBox">
