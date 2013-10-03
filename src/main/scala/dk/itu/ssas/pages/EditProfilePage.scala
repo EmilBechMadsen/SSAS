@@ -127,7 +127,7 @@ object EditProfilePage extends LoggedInPage {
     <div id="profileWrapper">
       <div id="profileHeader">
         <div id="profileCaption">
-        <form action="/profile/$user/edit/info" name="profileNameForm" id="profileNameForm" method="POST" onsubmit="return validateName()">
+        <form action="/profile/${user.id}/edit/info" name="profileNameForm" id="profileNameForm" method="POST" onsubmit="return validateName()">
           ${formKeyInput(key)}
           <input id="profileNameInput" name="profileName" type="text" value="${user.name}" />
         </form>
@@ -140,7 +140,7 @@ object EditProfilePage extends LoggedInPage {
         <div id="profileLeftBox">
           <div id="addressBox">
             <span class="profileLabel">Address</span><br />
-            <form action="/profile/$user/edit/info" name="profileAddressForm" id="profileAddressForm" method="POST" onsubmit="return validateAddress()">
+            <form action="/profile/${user.id}/edit/info" name="profileAddressForm" id="profileAddressForm" method="POST" onsubmit="return validateAddress()">
               ${formKeyInput(key)}
               <textarea name="profileAddress" id="profileAddressInput">
                 ${address(user)}
@@ -148,7 +148,7 @@ object EditProfilePage extends LoggedInPage {
             </form>
           </div>
           <div id="profilePasswordBox">
-            <form action="/profile/$user/edit/info" id="profilePasswordForm" method="POST" onsubmit="return validatePassword()">
+            <form action="/profile/${user.id}/edit/info" id="profilePasswordForm" method="POST" onsubmit="return validatePassword()">
               ${formKeyInput(key)}
               <span class="profileLabel">Current Password</span><br />
               <input class="profileInput" name="profileCurrentPassword" type="password" /><br />

@@ -251,9 +251,9 @@ class Service
           }
         }
       } ~
-      postWithFormKey {
-        path("edit") {
-          path("info") {
+      path("edit") {
+        path("info") {
+          postWithFormKey {
             if (u.id == id) {
               formFields('profileName, 'profileAddress, 'profileCurrentPassword, 'profileNewPassword, 'profileNewPasswordConfirm) {
                 (name, addr, currentPassword, newPassword, confirmPassword) =>
@@ -315,9 +315,11 @@ class Service
                 HttpResponse(StatusCodes.Unauthorized, "You cannot edit another person's profile.")
               }
             }
-          }~
-          path("hobby") {
-            path("add") {
+          }
+        }~
+        path("hobby") {
+          path("add") {
+            postWithFormKey {
               if (u.id == id) {
                 formFields('profileNewHobby) { hobby =>
                   try {
@@ -339,8 +341,10 @@ class Service
                   HttpResponse(StatusCodes.Unauthorized, "You cannot edit another person's profile.")
                 }
               }
-            }~
-            path("remove") {
+            }
+          }~
+          path("remove") {
+            postWithFormKey {
               if (u.id == id) {
                 formFields('profileHobby) { hobby =>
                   try {
@@ -365,28 +369,30 @@ class Service
           }
         }~
         path("request") {
-          if (u.id == id) {
-            complete {
-              HttpResponse(StatusCodes.BadRequest, "Sorry, you cannot have a relationship to yourself.")
-            }
-          } else {
-            formFields('relationship) { relationship =>
-              try {
-                val otherUser = User(UUID.fromString(id.toString()))
-                otherUser match {
-                  case Some(other) =>
-                    u.requestFriendship(other, Relationship(relationship))
-                    redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
-                  case None =>
+          postWithFormKey {
+            if (u.id == id) {
+              complete {
+                HttpResponse(StatusCodes.BadRequest, "Sorry, you cannot have a relationship to yourself.")
+              }
+            } else {
+              formFields('relationship) { relationship =>
+                try {
+                  val otherUser = User(id)
+                  otherUser match {
+                    case Some(other) =>
+                      u.requestFriendship(other, Relationship(relationship))
+                      redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+                    case None =>
+                      complete {
+                        HttpResponse(StatusCodes.BadRequest, "User does not exist.")  
+                      }
+                  }
+                } catch {
+                  case e: RelationshipDeserializationException =>
                     complete {
-                      HttpResponse(StatusCodes.BadRequest, "User does not exist.")  
+                      HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.")
                     }
                 }
-              } catch {
-                case e: RelationshipDeserializationException =>
-                  complete {
-                    HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.")
-                  }
               }
             }
           }

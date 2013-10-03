@@ -42,7 +42,9 @@ abstract class LoggedInPage extends Page {
                 RaptorDating.com
               </div>
               <div id="topBarProfileBox">
-                <button class="styledButton" type="button">${user.name}</button>
+                <a href="/profile/${user.id}"
+                  <button class="styledButton" type="button">${user.name}</button>
+                </a>
               </div>
               <div id="searchBox">
                 <form name="searchForm" action="/search" method="POST" onsubmit="return validateSearch()">
