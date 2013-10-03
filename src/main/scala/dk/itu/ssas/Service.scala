@@ -236,7 +236,7 @@ class Service
                     complete { HttpResponse(StatusCodes.BadRequest, "Both or neither accept and reject was pushed.") }
                   }
                 }
-                redirect(s"/request", StatusCodes.SeeOther)
+                redirect(s"/requests", StatusCodes.SeeOther)
               } catch {
                 case rde: RelationshipDeserializationException => complete { HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.") }
               }
@@ -246,31 +246,33 @@ class Service
         }
       }
     } ~
-    path("profile" / IntNumber) { id =>
-      get {
-        if (u.id == id) {
-          html { formKey =>
-            complete {
-              EditProfilePage.render("Profile: " + u.name, formKey, Some(u), EditProfilePageRequest(u))
+    pathPrefix("profile" / IntNumber) { id =>
+      path("") {
+        get {
+          if (u.id == id) {
+            html { formKey =>
+              complete {
+                EditProfilePage.render("Profile: " + u.name, formKey, Some(u), EditProfilePageRequest(u))
+              }
+            }
+          } else {
+            val otherUser = User(id)
+            otherUser match {
+              case Some(other) =>
+                html { formKey =>
+                  complete {
+                    ProfilePage.render("Profile: " + other.name, formKey, Some(u), ProfilePageRequest(u, other))
+                  }
+                }
+              case None =>
+                complete {
+                  HttpResponse(StatusCodes.NotFound, "The requested user does not exist.")
+                }
             }
           }
-        } else {
-          val otherUser = User(id)
-          otherUser match {
-            case Some(other) =>
-              html { formKey =>
-                complete {
-                  ProfilePage.render("Profile: " + other.name, formKey, Some(u), ProfilePageRequest(u, other))
-                }
-              }
-            case None =>
-              complete {
-                HttpResponse(StatusCodes.NotFound, "The requested user does not exist.")
-              }
-          }
         }
-      } ~
-      path("edit") {
+      }~
+      pathPrefix("edit") {
         path("info") {
           postWithFormKey {
             if (u.id == id) {
@@ -336,7 +338,7 @@ class Service
             }
           }
         }~
-        path("hobby") {
+        pathPrefix("hobby") {
           path("add") {
             postWithFormKey {
               if (u.id == id) {
@@ -386,37 +388,36 @@ class Service
               }
             }
           }
-        }~
-        path("request") {
-          postWithFormKey {
-            if (u.id == id) {
-              complete {
-                HttpResponse(StatusCodes.BadRequest, "Sorry, you cannot have a relationship with yourself.")
-              }
-            } else {
-              formFields('relationship) { relationship =>
-                try {
-                  val otherUser = User(id)
-                  otherUser match {
-                    case Some(other) =>
-                      u.requestFriendship(other, Relationship(relationship))
-                      redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
-                    case None =>
-                      complete {
-                        HttpResponse(StatusCodes.BadRequest, "User does not exist.")  
-                      }
-                  }
-                } catch {
-                  case e: RelationshipDeserializationException =>
+        }
+      }~
+      path("request") {
+        postWithFormKey {
+          if (u.id == id) {
+            complete {
+              HttpResponse(StatusCodes.BadRequest, "Sorry, you cannot have a relationship with yourself.")
+            }
+          } else {
+            formFields('relationship) { relationship =>
+              try {
+                val otherUser = User(id)
+                otherUser match {
+                  case Some(other) =>
+                    u.requestFriendship(other, Relationship(relationship))
+                    redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+                  case None =>
                     complete {
-                      HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.")
+                      HttpResponse(StatusCodes.BadRequest, "User does not exist.")  
                     }
                 }
+              } catch {
+                case e: RelationshipDeserializationException =>
+                  complete {
+                    HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.")
+                  }
               }
             }
           }
         }
-      }
       }
     } ~
     path("friends") {
@@ -451,12 +452,14 @@ class Service
         }
       }
     } ~
-    path("admin") {
+    pathPrefix("admin") {
       if (u.admin) {
-        get {
-          html { formKey =>
-            complete {
-              AdminPage.render("Admin Area", formKey, Some(u), AdminPageRequest(u))
+        path("") {
+          get {
+            html { formKey =>
+              complete {
+                AdminPage.render("Admin Area", formKey, Some(u), AdminPageRequest(u))
+              }
             }
           }
         } ~
@@ -500,6 +503,7 @@ class Service
       }
     }
   }
+}
   /*
 
   val route = 
