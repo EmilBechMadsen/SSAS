@@ -416,7 +416,7 @@ class Service
     } ~
     path("search") {
       entity(as[String]) { search =>
-        post { 
+        postWithFormKey {
           var users = u.search(search)
           html { formKey =>
             complete {
@@ -436,29 +436,13 @@ class Service
           }
         } ~
         path("user" / IntNumber) { userId => 
-          delete {
-            cookie(sessionCookieName) { c => r =>
-              val user = User(UUID.fromString(c.content))
-              user match {
-                case Some(u) =>
-                  if(u.admin) {
-                    val deleteUser = User(userId)
-                    deleteUser match {
-                      case Some(du) =>
-                        complete {
-                          du.delete()
-                          ""
-                        }
-                      case None =>
-                        HttpResponse(spray.http.StatusCodes.NotFound, "User not found.")
-                    }
-                  }
-                  else {
-                    HttpResponse(spray.http.StatusCodes.Unauthorized, "Not an admin.")
-                  }
-                case None =>
-                  HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
-              }
+          postWithFormKey {
+            User(userId) match {
+              case Some(deleteUser) => {
+                  deleteUser.delete()
+                  redirect("/admin", StatusCodes.SeeOther)
+                }
+              case None => complete { HttpResponse(StatusCodes.NotFound, "User not found.") }
             }
           }
         } ~
