@@ -53,7 +53,7 @@ abstract class LoggedOutPage extends Page {
             <div id="wrapper">
               <div id="topBar">
                 <div id="logoBox">
-                  $title
+                  RaptorDating.com
                 </div>
                 <div id="loginBox">
                   <form name="loginForm" action="/login" method="POST" onsubmit="return validateLogin()">
