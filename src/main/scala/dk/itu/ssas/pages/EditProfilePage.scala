@@ -133,7 +133,7 @@ object EditProfilePage extends LoggedInPage {
         </form>
         </div>
         <div id="profileSaveChangesBox">
-          <button type="submit" class="styledSubmitButton" form="profileNameForm profileAddressForm profilePasswordForm">Save Changes</button>
+          <button type="button" class="styledSubmitButton" onclick="submitForms()">Save Changes</button>
         </div>
       </div>
       <div id="profileBox">

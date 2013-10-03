@@ -21,7 +21,7 @@ object ProfilePage extends LoggedInPage {
 
   private def relationshipText(rel: Option[Relationship]): HTML = {
     rel match {
-      case Some(r) => r.toString()
+      case Some(r) => r.prettyPrint
       case None    => "None"
     }
   }

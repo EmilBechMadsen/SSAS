@@ -14,8 +14,8 @@ object FriendsPage extends LoggedInPage {
       <form actions="/friends" method="POST">
         ${formKeyInput(key)}
         <input name="friendRemoveId" type="hidden" value="${user.id}" />
-        <td class="friendEntryName"><a href="">${user.name}</a></td>
-        <td class="friendEntryStatus">$rel</td>
+        <td class="friendEntryName"><a href="/profile/${user.id}">${user.name}</a></td>
+        <td class="friendEntryStatus">${rel.prettyPrint}</td>
         <td><input name="friendRemove" class="styledSubmitButton" type="submit" value="Remove" /></td>
       </form>
     </tr>
