@@ -25,7 +25,7 @@ object AdminPage extends LoggedInPage {
 
     s"""
     <tr class="adminUserEntry">
-      <form method="POST">
+      <form action="/admin/user/${user.id}/toggleAdmin" method="POST">
         ${formKeyInput(key)}
         <input type="hidden" name="adminUserId" value="${user.id}" />
         <td class="adminUserEntryName">
@@ -34,6 +34,9 @@ object AdminPage extends LoggedInPage {
         <td class="adminUserEntryAdminButton adminUserEntryButton">
           $adminStatusInput
         </td>
+      </form>
+      <form action="/admin/user/${user.id}" method="POST">
+        ${formKeyInput(key)}
         <td class="adminUserEntryRemoveButton">
           <input name="adminUserRemove" class="styledSubmitButton" type="submit" value="Remove" />
         </td>
@@ -71,10 +74,10 @@ object AdminPage extends LoggedInPage {
             }
 
             function validateAddUser() {
-              var email = document.forms["adminAddUserForm"]["adminAddUserEmail"].value;
-              var name  = document.forms["adminAddUserForm"]["adminAddUserName"].value;
-              var password = document.forms["adminAddUserForm"]["adminAddUserPassword"].value;
-              var confirm = document.forms["adminAddUserForm"]["adminAddUserPasswordConfirm"].value;
+              var email = document.forms["adminAddUserForm"]["signupEmail"].value;
+              var name  = document.forms["adminAddUserForm"]["signupName"].value;
+              var password = document.forms["adminAddUserForm"]["signupPassword"].value;
+              var confirm = document.forms["adminAddUserForm"]["signupPasswordConfirm"].value;
 
               var passwordValid = password.length >= $minPassword && password.length <= $maxPassword
               var confirmationValid = password == confirm
@@ -120,7 +123,7 @@ object AdminPage extends LoggedInPage {
               <div id="adminAddUserBox">
                 <fieldset id="adminAddUserFieldset">
                   <legend>Add User</legend>
-                  <form name="adminAddUserForm" method="POST" onsubmit="return validateAddUser()" />
+                  <form name="adminAddUserForm" action="/signup" method="POST" onsubmit="return validateAddUser()" />
                     ${formKeyInput(key)}
                     <div id="adminAddUserFieldsetContent">
                       <table cellspacing="0" cellpadding="0">
@@ -128,21 +131,21 @@ object AdminPage extends LoggedInPage {
                           <td>
                             <div class="adminAddUserLabel">Email:</div>
                           </td>
-                          <td><input name="adminAddUserEmail" type="text" size="25" /></td>
+                          <td><input name="signupEmail" type="text" size="25" /></td>
                           <td>
                             <div class="adminAddUserLabel">Password:</div>
                           </td>
-                          <td><input name="adminAddUserPassword" type="password" size="25" /></td>
+                          <td><input name="signupPassword" type="password" size="25" /></td>
                         </tr>
                         <tr>
                           <td>
                             <div class="adminAddUserLabel">Name:</div>
                           </td>
-                          <td><input name="adminAddUserName" type="text" size="25" /></td>
+                          <td><input name="signupName" type="text" size="25" /></td>
                           <td>
                             <div class="adminAddUserLabel">Confirm Password:</div>
                           </td>
-                          <td><input name="adminAddUserPasswordConfirm" type="password" size="25" /></td>
+                          <td><input name="signupPasswordConfirm" type="password" size="25" /></td>
                         </tr>
                         <tr>
                           <td></td>

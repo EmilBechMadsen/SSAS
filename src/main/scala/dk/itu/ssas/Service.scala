@@ -463,28 +463,24 @@ class Service
           }
         } ~
         path("user" / IntNumber / "toggleAdmin") { userId => 
-          post {
-            cookie(sessionCookieName) { c => r =>
-              val user = User(UUID.fromString(c.content))
-              user match {
-                case Some(u) =>
-                  if(u.admin) {
-                    val promoteUser = User(userId)
-                    promoteUser match {
-                      case Some(du) =>
-                        complete {
-                          ""
-                        }
-                      case None =>
-                        HttpResponse(spray.http.StatusCodes.NotFound, "User not found.")
-                    }
+          postWithFormKey {
+            try {
+              User(UUID.fromString(userId.toString())) match {
+                case Some(other) =>
+                  if (other.admin) {
+                    other.admin = false
+                  } else {
+                    other.admin = true
                   }
-                  else {
-                    HttpResponse(spray.http.StatusCodes.Unauthorized, "Not an admin.")
-                  }
+                  redirect(s"/admin", StatusCodes.SeeOther)
                 case None =>
-                  HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+                  complete {
+                    HttpResponse(spray.http.StatusCodes.BadRequest, "That user does not exist.")
+                  }
               }
+            } catch {
+                case dbe: DbError => complete { HttpResponse(StatusCodes.InternalServerError, "Database error.") }
+                case ue: UserException => complete { HttpResponse(StatusCodes.BadRequest, "Invalid info.") }
             }
           }
         }
