@@ -16,10 +16,10 @@ abstract class LoggedInPage extends Page {
         <html>
           <head>
             <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-            <link rel="stylesheet" type="text/css" href="style.css" />
-            <script type="text/javascript" src="xregexp-min.js"></script>
-            <script type="text/javascript" src="unicode-base.js"></script>
-            <script type="text/javascript" src="verimail.js"></script>
+            <link rel="stylesheet" type="text/css" href="/static/style.css" />
+            <script type="text/javascript" src="/static/xregexp-min.js"></script>
+            <script type="text/javascript" src="/static/unicode-base.js"></script>
+            <script type="text/javascript" src="/static/verimail.js"></script>
             <script type="text/javascript">
               function validateSearch() {
                 var input = document.forms["searchForm"]["searchTerm"].value;
