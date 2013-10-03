@@ -421,9 +421,9 @@ class Service
       }
     } ~
     path("search") {
-      entity(as[String]) { search =>
-        postWithFormKey {
-          var users = u.search(search)
+      postWithFormKey {
+        formFields('searchTerm) { search => 
+          val users = u.search(search)
           html { formKey =>
             complete {
               SearchPage.render("Search results", formKey, Some(u), SearchPageRequest(users))
