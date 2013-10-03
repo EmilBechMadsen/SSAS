@@ -100,6 +100,11 @@ class Service
   }
 
   val route =
+    path("") {
+      get {
+        redirect("/signup", StatusCodes.Found)
+      }
+    } ~
     path("signup") { 
       get {
         html { formKey =>
@@ -208,7 +213,12 @@ class Service
           }
         }
       }
-    } 
+    }~
+    path("ssase13") {
+      get {
+        redirect("/", StatusCodes.MovedPermanently)
+      }
+    }
 
   def userRoutes(u: User): RequestContext => Unit = {
     path("requests") {
