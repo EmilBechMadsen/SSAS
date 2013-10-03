@@ -38,6 +38,8 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-email" % "1.3.1"
 )
 
+seq(com.github.retronym.SbtOneJar.oneJarSettings: _*)
+
 org.scalastyle.sbt.ScalastylePlugin.Settings
 
 seq(Revolver.settings: _*)
