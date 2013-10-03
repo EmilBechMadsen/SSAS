@@ -78,6 +78,16 @@ class UserTest extends FunSuite with DatabaseTests with DbAccess {
     }
   }
 
+  test ("Set user to admin") {
+    User(user1Id) match {
+      case (Some(user)) => {
+        user.admin = true
+        assert(user.admin === true)
+      }
+      case None => assert(false)
+    }
+  }
+
   test("Search Works") {
     val search1 = User search "John"
     assert(search1.length === 1)
@@ -107,6 +117,51 @@ class UserTest extends FunSuite with DatabaseTests with DbAccess {
     (user1, user2) match {
       case (Some(u1), Some(u2)) => {
         assert(u2.friendRequests(u1) === Friendship)
+      }
+      case _ => assert(false)
+    }
+  }
+
+  test("Accept friendship request") {
+    val user1 = User(user1Id)
+    val user2 = User(user2Id)
+
+    (user1, user2) match {
+      case (Some(u1), Some(u2)) => {
+        assert(u2.acceptFriendRequest(u1, Friendship) === true)
+        assert(u2.friends(u1) === Friendship)
+        assert(u1.friends(u2) === Friendship)
+        assert(u2.friendRequests.isEmpty)
+      }
+      case _ => assert(false)
+    }
+  }
+
+  test("Remove friend") {
+    val user1 = User(user1Id)
+    val user2 = User(user2Id)
+
+    (user1, user2) match {
+      case (Some(u1), Some(u2)) => {
+        u1.removeFriend(u2)
+        assert(u1.friends.isEmpty)
+        assert(u2.friends.isEmpty)
+      }
+      case _ => assert(false)
+    }
+  }
+
+  test("Reject friendship") {
+    val user1 = User(user1Id)
+    val user2 = User(user2Id)
+
+    (user1, user2) match {
+      case (Some(u1), Some(u2)) => {
+        u2.requestFriendship(u1, Bromance)
+        assert(u1.friendRequests(u2) === Bromance)
+        u1.rejectFriendRequest(u2, Bromance)
+        assert(u1.friendRequests.isEmpty)
+        assert(u1.friends.isEmpty)
       }
       case _ => assert(false)
     }
@@ -171,6 +226,18 @@ class UserTest extends FunSuite with DatabaseTests with DbAccess {
     changedUser match {
       case Some(u) => assert(u.email === email)
       case None    => assert(false)
+    }
+  }
+
+  test("Delete user") {
+    val user2 = User(user2Id)
+
+    user2 match {
+      case Some(u) => {
+        u.delete()
+        assert(User(user2Id) === None)
+      }
+      case None => assert(false)
     }
   }
 }

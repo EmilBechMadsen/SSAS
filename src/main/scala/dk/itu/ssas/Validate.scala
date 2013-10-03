@@ -1,16 +1,15 @@
 package dk.itu.ssas
 
 object Validate {
+  import org.apache.commons.validator.routines.EmailValidator
+  private val ev = EmailValidator.getInstance()
+  
   /** Checks an email address for validity
   *
   * @param e - The email address to check
   * @return Returns true if valid, false otherwise
   */
-  def validEmail(e: String): Boolean = {
-    import org.apache.commons.validator.routines.EmailValidator
-    val ev = EmailValidator.getInstance()
-    ev.isValid(e)
-  }
+  def validEmail(e: String): Boolean = ev.isValid(e)
 
   /** Checks a user name for validity
     *

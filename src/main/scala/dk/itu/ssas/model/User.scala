@@ -113,6 +113,27 @@ object User extends UserExceptions with DbAccess {
 
     users.list
   }
+
+  /** A list of all users
+    *
+    * @return A list of all users
+    */
+  def all: List[User] = Db withSession {
+    val users = for (u <- Users) yield u
+    users.list
+  }
+
+  /** A list of all admins
+    *
+    * @return A list of all admins
+    */
+  def allAdmins: List[User] = Db withSession {
+    val admins = for {
+      a <- Admins
+      u <- Users if (u.id === a.userId)
+    } yield u
+    admins.list
+  }
 }
 
 case class User(
@@ -125,6 +146,13 @@ case class User(
     extends DbAccess {
   import User._
   import dk.itu.ssas.Validate._
+
+  /** Deletes the user. *WARNING* this is permanent
+    *
+    */
+  def delete(): Unit = Db withSession {
+    (for (u <- Users if u.id === id) yield u) delete
+  }
 
   /** Confirms a user
     *
