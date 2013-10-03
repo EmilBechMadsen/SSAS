@@ -11,9 +11,10 @@ object ViewRequestsPage extends LoggedInPage {
     val rel = entry._2
     s"""
     <tr class="listEntryRow listEntryColor${kind}">
-      <form method="POST">
+      <form action="/requests" method="POST">
         ${formKeyInput(key)}
         <input name="friendRequestId" type="hidden" value="${user.id}" />
+        <input name="friendRequestKind" type="hidden" value="$rel" />
         <td class="requestsEntryName">${user.name}</td>
         <td class="requestsEntryStatus">$rel</td>
         <td class="requestsEntryButton">

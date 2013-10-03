@@ -11,9 +11,9 @@ object FriendsPage extends LoggedInPage {
     val rel  = entry._2
     s"""
     <tr class="listEntryRow listEntryColor${kind}">
-      <form method="POST">
+      <form actions="/friends" method="POST">
         ${formKeyInput(key)}
-        <input type="hidden" value="${user.id}" />
+        <input name="friendRemoveId" type="hidden" value="${user.id}" />
         <td class="friendEntryName"><a href="">${user.name}</a></td>
         <td class="friendEntryStatus">$rel</td>
         <td><input name="friendRemove" class="styledSubmitButton" type="submit" value="Remove" /></td>

@@ -35,6 +35,7 @@ class Service
   import dk.itu.ssas.model._
   import dk.itu.ssas.page._
   import dk.itu.ssas.page.request._
+  import scala.language.postfixOps
 
   private def renewFormKey(c: String => RequestContext => Unit): RequestContext => Unit = {
     val formKey = UUID.randomUUID().toString()
@@ -178,63 +179,38 @@ class Service
   def userRoutes(u: User): RequestContext => Unit = {
     path("requests") {
       get {
-        cookie(sessionCookieName) { c => r =>
-          val user = User(UUID.fromString(c.content))
-          val formKey = UUID.randomUUID().toString()
-          setCookie(HttpCookie(formkeyCookieName, formKey)) {
-            user match {
-              case Some(u) =>
-                complete {
-                  val requests = u.friendRequests
-                  ""
-                }
-              case None =>
-                // Reject
-                complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.") }
-            }
+        html { formKey =>
+          complete {
+            ViewRequestsPage.render("Your friend requests", formKey, Some(u), ViewRequestsPageRequest(u))
           }
         }
       } ~
-      post {
-        entity(as[RelationshipRequestMessage]) { message =>
-          cookie(sessionCookieName) { c => r =>
-            val user = User(UUID.fromString(c.content))
-            user match {
-              case Some(u) =>
-                complete {
-                  val otherUser = User(message.userId)
-                  otherUser match {
-                    case Some(ou) =>
-                      u.requestFriendship(ou, message.rel)
-                    case None =>
-                      HttpResponse(spray.http.StatusCodes.BadRequest, "User not found.")      
+      postWithFormKey {
+        formFields('friendRequestId, 'friendRequestKind, 'friendRequestAccept ?, 'friendRequestReject ?) {
+          (friendId, requestKind, accept, reject) =>
+          User(friendId.toInt) match {
+            case Some(otherUser) =>
+              try {
+                (accept, reject) match {
+                  case (Some(_), None) => {
+                    val k = u.acceptFriendRequest(otherUser, Relationship(requestKind))
                   }
-                  ""
+                  case (None, Some(_)) => {
+                    val k = u.rejectFriendRequest(otherUser, Relationship(requestKind))
+                  }
+                  case (_,_) => {
+                    complete { HttpResponse(StatusCodes.BadRequest, "Both or neither accept and reject was pushed.") }
+                  }
                 }
-              case None =>
-                // Reject
-                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
-            }
+                redirect(s"/request", StatusCodes.SeeOther)
+              } catch {
+                case rde: RelationshipDeserializationException => complete { HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.") }
+              }
+            case None =>
+              complete { HttpResponse(StatusCodes.BadRequest, "User not found.") }
           }
         }
-      } ~
-      put {
-        entity(as[RelationshipConfirmationMessage]) { message =>
-          cookie(sessionCookieName) { c => r =>
-            val user = User(UUID.fromString(c.content))
-            user match {
-              case Some(u) =>
-                complete {
-                  val otherUser = User(message.userId)
-                  ""
-                }
-              case None =>
-                // Reject
-                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
-            }
-          }
-        }
-      } 
+      }
     } ~
     path("profile" / IntNumber) { id =>
       get {
@@ -316,39 +292,31 @@ class Service
     } ~
     path("friends") {
       get {
-        cookie(sessionCookieName) { c => r =>
-          val user = User(UUID.fromString(c.content))
-          val formKey = UUID.randomUUID().toString()
-          setCookie(HttpCookie(formkeyCookieName, formKey)) {
-            user match {
-              case Some(u) =>
-                complete {
-                  // Get 
-                  ""
-                }
-              case None =>
-                // Reject
-                complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.") }
-            }
+        html { formKey =>
+          complete {
+            FriendsPage.render("Your friends", formKey, Some(u), FriendsPageRequest(u))
+          }
+        }
+      } ~
+      postWithFormKey {
+        formFields('friendRemoveId) { friendId =>
+          User(friendId.toInt) match {
+            case Some(otherUser) =>
+                u.removeFriend(otherUser)
+                redirect(s"/friends", StatusCodes.SeeOther)
+            case None =>
+              complete { HttpResponse(StatusCodes.BadRequest, "User not found.") }
           }
         }
       }
     } ~
     path("search") {
       entity(as[String]) { search =>
-        post {      
-          cookie(sessionCookieName) { c => r =>
-            val user = User(UUID.fromString(c.content))
-            user match {
-              case Some(u) =>
-                complete {
-                  var users = u.search(search)
-                  // Get search page
-                  ""
-                }
-              case None =>
-                // Reject
-                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+        post { 
+          var users = u.search(search)
+          html { formKey =>
+            complete {
+              SearchPage.render("Search results", formKey, Some(u), SearchPageRequest(users))
             }
           }
         }
