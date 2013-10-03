@@ -4,6 +4,7 @@ object AdminPage extends LoggedInPage {
   import dk.itu.ssas.model._
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.page.exception._
+  import dk.itu.ssas._
 
   type RequestType = AdminPageRequest
 
@@ -49,7 +50,65 @@ object AdminPage extends LoggedInPage {
     user.admin match {
       case false => throw new NotAdminException()
       case true  =>
+        val nameRegex = Settings.security.nameWhitelist
+        val minName = Settings.security.minName
+        val maxName = Settings.security.maxName
+        val minPassword = Settings.security.minPassword
+        val maxPassword = Settings.security.maxPassword
         s"""
+          <script type="text/javascript">
+            function validateName(name) {
+              var pattern = XRegExp("$nameRegex", 'i');
+              var validLength = name.length >= $minName && name.length <= $maxName;
+              if (XRegExp.test(name, pattern) && validLength) {
+                return true;
+              } else {
+                alert("Your name for the new user is invalid.");
+                return false;
+              }
+              return false;
+            }
+
+            function validateAddUser() {
+              var email = document.forms["adminAddUserForm"]["adminAddUserEmail"].value;
+              var name  = document.forms["adminAddUserForm"]["adminAddUserName"].value;
+              var password = document.forms["adminAddUserForm"]["adminAddUserPassword"].value;
+              var confirm = document.forms["adminAddUserForm"]["adminAddUserPasswordConfirm"].value;
+
+              var passwordValid = password.length >= $minPassword && password.length <= $maxPassword
+              var confirmationValid = password == confirm
+              var result = false;
+
+              var verify = verimail.verify(email, function(status, message, suggestion) {
+                  if(status < 0){
+                      // Incorrect syntax!
+                      alertMessage = "The provided email is invalid."
+                      if(suggestion) {
+                        alertMessage += "\nDid you mean " + suggestion + "?";
+                      }
+                      alert(alertMessage);
+                      result = false;
+                  } else { // Email is valid
+                    if (confirmationValid) {
+                      if (passwordValid) {
+                        if (validateName(name)) {
+                          result = true;
+                        } else {
+                          result = false;
+                        }
+                      } else {
+                        alert("Your password must be at least $minPassword characters long");
+                        result = false;
+                      }
+                    } else {
+                      alert("Your passwords do not match")
+                      result = false;
+                    }
+                  }
+              });
+              return result;
+            }
+          </script>
           <div id="adminWrapper">
             <div id="adminHeader">
               <div id="adminCaption">
@@ -60,24 +119,38 @@ object AdminPage extends LoggedInPage {
               <div id="adminAddUserBox">
                 <fieldset id="adminAddUserFieldset">
                   <legend>Add User</legend>
-                  <form method="POST" onsubmit="return false" />
-                  <div id="adminAddUserFieldsetContent">
-                    <div class="adminAddUserFieldBox">
-                      <span class="adminAddUserLabel">Email:</span>
-                      <input name="adminAddUserName" type="text" size="20" />
+                  <form name="adminAddUserForm" method="POST" onsubmit="return validateAddUser()" />
+                    <div id="adminAddUserFieldsetContent">
+                      <table cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td>
+                            <div class="adminAddUserLabel">Email:</div>
+                          </td>
+                          <td><input name="adminAddUserEmail" type="text" size="25" /></td>
+                          <td>
+                            <div class="adminAddUserLabel">Password:</div>
+                          </td>
+                          <td><input name="adminAddUserPassword" type="password" size="25" /></td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="adminAddUserLabel">Name:</div>
+                          </td>
+                          <td><input name="adminAddUserName" type="text" size="25" /></td>
+                          <td>
+                            <div class="adminAddUserLabel">Confirm Password:</div>
+                          </td>
+                          <td><input name="adminAddUserPasswordConfirm" type="password" size="25" /></td>
+                        </tr>
+                        <tr>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td><input name="adminAddUserSubmit" class="styledSubmitButton" type="submit" value="Add" /></td>
+                        </tr>
+                      </table>
                     </div>
-                    <div class="adminAddUserFieldBox">
-                      <span class="adminAddUserLabel">Password:</span>
-                      <input name="adminAddUserPassword" type="password" size="20" />
-                    </div>
-                    <div class="adminAddUserFieldBox">
-                      <span class="adminAddUserLabel">Confirm Password:</span>
-                      <input name="adminAddUserPasswordConfirm" type="password" size="20" />
-                    </div>
-                    <div id="adminAddUserSubmitBox">
-                      <input name="adminAddUserSubmit" class="styledSubmitButton" type="submit" value="Create" />
-                    </div>
-                  </div>
+                  </form>
                 </fieldset>
               </div>
               <div id="adminUsersBox">

@@ -9,21 +9,37 @@ object SignupPage extends LoggedOutPage {
   def content(request: NoRequest, key: Key): HTML = {
     val minPassword = Settings.security.minPassword
     val maxPassword = Settings.security.maxPassword
+    val nameRegex = Settings.security.nameWhitelist
+    val minName = Settings.security.minName
+    val maxName = Settings.security.maxName
     s"""
       <script type="text/javascript">
+        function validateName(name) {
+          var pattern = XRegExp("$nameRegex", 'i');
+          var validLength = name.length >= $minName && name.length <= $maxName;
+          if (XRegExp.test(name, pattern) && validLength) {
+            return true;
+          } else {
+            alert("Your name for the new user is invalid.");
+            return false;
+          }
+          return false;
+        }
+
         function validateSignup() {
-          var email = document.forms["signupForm"]["signupEmail"].value
+          var email = document.forms["signupForm"]["signupEmail"].value;
+          var name = document.forms["signupForm"]["signupName"].value;
           var verimail = new Comfirm.AlphaMail.Verimail();
-          var password = document.forms["signupForm"]["signupPassword"].value
-          var confirm = document.forms["signupForm"]["signupPasswordConfirm"].value
-          var passwordValid = password.length >= 8 && password.length <= 255
-          var confirmationValid = password == confirm
+          var password = document.forms["signupForm"]["signupPassword"].value;
+          var confirm = document.forms["signupForm"]["signupPasswordConfirm"].value;
+          var passwordValid = password.length >= $minPassword && password.length <= $maxPassword;
+          var confirmationValid = password == confirm;
           var result = false;
 
           var verify = verimail.verify(email, function(status, message, suggestion) {
               if(status < 0){
                   // Incorrect syntax!
-                  alertMessage = "The provided email is invalid."
+                  alertMessage = "The provided email is invalid.";
                   if(suggestion) {
                     alertMessage += "\nDid you mean " + suggestion + "?";
                   }
@@ -32,7 +48,11 @@ object SignupPage extends LoggedOutPage {
               } else { // Email is valid
                 if (confirmationValid) {
                   if (passwordValid) {
-                    result = true;
+                    if (validateName(name)) {
+                      result = true;
+                    } else {
+                      result = false;
+                    }
                   } else {
                     alert("Your password must be at least $minPassword characters long");
                     result = false;
@@ -57,6 +77,9 @@ object SignupPage extends LoggedOutPage {
             <table id="signupTable">
               <tr>
                 <td class="signupLabel">Email:</td><td><input name="signupEmail" type="text" size="25" /></td>
+              </tr>
+              <tr>
+                <td class="signupLabel">Name:</td><td><input name="signupName" type="text" size="25" /></td>
               </tr>
               <tr>
                 <td class="signupLabel">Password:</td><td><input name="signupPassword" type="password" size="25" /></td>

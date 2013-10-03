@@ -28,6 +28,14 @@
       </div>
     </div>
     <div> <!-- body content -->
+      <script type="text/javascript">
+      function validateAddUser() {
+        var email = document.forms["adminCreateUserForm"]["adminAddUserEmail"].value;
+        var name  = document.forms["adminCreateUserForm"]["adminAddUserName"].value;
+        var password = document.forms["adminCreateUserForm"]["adminAddUserPassword"].value;
+        var confirm = document.forms["adminCreateUserForm"]["adminAddUserPasswordConfirm"].value;
+      }
+      </script>
       <div id="adminWrapper">
         <div id="adminHeader">
           <div id="adminCaption">
@@ -38,36 +46,36 @@
           <div id="adminAddUserBox">
             <fieldset id="adminAddUserFieldset">
               <legend>Add User</legend>
-              <form method="POST" onsubmit="return false" />
+              <form name="adminAddUserForm" method="POST" onsubmit="return validateCreateUser()" />
                 <div id="adminAddUserFieldsetContent">
-                  <div id="adminAddUserFieldsetContentLeft">
-                    <table>
-                      <tr>
-                        <td><span class="adminAddUserLabel">Email:</span></td>
-                        <td><input name="adminAddUserEmail" type="text" size="20" /></td>
-                      </tr>
-                      <tr>
-                        <td><span class="adminAddUserLabel">Name:</span></td>
-                        <td><input name="adminAddUserName" type="text" size="20" /></td>
-                      </tr>
-                    </table>
-                  </div>
-                  <div id="adminAddUserFieldsetContentRight">
-                    <table>
-                      <tr>
-                        <td><span class="adminAddUserLabel">Password:</span></td>
-                        <td><input name="adminAddUserPassword" type="password" size="20" /></td>
-                      </tr>
-                      <tr>
-                        <td><span class="adminAddUserLabel">Confirm Password:</span></td>
-                        <td><input name="adminAddUserPasswordConfirm" type="password" size="20" /></td>
-                      </tr>
-                      <tr>
-                        <td></td>
-                        <td><input name="adminAddUserSubmit" class="styledSubmitButton" type="submit" value="Create" /></td>
-                      </tr>
-                    </table>
-                  </div>
+                  <table cellspacing="0" cellpadding="0">
+                    <tr>
+                      <td>
+                        <div class="adminAddUserLabel">Email:</div>
+                      </td>
+                      <td><input name="adminAddUserEmail" type="text" size="25" /></td>
+                      <td>
+                        <div class="adminAddUserLabel">Password:</div>
+                      </td>
+                      <td><input name="adminAddUserPassword" type="password" size="25" /></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="adminAddUserLabel">Name:</div>
+                      </td>
+                      <td><input name="adminAddUserName" type="text" size="25" /></td>
+                      <td>
+                        <div class="adminAddUserLabel">Confirm Password:</div>
+                      </td>
+                      <td><input name="adminAddUserPasswordConfirm" type="password" size="25" /></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td><input name="adminAddUserSubmit" class="styledSubmitButton" type="submit" value="Add" /></td>
+                    </tr>
+                  </table>
                 </div>
               </form>
             </fieldset>
@@ -93,7 +101,7 @@
                 <form method="POST">
                   <input type="hidden" name="adminUserId" value="1" />
                   <td class="adminUserEntryName">
-                    Ivar Hieronimus Nicodemus Augustus Nielsson-Hansson
+                    Ib
                   </td>
                   <td class="adminUserEntryAdminButton adminUserEntryButton">
                     <input name="adminUserAdmin" class="styledSubmitButton" type="submit" value="Demote " />
