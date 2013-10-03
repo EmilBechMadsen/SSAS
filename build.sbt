@@ -38,3 +38,5 @@ libraryDependencies ++= Seq(
 )
 
 org.scalastyle.sbt.ScalastylePlugin.Settings
+
+seq(Revolver.settings: _*)
