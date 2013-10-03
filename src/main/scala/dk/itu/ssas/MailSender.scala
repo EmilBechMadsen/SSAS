@@ -8,26 +8,27 @@ case class ConfirmationMail(email: String, name: String, key: UUID) extends SSAS
 
 class MailSender extends Actor with ActorLogging {
   import org.apache.commons.mail.HtmlEmail
+  import Settings.{ baseUrl, siteName }
+  import Settings.email._
 
-  val BaseUrl = "http://localhost:8080"
-
-  def receive =  {
+  def receive = {
     case ConfirmationMail(email, name, confirmationGuid) => confirmationMail(email, name, confirmationGuid)
   }
 
   def sendEmail(email: String, name: String, subject: String, body: String) = {
     val message = new HtmlEmail()
-    message.setHostName("localhost") // Ofc needs to have smtp running locally (default port 25)
+    message.setHostName(host) // Ofc needs to have smtp running locally (default port 25)
     message.addTo(email, name)
-    message.setFrom("noreply@raptordating.com", "Raptor Dating")
+    message.setFrom(address, siteName)
     message.setSubject(subject)
     message.setHtmlMsg(body)
     message.send()
+    log.info(s"Email to $email sent")
   }
 
   def confirmationMail(email: String, name: String, confirmationGuid: UUID) = {
     log.info(s"Sending confirmation mail to $email")
-    val url = s"$BaseUrl/confirm/$confirmationGuid"
+    val url = s"$baseUrl/confirm/$confirmationGuid"
   
     val subject = "Thanks for your interest in Raptor Dating. Please confirm your registration."
     val body = s"Hi $name <br><br>" +
