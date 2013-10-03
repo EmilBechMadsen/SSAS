@@ -45,15 +45,20 @@ class Service
 
   private def postWithFormKey(c: RequestContext => Unit): RequestContext => Unit = {
     post {
-      cookie(formkeyCookieName) { cookieKey =>
-        formField('formkey) { formKey =>
-          if (cookieKey.content == formKey) {
-            c
-          }
-          else {
-            complete {
-              HttpResponse(StatusCodes.Unauthorized, "XSRF protection kicked in. Please try again.")
+      optionalCookie(formkeyCookieName) { ck =>
+        ck match {
+          case Some(cookieKey) => {
+            formField('formkey) { formKey =>
+              if (cookieKey.content == formKey) {
+                c
+              }
+              else complete {
+                HttpResponse(StatusCodes.Unauthorized, "XSRF protection kicked in. Please try again.")
+              }
             }
+          }
+          case None => complete {
+            HttpResponse(StatusCodes.Unauthorized, "XSRF protection kicked in. Please try again.")
           }
         }
       }
@@ -61,19 +66,22 @@ class Service
   }
 
   private def withUser(c: User => RequestContext => Unit): RequestContext => Unit = {
-    cookie(sessionCookieName) { sessionCookie =>
-      try {
-        val id = UUID.fromString(sessionCookie.content) 
-        User(id) match {
-          case Some(user) => c(user)
-          case None => complete {
-            HttpResponse(StatusCodes.Unauthorized, "You need to be logged in to access this page")
+    optionalCookie(sessionCookieName) { sc => 
+      sc match {
+        case Some(sessionCookie) => try {
+          val id = UUID.fromString(sessionCookie.content) 
+          User(id) match {
+            case Some(user) => c(user)
+            case None => complete {
+              HttpResponse(StatusCodes.Unauthorized, "You need to be logged in to access this page")
+            }
+          }
+        } catch {
+          case e: IllegalArgumentException => complete {
+            HttpResponse(StatusCodes.InternalServerError, "Could not deserialize session")
           }
         }
-      } catch {
-        case e: IllegalArgumentException => complete {
-          HttpResponse(StatusCodes.InternalServerError, "Could not deserialize session")
-        }
+        case None => redirect("/signup", StatusCodes.SeeOther)
       }
     }
   }
@@ -100,7 +108,9 @@ class Service
           (email, name, pass1, pass2) =>
           if (pass1 == pass2 && validEmail(email) && validName(name) && validPassword(pass1)) {
             User.create(name, None, email, pass1) match {
-              case Some(u) => redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+              case Some(u) => complete {
+                "Check your email for confirmation!"
+              }
               case None    => complete {
                 HttpResponse(StatusCodes.InternalServerError)
               }
@@ -138,6 +148,25 @@ class Service
             case None => complete {
               HttpResponse(StatusCodes.BadRequest, "Confirmation id was invalid.")
             } 
+          }
+        }
+      }
+    } ~
+    path("login") {
+      postWithFormKey {
+        formFields('loginEmail, 'loginPassword) { (email, password) =>
+          User.login(email, password) match {
+            case Some(user) => user.session match {
+              case Some(session) => {
+                setCookie(HttpCookie(sessionCookieName, session.toString)) {
+                  redirect(s"/profile/${user.id}", StatusCodes.SeeOther)
+                }
+              }
+              case None => complete {
+                HttpResponse(StatusCodes.InternalServerError)
+              }
+            }
+            case None => redirect("/signup", StatusCodes.SeeOther)
           }
         }
       }
@@ -324,40 +353,7 @@ class Service
           }
         }
       }
-    }
-    path("login") {
-      post {
-        entity(as[LogInMessage]) { message => 
-          val user = User.login(message.email, message.password) 
-          user match {
-            case Some(u) => 
-              // Login was successful
-              val session = u.session
-              session match {
-                case Some(s) =>
-                  setCookie(HttpCookie(sessionCookieName, s.toString())) {
-                    complete {
-                      // TODO: Redirect to appropiate page
-                      ""
-                    }
-                  }
-                case None =>
-                  complete {
-                    // Session did not exist.
-                    HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
-                  }
-              }
-              
-            case None =>
-              // Login was not successful.
-              complete {
-                // Reject
-                HttpResponse(spray.http.StatusCodes.Unauthorized, "User or password was incorrect.")
-              }
-          }
-        }
-      }
-    }
+    } ~
     path("logout") {
       post {      
         cookie(sessionCookieName) { c => r =>
@@ -374,7 +370,7 @@ class Service
           }
         }
       }
-    }
+    } ~
     path("admin") {
       get {
         cookie(sessionCookieName) { c => r =>
@@ -392,7 +388,7 @@ class Service
           }
         }
       }
-    }
+    } ~ 
     path("user" / IntNumber) { userId => 
       delete {
         cookie(sessionCookieName) { c => r =>
@@ -419,7 +415,7 @@ class Service
           }
         }
       }
-    }
+    } ~
     path("user" / "promote" / IntNumber) { userId => 
       post {
         cookie(sessionCookieName) { c => r =>
