@@ -89,7 +89,7 @@ class Service
       get {
         html {
           complete {
-            SignupPage.render("Sign up", "renewFormKey()", None, NoRequest())
+            SignupPage.render("Sign up", renewFormKey(), None, NoRequest())
           }
         }
       } ~
