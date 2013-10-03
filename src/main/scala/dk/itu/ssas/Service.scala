@@ -240,19 +240,90 @@ class Service
    	}
     path("logout") {
       post {      
-          cookie(cookieName) { c => r =>
-            val user = User(UUID.fromString(c.content))
-            user match {
-              case Some(u) =>
-                complete {
-                  u.logout()
-                  ""
-                }
-              case None =>
-                // Reject
-                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
-            }
+        cookie(cookieName) { c => r =>
+          val user = User(UUID.fromString(c.content))
+          user match {
+            case Some(u) =>
+              complete {
+                u.logout()
+                ""
+              }
+            case None =>
+              // Reject
+              HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
           }
         }
+      }
+    }
+    path("admin") {
+      get {
+        cookie(cookieName) { c => r =>
+          val user = User(UUID.fromString(c.content))
+          user match {
+            case Some(u) =>
+              if(u.admin)
+                complete {
+                  ""
+                }
+              else
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "Not an admin.")
+            case None =>
+              HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+          }
+        }
+      }
+    }
+    path("user" / IntNumber) { userId => 
+      delete {
+        cookie(cookieName) { c => r =>
+          val user = User(UUID.fromString(c.content))
+          user match {
+            case Some(u) =>
+              if(u.admin) {
+                val deleteUser = User(userId)
+                deleteUser match {
+                  case Some(du) =>
+                    complete {
+                      du.delete()
+                      ""
+                    }
+                  case None =>
+                    HttpResponse(spray.http.StatusCodes.NotFound, "User not found.")
+                }
+              }
+              else {
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "Not an admin.")
+              }
+            case None =>
+              HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+          }
+        }
+      }
+    }
+    path("user" / "promote" / IntNumber) { userId => 
+      post {
+        cookie(cookieName) { c => r =>
+          val user = User(UUID.fromString(c.content))
+          user match {
+            case Some(u) =>
+              if(u.admin) {
+                val promoteUser = User(userId)
+                promoteUser match {
+                  case Some(du) =>
+                    complete {
+                      ""
+                    }
+                  case None =>
+                    HttpResponse(spray.http.StatusCodes.NotFound, "User not found.")
+                }
+              }
+              else {
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "Not an admin.")
+              }
+            case None =>
+              HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+          }
+        }
+      }
     }
 }
