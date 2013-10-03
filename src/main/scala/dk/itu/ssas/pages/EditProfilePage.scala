@@ -101,6 +101,7 @@ object EditProfilePage extends LoggedInPage {
             } else {
               alert("Your new password could not be confirmed.");
               return false;
+            }
           } else {
             return true;
           }
