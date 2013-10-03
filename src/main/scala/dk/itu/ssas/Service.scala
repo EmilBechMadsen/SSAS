@@ -39,7 +39,11 @@ class Service
 
   private def renewFormKey(c: String => RequestContext => Unit): RequestContext => Unit = {
     val formKey = UUID.randomUUID().toString()
-    setCookie(HttpCookie(formkeyCookieName, formKey)) {
+    setCookie(HttpCookie(formkeyCookieName, 
+                         formKey, 
+                         path = Some("/"), 
+                         httpOnly = true, 
+                         secure = true)) {
       c(formKey)
     }
   }
@@ -141,7 +145,18 @@ class Service
             case Some(user) => {
               if (user.checkPassword(password)) {
                 user.confirm(token)
-                redirect(s"/profile/${user.id}", StatusCodes.SeeOther)
+                User.login(user.email, password)
+
+                user.session match {
+                  case Some(session) => setCookie(HttpCookie(sessionCookieName, 
+                                     session.toString,
+                                     path = Some("/"),
+                                     httpOnly = true,
+                                     secure = true)) {
+                    redirect(s"/profile/${user.id}", StatusCodes.SeeOther)
+                  }
+                  case None => redirect(s"/signup", StatusCodes.SeeOther)
+                }
               } else complete {
                 HttpResponse(StatusCodes.Unauthorized, "Incorrect username or password.")
               }
@@ -159,7 +174,11 @@ class Service
           User.login(email, password) match {
             case Some(user) => user.session match {
               case Some(session) => {
-                setCookie(HttpCookie(sessionCookieName, session.toString)) {
+                setCookie(HttpCookie(sessionCookieName, 
+                                     session.toString,
+                                     path = Some("/"),
+                                     httpOnly = true,
+                                     secure = true)) {
                   redirect(s"/profile/${user.id}", StatusCodes.SeeOther)
                 }
               }
@@ -236,7 +255,7 @@ class Service
             }
           }
         } else {
-          val otherUser = User(UUID.fromString(id.toString()))
+          val otherUser = User(id)
           otherUser match {
             case Some(other) =>
               html { formKey =>
