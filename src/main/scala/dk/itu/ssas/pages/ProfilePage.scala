@@ -16,8 +16,7 @@ object ProfilePage extends LoggedInPage {
   }
 
   private def relationshipOption(rel: Relationship): HTML = {
-    val relString = rel.toString()
-    s"""<option value="$relString">$relString</option>"""
+    s"""<option value="$rel">${rel.prettyPrint}</option>"""
   }
 
   private def relationshipText(rel: Option[Relationship]): HTML = {
@@ -75,12 +74,11 @@ object ProfilePage extends LoggedInPage {
             ${request.user.name}
           </div>
           <div id="profileRequestBox">
-          <form method="POST">
+          <form action="/profile/${request.other.id}/request" method="POST">
             ${formKeyInput(key)}
             Request <select name="relationship">
               ${requestOptions(request.user, request.other)}
             </select>
-            <input type="hidden" name="user" value="${request.other.id}" />
             <input class="styledSubmitButton" type="submit" value="Do it" />
           </form>
           </div>

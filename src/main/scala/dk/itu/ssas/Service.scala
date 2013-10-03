@@ -214,80 +214,169 @@ class Service
     } ~
     path("profile" / IntNumber) { id =>
       get {
-        cookie(sessionCookieName) { c => r =>
-          val user = User(UUID.fromString(c.content))
-          val formKey = UUID.randomUUID().toString()
-          setCookie(HttpCookie(formkeyCookieName, formKey)) {
-            user match {
-              case Some(u) =>
-                complete {
-                  if (u.id == id) {
-                    // Get own ID page
-                    ""
-                  } else {
-                    // Get requested ID page
-                    ""
-                  }
-                }
-              case None =>
-                // Reject
-                complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.") }
-                
+        if (u.id == id) {
+          html { formKey =>
+            complete {
+              EditProfilePage.render("Profile: " + u.name, formKey, Some(u), EditProfilePageRequest(u))
             }
+          }
+        } else {
+          val otherUser = User(UUID.fromString(id.toString()))
+          otherUser match {
+            case Some(other) =>
+              html { formKey =>
+                complete {
+                  ProfilePage.render("Profile: " + other.name, formKey, Some(u), ProfilePageRequest(u, other))
+                }
+              }
+            case None =>
+              complete {
+                HttpResponse(StatusCodes.NotFound, "The requested user does not exist.")
+              }
           }
         }
       } ~
-      post {
-        cookie(sessionCookieName) { sessionC => _ =>
-          cookie(formkeyCookieName) { sessionK => _ =>
-            val user = User(UUID.fromString(sessionC.content))
-            user match {
-              case Some(u) =>
-                formFields('formkey, 'profileName, 'profileAddress, 'profileCurrentPassword, 'profileNewPassword, 'profileNewPasswordConfirm) { 
-                  (formkey, name, address, cPassword, nPassword, nPasswordConf) =>
-
-                  if(formkey == sessionK.content) {
-                    if(u.checkPassword(cPassword)) {
-
-                      (validName(name), validAddress(Some(address)), (nPassword == nPasswordConf)) match {
-                        case (true, true, true) =>
-                          try {
-                            if(!nPassword.isEmpty) {
-                              (validPassword(nPassword), validPassword(nPasswordConf)) match {
-                                case (true, true) =>
-                                  u.password = nPassword
-                                case(_, _) =>
-                                  HttpResponse(spray.http.StatusCodes.BadRequest, "Not valid input.")
+      postWithFormKey {
+        path("edit") {
+          path("info") {
+            if (u.id == id) {
+              formFields('profileName, 'profileAddress, 'profileCurrentPassword, 'profileNewPassword, 'profileNewPasswordConfirm) {
+                (name, addr, currentPassword, newPassword, confirmPassword) =>
+                  val nameChanged     = u.name != name
+                  val addressChanged  = u.address != addr
+                  val passwordChanged = newPassword != "" || confirmPassword != ""
+                  try {
+                    if (validPassword(currentPassword)) {
+                      if (u.checkPassword(currentPassword)) {
+                        if (nameChanged) {
+                          if (validName(name)) {
+                            u.name = name
+                          } else {
+                            complete {
+                              HttpResponse(StatusCodes.BadRequest, "The new name is invalid.")
+                            }
+                          }
+                        }
+                        if (addr.isEmpty) {
+                          u.address = None
+                        } else {
+                          if (addressChanged) {
+                            if (validAddress(Some(addr))) {
+                              u.address = Some(addr)
+                            } else {
+                              complete {
+                                HttpResponse(StatusCodes.BadRequest, "The new address is invalid.")
                               }
                             }
-
-                            u.name = name
-                            u.address = Some(address)
-                            complete {
-                              // Get new profile page
-                              ""
-                            }
-                          
-                          } catch {
-                            case dbe: DbError       => complete { HttpResponse(spray.http.StatusCodes.InternalServerError, s"Database not accessible: $dbe.s") }
-                            case ue:  UserException => complete { HttpResponse(spray.http.StatusCodes.Unauthorized, s"Not valid input: $ue.s") }
                           }
-
-                        case (_,_,_) => 
-                          complete { HttpResponse(spray.http.StatusCodes.BadRequest, "Not valid input.") }
                         }
+                        if (passwordChanged) {
+                          if (newPassword == confirmPassword && validPassword(newPassword)) {
+                            u.password = newPassword
+                          } else {
+                            complete {
+                              HttpResponse(StatusCodes.BadRequest, "The password could not be changed.")
+                            }
+                          }
+                        }
+                        redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+                      } else {
+                        complete {
+                          HttpResponse(StatusCodes.Unauthorized, "You do not have permission to edit this profile.")
+                        }
+                      }
                     } else {
-                      complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Wrong password.") }
+                      complete {
+                        HttpResponse(StatusCodes.BadRequest, "Invalid password.")      
+                      }
                     }
-                  } else {
-                    complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Form key violation.") }
+                  } catch {
+                    case dbe: DbError => complete { HttpResponse(StatusCodes.InternalServerError, "Database error.") }
+                    case ue: UserException => complete { HttpResponse(StatusCodes.BadRequest, "Invalid info.") }
                   }
               }
-              case None =>
-                complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.") }
+            } else {
+              complete {
+                HttpResponse(StatusCodes.Unauthorized, "You cannot edit another person's profile.")
+              }
+            }
+          }~
+          path("hobby") {
+            path("add") {
+              if (u.id == id) {
+                formFields('profileNewHobby) { hobby =>
+                  try {
+                    if (validHobby(hobby)) {
+                      u.addHobby(hobby)
+                      redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+                    } else {
+                      complete {
+                        HttpResponse(StatusCodes.BadRequest, "Invalid hobby.")
+                      }
+                    }
+                  } catch {
+                    case dbe: DbError => complete { HttpResponse(StatusCodes.InternalServerError, "Database error.") }
+                    case ue: UserException => complete { HttpResponse(StatusCodes.BadRequest, "Invalid info.") }
+                  }
+                }
+              } else {
+                complete {
+                  HttpResponse(StatusCodes.Unauthorized, "You cannot edit another person's profile.")
+                }
+              }
+            }~
+            path("remove") {
+              if (u.id == id) {
+                formFields('profileHobby) { hobby =>
+                  try {
+                    if (validHobby(hobby)) {
+                      if (u.hobbies.exists { h => h == hobby }) {
+                          u.removeHobby(hobby)
+                          redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+                      }
+                    }
+                    redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+                  } catch {
+                    case dbe: DbError => complete { HttpResponse(StatusCodes.InternalServerError, "Database error.") }
+                    case ue: UserException => complete { HttpResponse(StatusCodes.BadRequest, "Invalid info.") }
+                  }
+                }
+              } else {
+                complete {
+                  HttpResponse(StatusCodes.Unauthorized, "You cannot edit another person's profile.")
+                }                
+              }
+            }
+          }
+        }~
+        path("request") {
+          if (u.id == id) {
+            complete {
+              HttpResponse(StatusCodes.BadRequest, "Sorry, you cannot have a relationship to yourself.")
+            }
+          } else {
+            formFields('relationship) { relationship =>
+              try {
+                val otherUser = User(UUID.fromString(id.toString()))
+                otherUser match {
+                  case Some(other) =>
+                    u.requestFriendship(other, Relationship(relationship))
+                    redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+                  case None =>
+                    complete {
+                      HttpResponse(StatusCodes.BadRequest, "User does not exist.")  
+                    }
+                }
+              } catch {
+                case e: RelationshipDeserializationException =>
+                  complete {
+                    HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.")
+                  }
+              }
             }
           }
         }
+      }
       }
     } ~
     path("friends") {
@@ -712,5 +801,5 @@ class Service
           }
         }
       }
-    }*/
-}
+    }
+}*/

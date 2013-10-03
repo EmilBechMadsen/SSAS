@@ -14,15 +14,15 @@ object EditProfilePage extends LoggedInPage {
     }
   }
 
-  private def hobbyEntry(hobby: String, index: Int, key: Key): HTML = {
+  private def hobbyEntry(hobby: String, user: User, index: Int, key: Key): HTML = {
     s"""
     <tr>
-      <form method="POST">
+      <form action="/profile/${user.id}/edit/hobby/remove" method="POST">
         ${formKeyInput(key)}
         <td class="hobbiesListItem">$hobby</td>
         <td>
           <input name="profileHobbyRemoveSubmit" type="submit" value="X" class="styledSubmitButton" />
-          <input name="hobbyId" type="hidden" value="$index" />
+          <input name="profileHobby" type="hidden" value="$hobby" />
         </td>
       </form>
     </tr>
@@ -31,7 +31,7 @@ object EditProfilePage extends LoggedInPage {
 
   private def hobbies(user: User, key: Key): HTML = {
     user.hobbies mapi {
-      case (hobby, i) => hobbyEntry(hobby, i, key)
+      case (hobby, i) => hobbyEntry(hobby, user, i, key)
     } mkString("\n")
   }
 
@@ -127,7 +127,7 @@ object EditProfilePage extends LoggedInPage {
     <div id="profileWrapper">
       <div id="profileHeader">
         <div id="profileCaption">
-        <form name="profileNameForm" id="profileNameForm" method="POST" onsubmit="return validateName()">
+        <form action="/profile/$user/edit/info" name="profileNameForm" id="profileNameForm" method="POST" onsubmit="return validateName()">
           ${formKeyInput(key)}
           <input id="profileNameInput" name="profileName" type="text" value="${user.name}" />
         </form>
@@ -140,7 +140,7 @@ object EditProfilePage extends LoggedInPage {
         <div id="profileLeftBox">
           <div id="addressBox">
             <span class="profileLabel">Address</span><br />
-            <form name="profileAddressForm" id="profileAddressForm" method="POST" onsubmit="return validateAddress()">
+            <form action="/profile/$user/edit/info" name="profileAddressForm" id="profileAddressForm" method="POST" onsubmit="return validateAddress()">
               ${formKeyInput(key)}
               <textarea name="profileAddress" id="profileAddressInput">
                 ${address(user)}
@@ -148,7 +148,7 @@ object EditProfilePage extends LoggedInPage {
             </form>
           </div>
           <div id="profilePasswordBox">
-            <form id="profilePasswordForm" method="POST" onsubmit="return validatePassword()">
+            <form action="/profile/$user/edit/info" id="profilePasswordForm" method="POST" onsubmit="return validatePassword()">
               ${formKeyInput(key)}
               <span class="profileLabel">Current Password</span><br />
               <input class="profileInput" name="profileCurrentPassword" type="password" /><br />
@@ -166,7 +166,7 @@ object EditProfilePage extends LoggedInPage {
               <table id="hobbiesTable">
                 ${hobbies(user, key)}
                 <tr>
-                  <form name="profileNewHobbyForm" method="POST" onsubmit="return validateNewHobby()">
+                  <form action="/profile/${user.id}/edit/hobby/add" name="profileNewHobbyForm" method="POST" onsubmit="return validateNewHobby()">
                     ${formKeyInput(key)}
                     <td class="hobbiesListItem">
                       <input name="profileNewHobby" id="profileNewHobbyInput" type="text" value="New hobby" onfocus="this.value='';" />
