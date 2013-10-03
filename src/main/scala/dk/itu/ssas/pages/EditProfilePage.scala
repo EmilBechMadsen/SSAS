@@ -82,7 +82,7 @@ object EditProfilePage extends LoggedInPage {
         return false;
       }
 
-      function validatePassword {
+      function validatePassword() {
         var password = document.forms["profilePasswordForm"]["profileCurrentPassword"].value;
         var newPassword = document.forms["profilePasswordForm"]["profileNewPassword"].value;
         var confirmNewPassword = document.forms["profilePasswordForm"]["profileNewPasswordConfirm"].value;
