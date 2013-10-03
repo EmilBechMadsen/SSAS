@@ -174,7 +174,22 @@ class Service
     } ~
     withUser { u =>
       userRoutes(u)
-    }
+    } ~ 
+    path("logout") {
+      post {      
+        cookie(sessionCookieName) { cookie =>
+          User(UUID.fromString(cookie.content)) match {
+            case Some(u) => {
+              deleteCookie(cookie) {
+                u.logout()
+                redirect("/signup", StatusCodes.SeeOther)
+              } 
+            }
+            case None => complete { HttpResponse(StatusCodes.InternalServerError) } 
+          }
+        }
+      }
+    } 
 
   def userRoutes(u: User): RequestContext => Unit = {
     path("requests") {
@@ -407,23 +422,6 @@ class Service
             complete {
               SearchPage.render("Search results", formKey, Some(u), SearchPageRequest(users))
             }
-          }
-        }
-      }
-    } ~
-    path("logout") {
-      post {      
-        cookie(sessionCookieName) { c => r =>
-          val user = User(UUID.fromString(c.content))
-          user match {
-            case Some(u) =>
-              complete {
-                u.logout()
-                ""
-              }
-            case None =>
-              // Reject
-              HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
           }
         }
       }
