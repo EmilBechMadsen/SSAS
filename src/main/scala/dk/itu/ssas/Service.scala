@@ -193,7 +193,7 @@ class Service
             user match {
               case Some(u) =>
                 complete {
-                  var users = User.search(search)
+                  var users = u.search(search)
                   // Get search page
                   ""
                 }

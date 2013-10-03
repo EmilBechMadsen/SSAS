@@ -89,13 +89,18 @@ class UserTest extends FunSuite with DatabaseTests with DbAccess {
   }
 
   test("Search Works") {
-    val search1 = User search "John"
-    assert(search1.length === 1)
-    assert(search1(0).id === user1Id)
+    (User(1), User(2)) match {
+      case (Some(u1), Some(u2)) => {
+        val search1 = u2 search "John"
+        assert(search1.length === 1)
+        assert(search1(0).id === user1Id)
 
-    val search2 = User search "Pantson"
-    assert(search2.length === 1)
-    assert(search2(0).id === user2Id)
+        val search2 = u1 search "Pantson"
+        assert(search2.length === 1)
+        assert(search2(0).id === user2Id)
+      }
+      case _ => assert(false)
+    }
   }
 
   test("Request friendship") {

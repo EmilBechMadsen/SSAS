@@ -101,19 +101,6 @@ object User extends UserExceptions with DbAccess {
     }
   }
 
-  /** Searches for users by name
-    *
-    * @param s - The search string
-    * @return A list of users with names matching the search string
-    */
-  def search(s: String): List[User] = Db withSession {
-    val users = for {
-      u <- Users if u.name like s"%$s%"
-    } yield u
-
-    users.list
-  }
-
   /** A list of all users
     *
     * @return A list of all users
@@ -198,6 +185,22 @@ case class User(
     import dk.itu.ssas.Security
 
     Security.checkPassword(p, _password, _salt)
+  }
+
+  /** Searches for other users by name
+    *
+    * @param s - The search string
+    * @return A list of users with names matching the search string
+    */
+  def search(s: String): List[User] = Db withSession {
+    if (validName(s)) {
+      val users = for {
+        u <- Users if u.name like s"%$s%"
+      } yield u
+
+      users.list filter (u => u.id != id)
+    }
+    else List()
   }
 
   /** Returns the user's friends
