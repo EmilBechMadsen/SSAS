@@ -53,6 +53,12 @@ abstract class LoggedInPage extends Page {
                   <input class="styledSubmitButton" value="Search" type="submit" /> 
                 </form>
               </div>
+              <div id="logoutBox">
+                <form action="/logout" method="POST">
+                  ${formKeyInput(key)}
+                  <input class="styledSubmitButton" value="Logout" type="submit" />
+                </form>
+              </div>
               <div class="topBarButtonBox">
                 <a href="/requests">
                   <button class="styledButton" type="button">Requests (${user.friendRequests.size})</button>
@@ -62,12 +68,6 @@ abstract class LoggedInPage extends Page {
                 <a href="/friends">
                   <button class="styledButton" type="button">Friends</button>
                 </a>
-              </div>
-              <div id="logoutBox">
-                <form action="/logout" method="POST">
-                  ${formKeyInput(key)}
-                  <input class="styledSubmitButton" value="Logout" type="submit" />
-                </form>
               </div>
             </div>
             <div> <!-- body content -->
