@@ -77,9 +77,10 @@ object ProfilePage extends LoggedInPage {
           <div id="profileRequestBox">
           <form method="POST">
             ${formKeyInput(key)}
-            Request <select>
+            Request <select name="relationship">
               ${requestOptions(request.user, request.other)}
             </select>
+            <input type="hidden" name="user" value="${request.other.id}" />
             <input class="styledSubmitButton" type="submit" value="Do it" />
           </form>
           </div>

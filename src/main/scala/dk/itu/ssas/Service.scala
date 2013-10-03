@@ -36,74 +36,115 @@ class Service
   import dk.itu.ssas.page._
   import dk.itu.ssas.page.request._
 
-  val route = 
+  private def renewFormKey(): String = {
+    val formKey = UUID.randomUUID().toString()
+    setCookie(HttpCookie(formkeyCookieName, formKey))
+
+    formKey
+  }
+
+  private def postWithFormKey(c: RequestContext => Unit): RequestContext => Unit = {
+    cookie(formkeyCookieName) { cookieKey =>
+      post {
+        formField('formkey) { formKey =>
+          if (cookieKey.content == formKey) {
+            c
+          }
+          else {
+            complete {
+              HttpResponse(StatusCodes.Unauthorized, "XSRF protection kicked in. Please try again.")
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private def withUser(c: User => RequestContext => Unit): RequestContext => Unit = {
+    cookie(sessionCookieName) { sessionCookie =>
+      try {
+        val id = UUID.fromString(sessionCookie.content) 
+        User(id) match {
+          case Some(user) => c(user)
+          case None => complete {
+            HttpResponse(StatusCodes.Unauthorized, "You need to be logged in to access this page")
+          }
+        }
+      } catch {
+        case e: IllegalArgumentException => complete {
+          HttpResponse(StatusCodes.InternalServerError, "Could not deserialize session")
+        }
+      }
+    }
+  }
+
+  private def html(c: RequestContext => Unit): RequestContext => Unit = {
+    respondWithMediaType(MediaTypes.`text/html`) {
+      c
+    }
+  }
+
+  val route =
     path("signup") { 
       get {
-        val formKey = UUID.randomUUID().toString()
-        setCookie(HttpCookie(formkeyCookieName, formKey)) { 
-          respondWithMediaType(MediaType.custom("text/html")) {
-            complete {
-              SignupPage.render("Sign up", formKey, None, new NoRequest())
-            }
+        html {
+          complete {
+            SignupPage.render("Sign up", "renewFormKey()", None, NoRequest())
           }
         }
       } ~
       post {
-        entity(as[SignUpMessage]) { message =>
-          complete { 
-            val user = User.create(message.name, None, message.email, message.password)
-            user match {
-              case Some(u) =>
-                // User created
-                ""
-              case None =>
-                // User not created
-                ""
-            }   
-          }
+        complete { 
+          // FIXME
+          ""
         }
       }
     } ~
     path("confirm" / JavaUUID) { token =>
       get {
-        val formKey = UUID.randomUUID().toString()
-        setCookie(HttpCookie(formkeyCookieName, formKey)) {
-          complete {
-            val user = User(token)
-            user match {
-              case Some(u) =>
-                // User exists.
-                // Get page
-                ""
-              case None =>
-                // No token found for user
-                ""                
+        complete {
+          User(token) match {
+            case Some(user) => {
+              EmailConfirmationPage.render("Confirm account", renewFormKey(), None, EmailConfirmationPageRequest(token))
             }
+            case None => HttpResponse(StatusCodes.BadRequest, "Confirmation id was invalid.")
           }
-        }
+       }
       } ~
-      post {
-        entity(as[String]) { password =>
-          complete {
-            val user = User(token)
-            user match {
-              case Some(u) =>
-                if(u.checkPassword(password)) 
-                  if(u.confirm(token)) 
-                    "" // Success
-                  else
-                  HttpResponse(spray.http.StatusCodes.BadRequest, "Confirmation id was invalid.")                  
-                else 
-                  HttpResponse(spray.http.StatusCodes.Unauthorized, "User or password was incorrect.")
-              case None =>
-                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
-                
+      postWithFormKey {
+        formFields('emailConfirmationPassword) { password =>
+          User(token) match {
+            case Some(user) => {
+              if (user.checkPassword(password)) {
+                user.confirm(token)
+                redirect(s"/profile/${user.id}", StatusCodes.SeeOther)
+              } else complete {
+                HttpResponse(StatusCodes.Unauthorized, "Incorrect username or password.")
+              }
             }
-            ""
+            case None => complete {
+              HttpResponse(StatusCodes.BadRequest, "Confirmation id was invalid.")
+            } 
           }
         }
       }
     } ~
+    withUser { u =>
+      userRoutes(u)
+    }
+
+  def userRoutes(u: User): RequestContext => Unit = {
+    path("hens") {
+      get {
+        complete {
+          u.toString()
+        }
+      } 
+    }
+  }
+  /*
+
+  val route = 
     path("requests") {
       get {
         cookie(sessionCookieName) { c => r =>
@@ -402,5 +443,5 @@ class Service
           }
         }
       }
-    }
+    }*/
 }
