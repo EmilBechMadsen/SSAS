@@ -20,12 +20,13 @@ object AdminPage extends LoggedInPage {
     """    
   }
 
-  private def userToHTML(user: User): HTML = {
+  private def userToHTML(user: User, key: Key): HTML = {
     val adminStatusInput: HTML = if (user.admin) demoteInput; else promoteInput
 
     s"""
     <tr class="adminUserEntry">
       <form method="POST">
+        ${formKeyInput(key)}
         <input type="hidden" name="adminUserId" value="${user.id}" />
         <td class="adminUserEntryName">
           ${user.name}
@@ -41,8 +42,8 @@ object AdminPage extends LoggedInPage {
     """
   }
 
-  private def users(userList: List[User]): HTML = {
-    userList map userToHTML mkString("\n")
+  private def users(userList: List[User], key: Key): HTML = {
+    userList map { u => userToHTML(u, key) } mkString("\n")
   }
 
   def content(request: AdminPageRequest, key: Key): HTML = {
@@ -120,6 +121,7 @@ object AdminPage extends LoggedInPage {
                 <fieldset id="adminAddUserFieldset">
                   <legend>Add User</legend>
                   <form name="adminAddUserForm" method="POST" onsubmit="return validateAddUser()" />
+                    ${formKeyInput(key)}
                     <div id="adminAddUserFieldsetContent">
                       <table cellspacing="0" cellpadding="0">
                         <tr>
@@ -156,7 +158,7 @@ object AdminPage extends LoggedInPage {
               <div id="adminUsersBox">
                 <h2>Users</h2>
                 <table cellspacing="0" cellpadding="0" id="adminUsersTable">
-                  ${users(User.all)}
+                  ${users(User.all, key)}
                 </table>     
               </div>
             </div>

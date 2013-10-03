@@ -4,11 +4,12 @@ object EmailConfirmationPage extends LoggedOutPage {
   import dk.itu.ssas._
   import dk.itu.ssas.page.request._
 
-  type RequestType = NoRequest
+  type RequestType = EmailConfirmationPageRequest
   
-  def content(request: NoRequest, key: Key): HTML = {
+  def content(request: EmailConfirmationPageRequest, key: Key): HTML = {
     val minPassword = Settings.security.minPassword
     val maxPassword = Settings.security.maxPassword
+    val token = request.token
 
     s"""
     <script type="text/javascript">
@@ -31,6 +32,7 @@ object EmailConfirmationPage extends LoggedOutPage {
           <span>To confirm your email, please enter your password</span>
           <form name="emailConfirmationPasswordForm" method="POST" onsubmit="return validatePassword()">
             ${formKeyInput(key)}
+            <input name="token" type="hidden" value="$token" />
             <div id="confirmationFormContent">
               <input name="emailConfirmationPassword" id="confirmationInput" type="password" />
               <input name="emailConfirmationSubmit" class="styledSubmitButton" type="submit" value="Confirm Email" />
