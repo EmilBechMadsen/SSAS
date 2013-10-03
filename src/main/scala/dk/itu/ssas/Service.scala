@@ -36,16 +36,16 @@ class Service
   import dk.itu.ssas.page._
   import dk.itu.ssas.page.request._
 
-  private def renewFormKey(): String = {
+  private def renewFormKey(c: String => RequestContext => Unit): RequestContext => Unit = {
     val formKey = UUID.randomUUID().toString()
-    setCookie(HttpCookie(formkeyCookieName, formKey))
-
-    formKey
+    setCookie(HttpCookie(formkeyCookieName, formKey)) {
+      c(formKey)
+    }
   }
 
   private def postWithFormKey(c: RequestContext => Unit): RequestContext => Unit = {
-    cookie(formkeyCookieName) { cookieKey =>
-      post {
+    post {
+      cookie(formkeyCookieName) { cookieKey =>
         formField('formkey) { formKey =>
           if (cookieKey.content == formKey) {
             c
@@ -78,38 +78,51 @@ class Service
     }
   }
 
-  private def html(c: RequestContext => Unit): RequestContext => Unit = {
+  private def html(c: String => RequestContext => Unit): RequestContext => Unit = {
     respondWithMediaType(MediaTypes.`text/html`) {
-      c
+      renewFormKey { key =>
+        c(key)
+      }
     }
   }
 
   val route =
     path("signup") { 
       get {
-        html {
+        html { formKey =>
           complete {
-            SignupPage.render("Sign up", renewFormKey(), None, NoRequest())
+            SignupPage.render("Sign up", formKey, None, NoRequest())
           }
         }
       } ~
-      post {
-        complete { 
-          // FIXME
-          ""
+      postWithFormKey {
+        formFields('signupEmail, 'signupName, 'signupPassword, 'signupPasswordConfirm) {
+          (email, name, pass1, pass2) =>
+          if (pass1 == pass2 && validEmail(email) && validName(name) && validPassword(pass1)) {
+            User.create(name, None, email, pass1) match {
+              case Some(u) => redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+              case None    => complete {
+                HttpResponse(StatusCodes.InternalServerError)
+              }
+            } 
+          } else complete {
+            HttpResponse(StatusCodes.BadRequest, "Invalid information.")
+          }
         }
       }
     } ~
     path("confirm" / JavaUUID) { token =>
       get {
-        complete {
-          User(token) match {
-            case Some(user) => {
-              EmailConfirmationPage.render("Confirm account", renewFormKey(), None, EmailConfirmationPageRequest(token))
+        User(token) match {
+          case Some(user) => html { formKey =>
+            complete {
+              EmailConfirmationPage.render("Confirm account", formKey, None, EmailConfirmationPageRequest(token))
             }
-            case None => HttpResponse(StatusCodes.BadRequest, "Confirmation id was invalid.")
           }
-       }
+          case None => complete {
+            HttpResponse(StatusCodes.BadRequest, "Confirmation id was invalid.")
+          }
+        }
       } ~
       postWithFormKey {
         formFields('emailConfirmationPassword) { password =>
