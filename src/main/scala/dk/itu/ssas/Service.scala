@@ -427,70 +427,70 @@ class Service
       }
     } ~
     path("admin") {
-      get {
-        if (u.admin) {
+      if (u.admin) {
+        get {
           html { formKey =>
             complete {
               AdminPage.render("Admin Area", formKey, Some(u), AdminPageRequest(u))
             }
           }
-        } else {
-          complete {
-            HttpResponse(spray.http.StatusCodes.Forbidden, "You must be an admin to enter this area.")
-          }
-        }
-      } ~ 
-      path("user" / IntNumber) { userId => 
-        delete {
-          cookie(sessionCookieName) { c => r =>
-            val user = User(UUID.fromString(c.content))
-            user match {
-              case Some(u) =>
-                if(u.admin) {
-                  val deleteUser = User(userId)
-                  deleteUser match {
-                    case Some(du) =>
-                      complete {
-                        du.delete()
-                        ""
-                      }
-                    case None =>
-                      HttpResponse(spray.http.StatusCodes.NotFound, "User not found.")
+        } ~
+        path("user" / IntNumber) { userId => 
+          delete {
+            cookie(sessionCookieName) { c => r =>
+              val user = User(UUID.fromString(c.content))
+              user match {
+                case Some(u) =>
+                  if(u.admin) {
+                    val deleteUser = User(userId)
+                    deleteUser match {
+                      case Some(du) =>
+                        complete {
+                          du.delete()
+                          ""
+                        }
+                      case None =>
+                        HttpResponse(spray.http.StatusCodes.NotFound, "User not found.")
+                    }
                   }
-                }
-                else {
-                  HttpResponse(spray.http.StatusCodes.Unauthorized, "Not an admin.")
-                }
-              case None =>
-                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+                  else {
+                    HttpResponse(spray.http.StatusCodes.Unauthorized, "Not an admin.")
+                  }
+                case None =>
+                  HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+              }
+            }
+          }
+        } ~
+        path("user" / IntNumber / "toggleAdmin") { userId => 
+          post {
+            cookie(sessionCookieName) { c => r =>
+              val user = User(UUID.fromString(c.content))
+              user match {
+                case Some(u) =>
+                  if(u.admin) {
+                    val promoteUser = User(userId)
+                    promoteUser match {
+                      case Some(du) =>
+                        complete {
+                          ""
+                        }
+                      case None =>
+                        HttpResponse(spray.http.StatusCodes.NotFound, "User not found.")
+                    }
+                  }
+                  else {
+                    HttpResponse(spray.http.StatusCodes.Unauthorized, "Not an admin.")
+                  }
+                case None =>
+                  HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+              }
             }
           }
         }
-      } ~
-      path("user" / IntNumber / "toggleAdmin") { userId => 
-        post {
-          cookie(sessionCookieName) { c => r =>
-            val user = User(UUID.fromString(c.content))
-            user match {
-              case Some(u) =>
-                if(u.admin) {
-                  val promoteUser = User(userId)
-                  promoteUser match {
-                    case Some(du) =>
-                      complete {
-                        ""
-                      }
-                    case None =>
-                      HttpResponse(spray.http.StatusCodes.NotFound, "User not found.")
-                  }
-                }
-                else {
-                  HttpResponse(spray.http.StatusCodes.Unauthorized, "Not an admin.")
-                }
-              case None =>
-                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
-            }
-          }
+      } else {
+        complete {
+          HttpResponse(spray.http.StatusCodes.Forbidden, "You must be an admin to enter this area.")
         }
       }
     }
