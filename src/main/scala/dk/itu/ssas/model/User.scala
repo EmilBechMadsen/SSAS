@@ -294,7 +294,6 @@ case class User(
         val f = for {
           f <- Friends if (f.user1Id === id && f.user2Id === req.fromUser) ||
                           (f.user1Id === req.fromUser && f.user2Id === id)
-          u <- Users   if (u.id === f.user1Id || u.id === f.user2Id)
         } yield f.relationship
 
         f firstOption match {
