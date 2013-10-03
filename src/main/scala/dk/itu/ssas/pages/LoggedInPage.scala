@@ -42,7 +42,7 @@ abstract class LoggedInPage extends Page {
                 RaptorDating.com
               </div>
               <div id="topBarProfileBox">
-                <a href="/profile/${user.id}"
+                <a href="/profile/${user.id}">
                   <button class="styledButton" type="button">${user.name}</button>
                 </a>
               </div>

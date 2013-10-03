@@ -391,7 +391,7 @@ class Service
           postWithFormKey {
             if (u.id == id) {
               complete {
-                HttpResponse(StatusCodes.BadRequest, "Sorry, you cannot have a relationship to yourself.")
+                HttpResponse(StatusCodes.BadRequest, "Sorry, you cannot have a relationship with yourself.")
               }
             } else {
               formFields('relationship) { relationship =>

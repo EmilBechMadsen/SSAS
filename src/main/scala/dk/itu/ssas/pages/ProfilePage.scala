@@ -71,7 +71,7 @@ object ProfilePage extends LoggedInPage {
 	    <div id="profileWrapper">
         <div id="profileHeader">
           <div id="profileCaption">
-            ${request.user.name}
+            ${request.other.name}
           </div>
           <div id="profileRequestBox">
           <form action="/profile/${request.other.id}/request" method="POST">
