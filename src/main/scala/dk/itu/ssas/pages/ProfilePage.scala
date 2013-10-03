@@ -66,7 +66,7 @@ object ProfilePage extends LoggedInPage {
     } mkString("\n")
   }
 
-  def content(request: ProfilePageRequest, key: Int): HTML = {
+  def content(request: ProfilePageRequest, key: Key): HTML = {
     val rel = relationship(request.user, request.other)
   	s"""
 	    <div id="profileWrapper">

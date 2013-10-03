@@ -6,7 +6,7 @@ object FriendsPage extends LoggedInPage {
   
   type RequestType = FriendsPageRequest
 
-  private def friendEntry(entry: (User, Relationship), kind: Int, key: Int): HTML = {
+  private def friendEntry(entry: (User, Relationship), kind: Int, key: Key): HTML = {
     val user = entry._1
     val rel  = entry._2
     s"""
@@ -22,13 +22,13 @@ object FriendsPage extends LoggedInPage {
     """    
   }
 
-  private def friendsToHTML(friends: Map[User, Relationship], key: Int): HTML = {
+  private def friendsToHTML(friends: Map[User, Relationship], key: Key): HTML = {
     friends mapi {
       case (entry, i) => friendEntry(entry, if (i % 2 == 0) 1; else 2, key)
     } mkString("\n")
   }
 
-  def content(request: FriendsPageRequest, key: Int): HTML = {
+  def content(request: FriendsPageRequest, key: Key): HTML = {
     s"""
       <div id="myFriendsBox">
         <div id="myFriendsCaption">

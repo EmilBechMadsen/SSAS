@@ -6,7 +6,7 @@ object ViewRequestsPage extends LoggedInPage {
 
   type RequestType = ViewRequestsPageRequest
 
-  private def requestEntry(entry: (User, Relationship), kind: Int, key: Int): HTML = {
+  private def requestEntry(entry: (User, Relationship), kind: Int, key: Key): HTML = {
     val user = entry._1
     val rel = entry._2
     s"""
@@ -25,13 +25,13 @@ object ViewRequestsPage extends LoggedInPage {
     """    
   }
 
-  private def requestsToHTML(requests: Map[User, Relationship], key: Int): HTML = {
+  private def requestsToHTML(requests: Map[User, Relationship], key: Key): HTML = {
     requests mapi {
       case (req, i) => requestEntry(req, if (i % 2 == 0) 1; else 2, key) 
     } mkString("\n")
   }
 
-  def content(request: ViewRequestsPageRequest, key: Int): HTML = {
+  def content(request: ViewRequestsPageRequest, key: Key): HTML = {
     s"""
     <div id="requestsBox">
       <div id="requestsCaption">

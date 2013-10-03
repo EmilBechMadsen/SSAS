@@ -22,7 +22,7 @@ object SearchPage extends LoggedInPage {
     } mkString("\n")
   }
 
-  def content(request: SearchPageRequest, key: Int): HTML = {
+  def content(request: SearchPageRequest, key: Key): HTML = {
 	s"""
   <div id="searchResultsBox">
     <div id="searchResultsCaption">

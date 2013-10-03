@@ -6,13 +6,13 @@ import dk.itu.ssas.model._
 trait WebPage {
   type RequestType <: Request
 
-  def header(title: String, key: Int, user: Option[User]): HTML
+  protected def header(title: String, key: Key, user: Option[User]): HTML
 
-  def content(request: RequestType, key: Int): HTML
+  protected def content(request: RequestType, key: Key): HTML
 
-  def footer: HTML
+  protected def footer: HTML
 
-  def render(title: String, key: Int, user: Option[User], request: RequestType): HTML = {
+  def render(title: String, key: Key, user: Option[User], request: RequestType): HTML = {
   	val page = new StringBuilder()
   	val head = header(title, key, user)
   	val body = content(request, key)

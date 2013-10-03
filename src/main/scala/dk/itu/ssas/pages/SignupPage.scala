@@ -6,7 +6,7 @@ object SignupPage extends LoggedOutPage {
 
   type RequestType = NoRequest
 
-  def content(request: NoRequest, key: Int): HTML = {
+  def content(request: NoRequest, key: Key): HTML = {
     val minPassword = Settings.security.minPassword
     val maxPassword = Settings.security.maxPassword
     s"""

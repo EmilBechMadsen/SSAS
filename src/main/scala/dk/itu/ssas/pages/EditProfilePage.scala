@@ -14,7 +14,7 @@ object EditProfilePage extends LoggedInPage {
     }
   }
 
-  private def hobbyEntry(hobby: String, index: Int, key: Int): HTML = {
+  private def hobbyEntry(hobby: String, index: Int, key: Key): HTML = {
     s"""
     <tr>
       <form method="POST">
@@ -29,13 +29,13 @@ object EditProfilePage extends LoggedInPage {
     """
   }
 
-  private def hobbies(user: User, key: Int): HTML = {
+  private def hobbies(user: User, key: Key): HTML = {
     user.hobbies mapi {
       case (hobby, i) => hobbyEntry(hobby, i, key)
     } mkString("\n")
   }
 
-  def content(request: EditProfilePageRequest, key: Int): HTML = {
+  def content(request: EditProfilePageRequest, key: Key): HTML = {
     val user = request.user
     val nameRegex = Settings.security.nameWhitelist
     val minName = Settings.security.minName
@@ -48,8 +48,8 @@ object EditProfilePage extends LoggedInPage {
     val hobbyRegex = Settings.security.hobbyWhitelist
     val minHobby = Settings.security.minHobby
     val maxHobby = Settings.security.maxHobby
-  	s"""
-  	<script type="text/javascript">
+    s"""
+    <script type="text/javascript">
       function submitForms() {
         document.getElementById('profileNameForm').submit();
         document.getElementById('profileAddressForm').submit();
@@ -124,7 +124,7 @@ object EditProfilePage extends LoggedInPage {
         return false;
       }
     </script>
-  	<div id="profileWrapper">
+    <div id="profileWrapper">
       <div id="profileHeader">
         <div id="profileCaption">
         <form name="profileNameForm" id="profileNameForm" method="POST" onsubmit="return validateName()">
@@ -182,6 +182,6 @@ object EditProfilePage extends LoggedInPage {
         </div>
       </div>
     </div>
-  	"""
+    """
   }
 }

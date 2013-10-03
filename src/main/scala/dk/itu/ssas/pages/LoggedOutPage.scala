@@ -5,7 +5,7 @@ abstract class LoggedOutPage extends Page {
   import dk.itu.ssas.model._
   import dk.itu.ssas.page.exception._
 
-  def header(title: String, key: Int, user: Option[User]): HTML = {
+  def header(title: String, key: Key, user: Option[User]): HTML = {
     user match {
       case Some(_) => throw UnexpectedUserException()
       case None => {

@@ -1,0 +1,113 @@
+<html>
+ <head>
+   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+   <link rel="stylesheet" type="text/css" href="style.css" />
+   <title>
+    RaptorDating.com
+   </title>
+ </head>
+ <body>
+  <div id="wrapper">
+    <div id="topBar">
+      <div id="logoBox">
+        RaptorDating.com
+      </div>
+      <div id="topBarProfileBox">
+        <button class="styledButton" type="button">Thorstein Immanuel Højreb</button>
+      </div>
+      <div id="searchBox">
+        <form action="/search" method="POST">
+          <input name="searchTerm" type="text" />
+          <input class="styledSubmitButton" value="Search" type="submit" /> 
+        </form>
+      </div>
+      <div id="logoutBox">
+        <form action="/logout" method="POST">
+          <input class="styledSubmitButton" value="Logout" type="submit" />
+        </form>
+      </div>
+    </div>
+    <div> <!-- body content -->
+      <div id="adminWrapper">
+        <div id="adminHeader">
+          <div id="adminCaption">
+            Admin page
+          </div>
+        </div>
+        <div id="adminBox">
+          <div id="adminAddUserBox">
+            <fieldset id="adminAddUserFieldset">
+              <legend>Add User</legend>
+              <form method="POST" onsubmit="return false" />
+                <div id="adminAddUserFieldsetContent">
+                  <div id="adminAddUserFieldsetContentLeft">
+                    <table>
+                      <tr>
+                        <td><span class="adminAddUserLabel">Email:</span></td>
+                        <td><input name="adminAddUserEmail" type="text" size="20" /></td>
+                      </tr>
+                      <tr>
+                        <td><span class="adminAddUserLabel">Name:</span></td>
+                        <td><input name="adminAddUserName" type="text" size="20" /></td>
+                      </tr>
+                    </table>
+                  </div>
+                  <div id="adminAddUserFieldsetContentRight">
+                    <table>
+                      <tr>
+                        <td><span class="adminAddUserLabel">Password:</span></td>
+                        <td><input name="adminAddUserPassword" type="password" size="20" /></td>
+                      </tr>
+                      <tr>
+                        <td><span class="adminAddUserLabel">Confirm Password:</span></td>
+                        <td><input name="adminAddUserPasswordConfirm" type="password" size="20" /></td>
+                      </tr>
+                      <tr>
+                        <td></td>
+                        <td><input name="adminAddUserSubmit" class="styledSubmitButton" type="submit" value="Create" /></td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+              </form>
+            </fieldset>
+          </div>
+          <div id="adminUsersBox">
+            <h2>Users</h2>
+            <table cellspacing="0" cellpadding="0" id="adminUsersTable">
+              <tr class="adminUserEntry">
+                <form method="POST">
+                  <input type="hidden" name="adminUserId" value="1" />
+                  <td class="adminUserEntryName">
+                    Viking-Allan den mindre skarpe XVII
+                  </td>
+                  <td class="adminUserEntryAdminButton adminUserEntryButton">
+                    <input name="adminUserAdmin" class="styledSubmitButton" type="submit" value="Promote" />
+                  </td>
+                  <td class="adminUserEntryRemoveButton">
+                    <input name="adminUserRemove" class="styledSubmitButton" type="submit" value="Remove" />
+                  </td>
+                </form>
+              </tr>
+              <tr class="adminUserEntry">
+                <form method="POST">
+                  <input type="hidden" name="adminUserId" value="1" />
+                  <td class="adminUserEntryName">
+                    Ivar Hieronimus Nicodemus Augustus Nielsson-Hansson
+                  </td>
+                  <td class="adminUserEntryAdminButton adminUserEntryButton">
+                    <input name="adminUserAdmin" class="styledSubmitButton" type="submit" value="Demote " />
+                  </td>
+                  <td class="adminUserEntryRemoveButton">
+                    <input name="adminUserRemove" class="styledSubmitButton" type="submit" value="Remove" />
+                  </td>
+                </form>
+              </tr>
+            </table>            
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ </body>
+</html>

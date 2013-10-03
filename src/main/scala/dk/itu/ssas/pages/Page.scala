@@ -10,7 +10,7 @@ abstract class Page extends WebPage {
     """
   }
 
-  def formKeyInput(key: Int): HTML = {
+  def formKeyInput(key: Key): HTML = {
   	s"""
   	<input type='hidden' name='formkey' value='$key' />
   	"""

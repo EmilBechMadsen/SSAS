@@ -5,7 +5,7 @@ abstract class LoggedInPage extends Page {
   import dk.itu.ssas.model._
   import dk.itu.ssas._
   
-  def header(title: String, key: Int, user: Option[User]): HTML = {
+  def header(title: String, key: Key, user: Option[User]): HTML = {
     user match {
       case None => throw NoUserException()
       case Some(user) =>
