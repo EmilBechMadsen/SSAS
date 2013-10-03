@@ -3,12 +3,12 @@ package dk.itu.ssas
 object Validate {
   import org.apache.commons.validator.routines.EmailValidator
   private val ev = EmailValidator.getInstance()
-  
+
   /** Checks an email address for validity
-  *
-  * @param e - The email address to check
-  * @return Returns true if valid, false otherwise
-  */
+    *
+    * @param e - The email address to check
+    * @return Returns true if valid, false otherwise
+    */
   def validEmail(e: String): Boolean = ev.isValid(e)
 
   /** Checks a user name for validity
@@ -53,7 +53,7 @@ object Validate {
     import Settings.security._
 
     a match {
-      case Some(a) => 
+      case Some(a) =>
         a.length >= minAddr && a.length <= maxAddr && a.matches(addrWhitelist)
       case None =>
         true

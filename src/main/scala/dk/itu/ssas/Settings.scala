@@ -5,7 +5,7 @@ object Settings {
 
   import com.typesafe.config._
 
-  // Load configuration from global config file if possible, 
+  // Load configuration from global config file if possible,
   // otherwise read from standard locations
   private val globalConfFile = new File("/etc/ssas.conf")
 
@@ -19,7 +19,7 @@ object Settings {
   val interface  = conf.getString("ssas.interface")
   val port       = conf.getInt("ssas.port")
   val timeout    = conf.getInt("ssas.timeout")
- 
+
   object db {
     val dbServer   = conf.getString("ssas.db.dbServer")
     val db         = conf.getString("ssas.db.db")

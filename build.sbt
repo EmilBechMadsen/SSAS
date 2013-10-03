@@ -9,6 +9,13 @@ scalaVersion := "2.10.3"
 scalacOptions += "-deprecation"
 
 scalacOptions += "-feature"
+
+scalacOptions in (Compile, doc) <++= baseDirectory.map {
+  (bd: File) => Seq[String](
+     "-sourcepath", bd.getAbsolutePath,
+     "-doc-source-url", "https://github.com/EmilBechMadsen/SSAS/tree/master€{FILE_PATH}.scala"
+  )
+}
  
 resolvers ++= Seq(
   "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",

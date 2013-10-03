@@ -12,11 +12,13 @@ trait DbAccess
   import scala.slick.driver.MySQLDriver.simple._
   import dk.itu.ssas.Settings
 
-  val Db = Database.forURL(Settings.db.dbString, driver = Settings.db.dbDriver)
+  protected val Db = Database.forURL(Settings.db.dbString, 
+                                     driver = Settings.db.dbDriver)
 
-  val upper = SimpleFunction.unary[String, String]("upper")
+  protected val upper = SimpleFunction.unary[String, String]("upper")
 
-  val ddl = Users.ddl ++ Friends.ddl ++ Admins.ddl ++ Sessions.ddl ++ 
-            FriendRequests.ddl ++ EmailConfirmations.ddl ++ 
-            Hobbies.ddl ++ UserHobbies.ddl
+  protected val ddl = Users.ddl ++ Friends.ddl ++ Admins.ddl ++ 
+                      Sessions.ddl ++ FriendRequests.ddl ++ 
+                      EmailConfirmations.ddl ++ Hobbies.ddl ++ 
+                      UserHobbies.ddl
 }

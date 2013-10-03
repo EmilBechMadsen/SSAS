@@ -4,7 +4,7 @@ protected trait Admins extends Users {
   import scala.slick.driver.MySQLDriver.simple._
   import scala.slick.lifted.ForeignKeyAction
 
-  object Admins extends Table[(Int)]("admin") {
+  protected object Admins extends Table[(Int)]("admin") {
     def userId       = column[Int]("user", O.PrimaryKey)
 
     def * = userId

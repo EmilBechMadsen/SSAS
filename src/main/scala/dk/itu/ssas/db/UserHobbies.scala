@@ -4,9 +4,9 @@ protected trait UserHobbies extends Users with Hobbies {
   import scala.slick.driver.MySQLDriver.simple._
   import scala.slick.lifted.ForeignKeyAction
 
-  case class UserHobby(userId: Int, hobbyId: Int)
+  protected case class UserHobby(userId: Int, hobbyId: Int)
 
-  object UserHobbies extends Table[UserHobby]("user_hobby") {
+  protected object UserHobbies extends Table[UserHobby]("user_hobby") {
     def userId       = column[Int]("user", O.NotNull)
     def hobbyId      = column[Int]("hobby", O.NotNull)
 

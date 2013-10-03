@@ -4,7 +4,7 @@ protected trait Users {
   import scala.slick.driver.MySQLDriver.simple._
   import dk.itu.ssas.model.User
 
-  object Users extends Table[User]("user") {
+  protected object Users extends Table[User]("user") {
     def id       = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def name     = column[String]("name", O.NotNull)
     def address  = column[Option[String]]("address")

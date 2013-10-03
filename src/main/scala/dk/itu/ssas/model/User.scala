@@ -27,16 +27,16 @@ object User extends UserExceptions with DbAccess {
     */
   def apply(key: UUID): Option[User] = Db withSession {
     val user = (for {
-      s <- Sessions if s.key    === key
+      s <- Sessions if s.key === key
       u <- Users    if s.userId === u.id
     } yield u) firstOption
 
     user match {
       case Some(u) => Some(u)
-      case None    => (for {
-        e <- EmailConfirmations if e.guid   === key
+      case None => (for {
+        e <- EmailConfirmations if e.guid === key
         u <- Users              if e.userId === u.id
-        } yield u) firstOption
+      } yield u) firstOption
     }
   }
 
@@ -47,6 +47,11 @@ object User extends UserExceptions with DbAccess {
     * @param email - The user's email
     * @param password - The user's password
     * @return The created user
+    * 
+    * @throws InvalidEmailException
+    * @throws InvalidNameException
+    * @throws InvalidPasswordException
+    * @throws InvalidAddressException
     */
   def create(name: String, address: Option[String], email: String, password: String): Option[User] = Db withSession {
     (validEmail(email), validName(name), validPassword(password), validAddress(address)) match {
@@ -65,37 +70,36 @@ object User extends UserExceptions with DbAccess {
       case (_, false, _, _) => throw new InvalidNameException
       case (_, _, false, _) => throw new InvalidPasswordException
       case (_, _, _, false) => throw new InvalidAddressException
-      case _ => None
+      case _                => None
     }
   }
 
-  /** Returns a user if the email and password matches 
+  /** Returns a user if the email and password matches
     *
     * @param email - The users email
     * @param password - The users password
     * @return Maybe a user
     */
   def login(email: String, password: String): Option[User] = Db withSession {
-    val user = (for (u <- Users if u.email === email) yield u) firstOption
+    (for (u <- Users if u.email === email) yield u) firstOption match {
+      case Some(u) => (u.checkPassword(password), u.isConfirmed) match {
+        case (true, true) => {
+          val q = (for (s <- Sessions if s.userId === u.id) yield s)
 
-    user match {
-      case Some(u) => { (u.checkPassword(password), u.isConfirmed) match {
-            case (true, true)  => {
-              val q = (for (s <- Sessions if s.userId === u.id) yield s)
+          val s = Session(UUID.randomUUID(), u.id)
 
-              val s = Session(UUID.randomUUID(), u.id)
+          q firstOption match {
+            // The user is already logged in, give him a new session
+            case Some(s) => q update s
+            // The user is not logged in
+            case None    => Sessions insert s
+          }
 
-              q firstOption match {
-                case Some(s) => q update s        // The user is already logged in, 
-                                                  // give him a new session
-                case None    => Sessions insert s // The user is not logged in
-              }
-
-              user
-            }
-            case (_, _) => None // Wrong password or unconfirmed
-                                // Fixme: throw exception for unconfirmed
+          Some(u)
         }
+        // Wrong password or unconfirmed
+        case (_, _) => None
+        // Fixme: throw exception for unconfirmed
       }
       case None => None // No such user
     }
@@ -123,14 +127,23 @@ object User extends UserExceptions with DbAccess {
   }
 }
 
+/** A user
+  *
+  * @param id - The id for the user
+  * @param _name - The name of the user
+  * @param _address - The address of the user
+  * @param _email - The email for the user
+  * @param _password - The password for the user
+  * @param _salt - The salt for the user
+  */
 case class User(
-      val id: Int, 
-      private var _name: String, 
-      private var _address: Option[String],
-      private var _email: String,
-      private var _password: String,
-      private var _salt: String)
-    extends DbAccess {
+    val id: Int,
+    private var _name: String,
+    private var _address: Option[String],
+    private var _email: String,
+    private var _password: String,
+    private var _salt: String)
+  extends DbAccess {
   import User._
   import dk.itu.ssas.Validate._
 
@@ -156,12 +169,14 @@ case class User(
     (ec firstOption) isDefined
   }
 
+  /** The confirmation status of the user
+    *
+    * @return True if the user is confirmed, false otherwise
+    */
   def isConfirmed: Boolean = Db withSession {
-    val notConfirmed = (for {
-          ec <- EmailConfirmations if ec.userId === id
-    } yield ec).firstOption isDefined
-
-    !notConfirmed // I AM THE WORST
+    (for {
+      ec <- EmailConfirmations if ec.userId === id
+    } yield ec).firstOption.isEmpty
   }
 
   /** Logs a user out
@@ -199,8 +214,7 @@ case class User(
       } yield u
 
       users.list filter (u => u.id != id)
-    }
-    else List()
+    } else List()
   }
 
   /** Returns the user's friends
@@ -209,15 +223,25 @@ case class User(
     */
   def friends: Map[User, Relationship] = Db withSession {
     val fs = for {
-      f <- Friends if  f.user1Id === id   || f.user2Id === id
-      u <- Users   if (f.user1Id === u.id || f.user2Id === u.id) && !(u.id === id)
+      f <- Friends if f.user1Id === id || f.user2Id === id
+      u <- Users if (f.user1Id === u.id || f.user2Id === u.id) && !(u.id === id)
     } yield (u, f.relationship)
 
     (for ((u, r) <- fs.list) yield u -> r) toMap
   }
 
+  /** Checks if a user is a friend of this user
+    *
+    * @param u - The user to check
+    * @return True if they are friends, false otherwise
+    */
   def isFriend(u: User): Boolean = isFriend(u.id)
 
+  /** Checks if a user is a friend of this user
+    *
+    * @param friendId - The id of the user to check
+    * @return True if they are friends, false otherwise
+    */
   def isFriend(friendId: Int): Boolean = Db withSession {
     getFriend(friendId) match {
       case Some(_) => true
@@ -226,13 +250,11 @@ case class User(
   }
 
   private def getFriend(friendId: Int): Option[User] = Db withSession {
-    val u = for {
-      f <- Friends if (f.user1Id === id       && f.user2Id === friendId) || 
+    (for {
+      f <- Friends if (f.user1Id === id && f.user2Id === friendId) ||
                       (f.user1Id === friendId && f.user2Id === id)
-      u <- Users   if (u.id === f.user1Id     || u.id === f.user2Id)
-    } yield u
-
-    u firstOption
+      u <- Users if (u.id === f.user1Id || u.id === f.user2Id)
+    } yield u) firstOption
   }
 
   /** Returns the outstanding friend requests for the user
@@ -241,24 +263,32 @@ case class User(
     */
   def friendRequests: Map[User, Relationship] = Db withSession {
     val fs = for {
-      f <- FriendRequests if f.toUserId   === id
-      u <- Users          if f.fromUserId === u.id
+      f <- FriendRequests if f.toUserId === id
+      u <- Users if f.fromUserId === u.id
     } yield (u, f.relationship)
 
     (for ((u, r) <- fs.list) yield u -> r) toMap
   }
 
+  /** Accepts a relationship from a user
+    *
+    * @param u - The user to accept the request from
+    * @param r - The relationship to accept
+    * @return True if the users are now friends, false otherwise
+    */
   def acceptFriendRequest(u: User, r: Relationship): Boolean = Db withSession {
-    val fr = for (fr <- FriendRequests if fr.toUserId === id && 
-                                          fr.fromUserId === u.id &&
-                                          fr.relationship === r) yield fr
+    val fr = for (
+      fr <- FriendRequests if fr.toUserId === id &&
+        fr.fromUserId === u.id &&
+        fr.relationship === r
+    ) yield fr
 
     fr firstOption match {
       case Some(req) => {
         val f = for {
-          f <- Friends if (f.user1Id === id           && f.user2Id === req.fromUser) || 
+          f <- Friends if (f.user1Id === id && f.user2Id === req.fromUser) ||
                           (f.user1Id === req.fromUser && f.user2Id === id)
-          u <- Users   if (u.id === f.user1Id         || u.id === f.user2Id)
+          u <- Users   if (u.id === f.user1Id || u.id === f.user2Id)
         } yield f.relationship
 
         f firstOption match {
@@ -267,7 +297,7 @@ case class User(
             fr.delete
             true
           }
-          case None    => { // New friendship
+          case None => { // New friendship
             Friends insert Friend(req.fromUser, id, req.relationship)
             fr.delete
             true
@@ -278,32 +308,46 @@ case class User(
     }
   }
 
+  /** Rejects a relationship request
+    *
+    * @param u - The user to reject
+    * @param r - The relationship to reject
+    */
   def rejectFriendRequest(u: User, r: Relationship): Unit = Db withSession {
     // Deletes all friend requests from the user, even if they are for 
     // different relationships
-    (for (fr <- FriendRequests if fr.toUserId === id &&
-                                  fr.fromUserId === u.id) yield fr) delete
+    (for (
+      fr <- FriendRequests if fr.toUserId === id &&
+                              fr.fromUserId === u.id
+    ) yield fr) delete
   }
 
-  // FIXME: Doesn't check whether two people already are friends
+  /** Request a relationship from another user
+    *
+    * @param u - The user to request a relationship from
+    * @param r - The relationship to request
+    */
   def requestFriendship(u: User, r: Relationship): Unit = Db withSession {
-    val fr = for {
-      fr <- FriendRequests if (fr.fromUserId === u.id && fr.toUserId === id) ||
-                              (fr.fromUserId === id   && fr.toUserId === u.id)
-    } yield fr
+    // Only send request if this is a new relationship
+    if (!(isFriend(u) && friends.get(u) == Some(r))) {
+      val fr = for {
+        fr <- FriendRequests if (fr.fromUserId === u.id && fr.toUserId === id) ||
+                                (fr.fromUserId === id && fr.toUserId === u.id)
+      } yield fr
 
-    fr firstOption match {
-      // No existing friend requests
-      case None     => FriendRequests insert FriendRequest(id, u.id, r)
-      case Some(f) => {
-        // The other person has sent a friend request with the same relationship,
-        // so we can just accept it
-        if (f.relationship == r) 
-          acceptFriendRequest(u, r)
-        else { // The other person has sent a friend request, but for a different
-               // relationship
-          fr.delete
-          FriendRequests insert FriendRequest(id, u.id, r)
+      fr firstOption match {
+        // No existing friend requests
+        case None => FriendRequests insert FriendRequest(id, u.id, r)
+        case Some(f) => {
+          // The other person has sent a friend request with the same relationship,
+          // so we can just accept it
+          if (f.relationship == r)
+            acceptFriendRequest(u, r)
+          else { // The other person has sent a friend request, but for a different
+            // relationship
+            fr.delete
+            FriendRequests insert FriendRequest(id, u.id, r)
+          }
         }
       }
     }
@@ -316,7 +360,7 @@ case class User(
   def removeFriend(f: User): Unit = Db withSession {
     val fq = for {
       fr <- Friends if (fr.user1Id === f.id && fr.user2Id === id) ||
-                       (fr.user1Id === id   && fr.user2Id === f.id)
+        (fr.user1Id === id && fr.user2Id === f.id)
     } yield fr
 
     fq delete
@@ -327,14 +371,18 @@ case class User(
     * @return A list of the user's hobbies
     */
   def hobbies: List[String] = Db withSession {
-    val hs = for {
-      uh <- UserHobbies if uh.userId  === id
-      h  <- Hobbies     if uh.hobbyId === h.id
-    } yield h.name
-
-    hs.list
+    (for {
+      uh <- UserHobbies if uh.userId === id
+      h <- Hobbies if uh.hobbyId === h.id
+    } yield h.name) list
   }
 
+  /** Adds a hobby to a user's list of hobbies
+    *
+    * @param h - The hobby to add
+    *
+    * @throws InvalidHobbyException
+    */
   def addHobby(h: String): Unit = Db withSession {
     if (!validHobby(h)) throw new InvalidHobbyException
 
@@ -344,14 +392,22 @@ case class User(
 
     hobby firstOption match {
       case Some(h) => UserHobbies insert UserHobby(id, h._1)
-      case None    => {
+      case None => {
         val hId = Hobbies.forInsert returning Hobbies.id insert h
         UserHobbies insert UserHobby(id, hId)
       }
     }
   }
 
+  /** Removes a hobby from the user's list of hobbies
+    *
+    * @param h - The hobby to remove
+    *
+    * @throws InvalidHobbyException
+    */
   def removeHobby(h: String): Unit = Db withSession {
+    if (!validHobby(h)) throw new InvalidHobbyException
+
     val hobby = for {
       hobby <- Hobbies.map(h => (h.id, upper(h.name))) if hobby._2 === h.toUpperCase()
     } yield hobby
@@ -368,10 +424,20 @@ case class User(
     }
   }
 
+  /** The address of a user
+    *
+    * @return Maybe the user's address
+    */
   def address: Option[String] = _address
 
+  /** Sets the user's address
+    *
+    * @param a - The address to set
+    *
+    * @throws InvalidAddressException
+    */
   def address_=(a: Option[String]): Unit = Db withSession {
-    val q = (for (u <- Users if u.id === id) yield u.address) 
+    val q = (for (u <- Users if u.id === id) yield u.address)
 
     a match {
       case Some(ad) => if (validAddress(a)) q update a
@@ -384,7 +450,7 @@ case class User(
     }
   }
 
-  /** Returns the admin status of the user
+  /** The admin status of the user
     *
     * @return Returns true if the user is an admin, false otherwise
     */
@@ -392,18 +458,33 @@ case class User(
     (for (a <- Admins if (a.userId === id)) yield a.userId).list.nonEmpty
   }
 
-  def admin_=(admin: Boolean): Unit = Db withSession {
+  /** Sets the admin status of the user
+    *
+    * @param a - The admin status to set
+    */
+  def admin_=(a: Boolean): Unit = Db withSession {
     val q = (for (a <- Admins if a.userId === id) yield a)
 
-    (q firstOption, admin) match {
+    (q firstOption, a) match {
       case (Some(a), false) => q delete
-      case (None,    true)  => Admins insert id
+      case (None, true)     => Admins insert id
       case _                => {}
     }
   }
 
+  /** The email address for the user
+    *
+    * @return The email address of the user
+    */
   def email: String = _email
-  
+
+  /** Sets the email address for the user
+    *
+    * @param e - The email address to set
+    *
+    * @throws InvalidEmailException
+    * @throws DbError
+    */
   def email_=(e: String): Unit = Db withSession {
     if (validEmail(e)) (for (u <- Users if u.id === id) yield u.email) update e
     else throw new InvalidEmailException
@@ -414,8 +495,19 @@ case class User(
     }
   }
 
+  /** The name of the user
+    *
+    * @return The name of the user
+    */
   def name: String = _name
 
+  /** Sets the name of the user
+    *
+    * @param n - The name to set
+    *
+    * @throws InvalidNameException
+    * @throws DbError
+    */
   def name_=(n: String): Unit = Db withSession {
     if (validName(n)) (for (u <- Users if u.id === id) yield u.name) update n
     else throw new InvalidNameException
@@ -426,8 +518,19 @@ case class User(
     }
   }
 
+  /** The hashed password for the user
+    *
+    * @return The hashed password for the user
+    */
   def password: String = _password
 
+  /** Sets the password for the user
+    *
+    * @param p - The password to set
+    *
+    * @throws InvalidPasswordException
+    * @throws DbError
+    */
   def password_=(p: String): Unit = Db withSession {
     import dk.itu.ssas.Security
 
@@ -436,19 +539,22 @@ case class User(
     if (validPassword(p)) {
       // FIXME: These should be 1 statement
       (for (u <- Users if u.id === id) yield u.password) update hashedPw
-      (for (u <- Users if u.id === id) yield u.salt)     update salt
-    }
-    else throw new InvalidPasswordException
+      (for (u <- Users if u.id === id) yield u.salt) update salt
+    } else throw new InvalidPasswordException
 
     (for (u <- Users if u.id === id && u.password === hashedPw && u.salt === salt) yield u) firstOption match {
       case Some(user) => {
         _password = hashedPw
-        _salt     = salt
+        _salt = salt
       }
-      case None       => throw new DbError
+      case None => throw new DbError
     }
   }
 
+  /** The session for the user
+    *
+    * @return The session for the user
+    */
   def session: Option[UUID] = Db withSession {
     (for (s <- Sessions if s.userId === id) yield s.key) firstOption
   }
