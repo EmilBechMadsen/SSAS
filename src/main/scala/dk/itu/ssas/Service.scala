@@ -5,41 +5,53 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import spray.routing._
 import spray.http._
 import spray.httpx.SprayJsonSupport
+import dk.itu.ssas.model.UserExceptions
 
 /** Exposes webservices provided by clireSkies */
 class Service
   extends Actor
   with HttpService
   with SprayJsonSupport 
-  with ActorLogging {
+  with ActorLogging 
+  with UserExceptions {
 
   import akka.pattern.ask
   import akka.util.Timeout
   import java.util.UUID
   import scala.concurrent.Await
-  import dk.itu.ssas.model._
+  import spray.http.MediaType
+  
 
   // The default timeout for all requests
   implicit val timeout = Timeout(Settings.timeout)
 
   def actorRefFactory = context
   def receive = runRoute(route)
-  val cookieName : String = "ssas_session"
+  val sessionCookieName : String = "ssas_session"
+  val formkeyCookieName : String = "ssas_key"
 
   import dk.itu.ssas.SSASMessageProtocol._
+  import dk.itu.ssas.Validate._
+  import dk.itu.ssas.model._
+  import dk.itu.ssas.page._
+  import dk.itu.ssas.page.request._
 
   val route = 
     path("signup") { 
-    	get {
-    		complete {
-          // Get sign up page
-    			""
-    		}
-    	} ~
-    	post {
-    		entity(as[SignUpMessage]) { message =>
-  				complete { 
-  					val user = User.create(message.name, None, message.email, message.password)
+      get {
+        val formKey = UUID.randomUUID().toString()
+        setCookie(HttpCookie(formkeyCookieName, formKey)) { 
+          respondWithMediaType(MediaType.custom("text/html")) {
+            complete {
+              SignupPage.render("Sign up", formKey, None, new NoRequest())
+            }
+          }
+        }
+      } ~
+      post {
+        entity(as[SignUpMessage]) { message =>
+          complete { 
+            val user = User.create(message.name, None, message.email, message.password)
             user match {
               case Some(u) =>
                 // User created
@@ -48,13 +60,15 @@ class Service
                 // User not created
                 ""
             }   
-  				}
-    		}
-    	}
+          }
+        }
+      }
     } ~
     path("confirm" / JavaUUID) { token =>
-    	get {
-    			complete {
+      get {
+        val formKey = UUID.randomUUID().toString()
+        setCookie(HttpCookie(formkeyCookieName, formKey)) {
+          complete {
             val user = User(token)
             user match {
               case Some(u) =>
@@ -66,11 +80,12 @@ class Service
                 ""                
             }
           }
-    	} ~
-    	post {
-    		entity(as[String]) { password =>
-    			complete {
-    				val user = User(token)
+        }
+      } ~
+      post {
+        entity(as[String]) { password =>
+          complete {
+            val user = User(token)
             user match {
               case Some(u) =>
                 if(u.checkPassword(password)) 
@@ -85,14 +100,16 @@ class Service
                 
             }
             ""
-    			}
-    		}
-    	}
+          }
+        }
+      }
     } ~
     path("requests") {
-    	get {
-    		cookie(cookieName) { c => r =>
-            val user = User(UUID.fromString(c.content))
+      get {
+        cookie(sessionCookieName) { c => r =>
+          val user = User(UUID.fromString(c.content))
+          val formKey = UUID.randomUUID().toString()
+          setCookie(HttpCookie(formkeyCookieName, formKey)) {
             user match {
               case Some(u) =>
                 complete {
@@ -101,13 +118,14 @@ class Service
                 }
               case None =>
                 // Reject
-                HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+                complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.") }
             }
           }
-  		} ~
-    	post {
-    		entity(as[RelationshipRequestMessage]) { message =>
-  				cookie(cookieName) { c => r =>
+        }
+      } ~
+      post {
+        entity(as[RelationshipRequestMessage]) { message =>
+          cookie(sessionCookieName) { c => r =>
             val user = User(UUID.fromString(c.content))
             user match {
               case Some(u) =>
@@ -126,11 +144,11 @@ class Service
                 HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
             }
           }
-    		}
-    	} ~
-    	put {
-    		entity(as[RelationshipConfirmationMessage]) { message =>
-          cookie(cookieName) { c => r =>
+        }
+      } ~
+      put {
+        entity(as[RelationshipConfirmationMessage]) { message =>
+          cookie(sessionCookieName) { c => r =>
             val user = User(UUID.fromString(c.content))
             user match {
               case Some(u) =>
@@ -144,51 +162,110 @@ class Service
             }
           }
         }
-    	}	
+      } 
     } ~
-   	path("profile" / IntNumber) { id =>
-   		get {
-        cookie(cookieName) { c => r =>
+    path("profile" / IntNumber) { id =>
+      get {
+        cookie(sessionCookieName) { c => r =>
           val user = User(UUID.fromString(c.content))
-          user match {
-            case Some(u) =>
-              complete {
-                if (u.id == id) {
-                  // Get own ID page
-                  ""
-                } else {
-                  // Get requested ID page
+          val formKey = UUID.randomUUID().toString()
+          setCookie(HttpCookie(formkeyCookieName, formKey)) {
+            user match {
+              case Some(u) =>
+                complete {
+                  if (u.id == id) {
+                    // Get own ID page
+                    ""
+                  } else {
+                    // Get requested ID page
+                    ""
+                  }
+                }
+              case None =>
+                // Reject
+                complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.") }
+                
+            }
+          }
+        }
+      } ~
+      post {
+        cookie(sessionCookieName) { sessionC => _ =>
+          cookie(formkeyCookieName) { sessionK => _ =>
+            val user = User(UUID.fromString(sessionC.content))
+            user match {
+              case Some(u) =>
+                formFields('formkey, 'profileName, 'profileAddress, 'profileCurrentPassword, 'profileNewPassword, 'profileNewPasswordConfirm) { 
+                  (formkey, name, address, cPassword, nPassword, nPasswordConf) =>
+
+                  if(formkey == sessionK.content) {
+                    if(u.checkPassword(cPassword)) {
+
+                      (validName(name), validAddress(Some(address)), (nPassword == nPasswordConf)) match {
+                        case (true, true, true) =>
+                          try {
+                            if(!nPassword.isEmpty) {
+                              (validPassword(nPassword), validPassword(nPasswordConf)) match {
+                                case (true, true) =>
+                                  u.password = nPassword
+                                case(_, _) =>
+                                  HttpResponse(spray.http.StatusCodes.BadRequest, "Not valid input.")
+                              }
+                            }
+
+                            u.name = name
+                            u.address = Some(address)
+                            complete {
+                              // Get new profile page
+                              ""
+                            }
+                          
+                          } catch {
+                            case dbe: DbError       => complete { HttpResponse(spray.http.StatusCodes.InternalServerError, s"Database not accessible: $dbe.s") }
+                            case ue:  UserException => complete { HttpResponse(spray.http.StatusCodes.Unauthorized, s"Not valid input: $ue.s") }
+                          }
+
+                        case (_,_,_) => 
+                          complete { HttpResponse(spray.http.StatusCodes.BadRequest, "Not valid input.") }
+                        }
+                    } else {
+                      complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Wrong password.") }
+                    }
+                  } else {
+                    complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Form key violation.") }
+                  }
+              }
+              case None =>
+                complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.") }
+            }
+          }
+        }
+      }
+    } ~
+    path("friends") {
+      get {
+        cookie(sessionCookieName) { c => r =>
+          val user = User(UUID.fromString(c.content))
+          val formKey = UUID.randomUUID().toString()
+          setCookie(HttpCookie(formkeyCookieName, formKey)) {
+            user match {
+              case Some(u) =>
+                complete {
+                  // Get 
                   ""
                 }
-              }
-            case None =>
-              // Reject
-              HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
+              case None =>
+                // Reject
+                complete { HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.") }
+            }
           }
         }
-    	}
-   	} ~
-   	path("friends") {
-   		get {
-    		cookie(cookieName) { c => r =>
-          val user = User(UUID.fromString(c.content))
-          user match {
-            case Some(u) =>
-              complete {
-                // Get 
-                ""
-              }
-            case None =>
-              // Reject
-              HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
-          }
-        }
-    	}
-   	} ~
-   	path("search") {
+      }
+    } ~
+    path("search") {
       entity(as[String]) { search =>
-     		post {			
-    			cookie(cookieName) { c => r =>
+        post {      
+          cookie(sessionCookieName) { c => r =>
             val user = User(UUID.fromString(c.content))
             user match {
               case Some(u) =>
@@ -202,20 +279,20 @@ class Service
                 HttpResponse(spray.http.StatusCodes.Unauthorized, "Session was invalid.")
             }
           }
-      	}
+        }
       }
-   	}
-   	path("login") {
-   		post {
-   			entity(as[LogInMessage]) { message => 
-  				val user = User.login(message.email, message.password) 
+    }
+    path("login") {
+      post {
+        entity(as[LogInMessage]) { message => 
+          val user = User.login(message.email, message.password) 
           user match {
             case Some(u) => 
               // Login was successful
               val session = u.session
               session match {
                 case Some(s) =>
-                  setCookie(HttpCookie(cookieName, s.toString())) {
+                  setCookie(HttpCookie(sessionCookieName, s.toString())) {
                     complete {
                       // TODO: Redirect to appropiate page
                       ""
@@ -234,13 +311,13 @@ class Service
                 // Reject
                 HttpResponse(spray.http.StatusCodes.Unauthorized, "User or password was incorrect.")
               }
-    			}
-    		}
-   		}
-   	}
+          }
+        }
+      }
+    }
     path("logout") {
       post {      
-        cookie(cookieName) { c => r =>
+        cookie(sessionCookieName) { c => r =>
           val user = User(UUID.fromString(c.content))
           user match {
             case Some(u) =>
@@ -257,7 +334,7 @@ class Service
     }
     path("admin") {
       get {
-        cookie(cookieName) { c => r =>
+        cookie(sessionCookieName) { c => r =>
           val user = User(UUID.fromString(c.content))
           user match {
             case Some(u) =>
@@ -275,7 +352,7 @@ class Service
     }
     path("user" / IntNumber) { userId => 
       delete {
-        cookie(cookieName) { c => r =>
+        cookie(sessionCookieName) { c => r =>
           val user = User(UUID.fromString(c.content))
           user match {
             case Some(u) =>
@@ -302,7 +379,7 @@ class Service
     }
     path("user" / "promote" / IntNumber) { userId => 
       post {
-        cookie(cookieName) { c => r =>
+        cookie(sessionCookieName) { c => r =>
           val user = User(UUID.fromString(c.content))
           user match {
             case Some(u) =>

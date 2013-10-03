@@ -11,6 +11,7 @@ case class SignUpMessage(name: String, email: String, password: String) extends 
 case class ConfirmMailMessage(token: UUID, password: String) extends SSASMessage
 case class RelationshipRequestMessage(userId: Int, rel: Relationship) extends SSASMessage
 case class RelationshipConfirmationMessage(userId: Int, accepted: Boolean) extends SSASMessage
+case class ProfileEditMessage(profileName: String, profileAddress: String, profileCurrentPassword: String, profileNewPassword: String, profileNewPasswordConfirm: String) extends SSASMessage
 case class LogInMessage(email: String, password: String) extends SSASMessage
 
 object SSASProtocol extends DefaultJsonProtocol {
@@ -59,6 +60,9 @@ object SSASMessageProtocol extends DefaultJsonProtocol {
 
   implicit val RelationshipConfirmationMessageFormat =
     jsonFormat2(RelationshipConfirmationMessage)
+
+  implicit val ProfileEditMessageFormat = 
+    jsonFormat5(ProfileEditMessage)
 
   implicit val LogInMessageFormat =
     jsonFormat2(LogInMessage)
