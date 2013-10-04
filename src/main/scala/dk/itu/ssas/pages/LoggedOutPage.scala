@@ -31,7 +31,7 @@ abstract class LoggedOutPage extends Page {
                           // Incorrect syntax!
                           alertMessage = "The provided email is invalid."
                           if(suggestion) {
-                            alertMessage += "\nDid you mean " + suggestion + "?";
+                            alertMessage += "Did you mean " + suggestion + "?";
                           }
                           alert(alertMessage);
                           result = false;

@@ -9,7 +9,7 @@ object SignupPage extends LoggedOutPage {
   def content(request: NoRequest, key: Key): HTML = {
     val minPassword = Settings.security.minPassword
     val maxPassword = Settings.security.maxPassword
-    val nameRegex = Settings.security.nameWhitelist
+    val nameRegex = Settings.security.nameWhitelist.replace("\\", "\\\\")
     val minName = Settings.security.minName
     val maxName = Settings.security.maxName
     s"""
@@ -41,7 +41,7 @@ object SignupPage extends LoggedOutPage {
                   // Incorrect syntax!
                   alertMessage = "The provided email is invalid.";
                   if(suggestion) {
-                    alertMessage += "\nDid you mean " + suggestion + "?";
+                    alertMessage += "Did you mean " + suggestion + "?";
                   }
                   alert(alertMessage);
                   result = false;
@@ -67,7 +67,7 @@ object SignupPage extends LoggedOutPage {
         }
       </script>
       <div id="signupPageImageBox">
-        <img src="http://www.eatthedamncake.com/wordpress/wp-content/uploads/2012/02/velociraptor.jpg"/>
+        <img src="/static/velociraptor.jpg"/>
       </div>
       <div id="signupBox">
         <form name="signupForm" action="/signup" method="POST" onsubmit="return validateSignup()">

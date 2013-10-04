@@ -37,27 +37,21 @@ object EditProfilePage extends LoggedInPage {
 
   def content(request: EditProfilePageRequest, key: Key): HTML = {
     val user = request.user
-    val nameRegex = Settings.security.nameWhitelist
+    val nameRegex = Settings.security.nameWhitelist.replace("\\", "\\\\")
     val minName = Settings.security.minName
     val maxName = Settings.security.maxName
     val minPassword = Settings.security.minPassword
     val maxPassword = Settings.security.maxPassword
-    val addrRegex = Settings.security.addrWhitelist
+    val addrRegex = Settings.security.addrWhitelist.replace("\\", "\\\\")
     val minAddr = Settings.security.minAddr
     val maxAddr = Settings.security.maxAddr
-    val hobbyRegex = Settings.security.hobbyWhitelist
+    val hobbyRegex = Settings.security.hobbyWhitelist.replace("\\", "\\\\")
     val minHobby = Settings.security.minHobby
     val maxHobby = Settings.security.maxHobby
     s"""
     <script type="text/javascript">
-      function submitForms() {
-        document.getElementById('profileNameForm').submit();
-        document.getElementById('profileAddressForm').submit();
-        document.getElementById('profilePasswordForm').submit();
-      }
-
       function validateName() {
-        var name = document.forms["profileNameForm"]["profileName"].value;
+        var name = document.forms["profileForm"]["profileName"].value;
         var pattern = XRegExp("$nameRegex", 'i');
         var validLength = name.length >= $minName && name.length <= $maxName;
         if (XRegExp.test(name, pattern) && validLength) {
@@ -70,7 +64,7 @@ object EditProfilePage extends LoggedInPage {
       }
 
       function validateAddress() {
-        var address = document.forms["profileAddressForm"]["profileAddress"].value;
+        var address = document.forms["profileForm"]["profileAddress"].value;
         var pattern = XRegExp("$addrRegex", 'i');
         var validLength = address.length >= $minAddr && address.length <= $maxAddr;
         if (XRegExp.test(address, pattern) && validLength) {
@@ -83,9 +77,9 @@ object EditProfilePage extends LoggedInPage {
       }
 
       function validatePassword() {
-        var password = document.forms["profilePasswordForm"]["profileCurrentPassword"].value;
-        var newPassword = document.forms["profilePasswordForm"]["profileNewPassword"].value;
-        var confirmNewPassword = document.forms["profilePasswordForm"]["profileNewPasswordConfirm"].value;
+        var password = document.forms["profileForm"]["profileCurrentPassword"].value;
+        var newPassword = document.forms["profileForm"]["profileNewPassword"].value;
+        var confirmNewPassword = document.forms["profileForm"]["profileNewPasswordConfirm"].value;
 
         var validCurrentPassword = password.length >= $minPassword && password.length <= $maxPassword;
         if (validCurrentPassword) {
@@ -124,41 +118,36 @@ object EditProfilePage extends LoggedInPage {
         }
         return false;
       }
+
+      function validate() {
+        validateName() && validateAddress() && validatePassword()
+      }
     </script>
     <div id="profileWrapper">
       <div id="profileHeader">
         <div id="profileCaption">
-        <form action="/profile/${user.id}/edit/info" name="profileNameForm" id="profileNameForm" method="POST" onsubmit="return validateName()">
-          ${formKeyInput(key)}
-          <input id="profileNameInput" name="profileName" type="text" value="${user.name}" />
-        </form>
-        </div>
-        <div id="profileSaveChangesBox">
-          <button type="button" class="styledSubmitButton" onclick="submitForms()">Save Changes</button>
+          <h1>Edit profile</h1>
         </div>
       </div>
       <div id="profileBox">
         <div id="profileLeftBox">
-          <div id="addressBox">
-            <span class="profileLabel">Address</span><br />
-            <form action="/profile/${user.id}/edit/info" name="profileAddressForm" id="profileAddressForm" method="POST" onsubmit="return validateAddress()">
-              ${formKeyInput(key)}
-              <textarea name="profileAddress" id="profileAddressInput">
-                ${address(user)}
-              </textarea>
-            </form>
-          </div>
-          <div id="profilePasswordBox">
-            <form action="/profile/${user.id}/edit/info" id="profilePasswordForm" method="POST" onsubmit="return validatePassword()">
-              ${formKeyInput(key)}
-              <span class="profileLabel">Current Password</span><br />
-              <input class="profileInput" name="profileCurrentPassword" type="password" /><br />
-              <span class="profileLabel">New Password</span><br />
-              <input class="profileInput" name="profileNewPassword" type="password" /><br />
-              <span class="profileLabel">Confirm New Password</span><br />
-              <input class="profileInput" name="profileNewPasswordConfirm" type="password" />
-            </form>
-          </div>
+          <form action="/profile/${user.id}/edit/info" name="profileForm" id="profileNameForm" method="POST" onsubmit="return validate()">
+            ${formKeyInput(key)}
+            <input id="profileNameInput" name="profileName" type="text" value="${user.name}" />
+            <div id="addressBox">
+              <span class="profileLabel">Address</span><br />
+                <textarea name="profileAddress" id="profileAddressInput">${address(user)}</textarea>
+            </div>
+            <div id="profilePasswordBox">
+                <span class="profileLabel">Current Password</span><br />
+                <input class="profileInput" name="profileCurrentPassword" type="password" /><br />
+                <span class="profileLabel">New Password</span><br />
+                <input class="profileInput" name="profileNewPassword" type="password" /><br />
+                <span class="profileLabel">Confirm New Password</span><br />
+                <input class="profileInput" name="profileNewPasswordConfirm" type="password" />
+            </div>
+            <input type="submit" class="styledSubmitButton" value="Save Changes" />
+          </form>
         </div>
         <div id="profileRightBox">
           <div id="hobbiesBox">

@@ -35,7 +35,7 @@ object AdminPage extends LoggedInPage {
           $adminStatusInput
         </td>
       </form>
-      <form action="/admin/user/${user.id}" method="POST">
+      <form action="/admin/user/${user.id}/delete" method="POST">
         ${formKeyInput(key)}
         <td class="adminUserEntryRemoveButton">
           <input name="adminUserRemove" class="styledSubmitButton" type="submit" value="Remove" />
@@ -88,7 +88,7 @@ object AdminPage extends LoggedInPage {
                       // Incorrect syntax!
                       alertMessage = "The provided email is invalid."
                       if(suggestion) {
-                        alertMessage += "\nDid you mean " + suggestion + "?";
+                        alertMessage += "Did you mean " + suggestion + "?";
                       }
                       alert(alertMessage);
                       result = false;

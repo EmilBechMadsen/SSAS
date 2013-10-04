@@ -58,11 +58,13 @@ class Service
                 c
               }
               else complete {
+                log.warning(s"XSRF protection kicked in. Was expecting $cookieKey, but got $formKey")
                 HttpResponse(StatusCodes.Unauthorized, "XSRF protection kicked in. Please try again.")
               }
             }
           }
           case None => complete {
+            log.warning("XSRF protection kicked in. No cookie received.")
             HttpResponse(StatusCodes.Unauthorized, "XSRF protection kicked in. Please try again.")
           }
         }
@@ -105,11 +107,27 @@ class Service
         redirect("/signup", StatusCodes.Found)
       }
     } ~
-    path("signup") { 
-      get {
-        html { formKey =>
-          complete {
-            SignupPage.render("Sign up", formKey, None, NoRequest())
+    path("signup") {
+      optionalCookie(sessionCookieName) { sc => 
+        sc match {
+          case Some(sessionCookie) => {
+            User(UUID.fromString(sessionCookie.content)) match {
+              case Some(u) => redirect("/friends", StatusCodes.SeeOther)
+              case None    => {
+                deleteCookie(sessionCookie) {
+                  redirect("/signup", StatusCodes.SeeOther)
+                }
+              }
+            }
+          }
+          case None => {
+            get {
+              html { formKey =>
+                complete {
+                  SignupPage.render("Sign up", formKey, None, NoRequest())
+                }
+              }
+            }
           }
         }
       } ~
@@ -119,6 +137,7 @@ class Service
           if (pass1 == pass2 && validEmail(email) && validName(name) && validPassword(pass1)) {
             User.create(name, None, email, pass1) match {
               case Some(u) => complete {
+                log.info(s"User ${u.id} created")
                 "Check your email for confirmation!"
               }
               case None    => complete {
@@ -150,6 +169,7 @@ class Service
             case Some(user) => {
               if (user.checkPassword(password)) {
                 user.confirm(token)
+                log.info(s"User ${user.id} confirmed")
                 User.login(user.email, password)
 
                 user.session match {
@@ -463,7 +483,7 @@ class Service
       }
     } ~
     pathPrefix("admin") {
-      if (u.admin) {
+      if(u.admin) {
         path("") {
           get {
             html { formKey =>
@@ -473,36 +493,40 @@ class Service
             }
           }
         } ~
-        path("user" / IntNumber) { userId => 
-          postWithFormKey {
-            User(userId) match {
-              case Some(deleteUser) => {
-                  deleteUser.delete()
-                  redirect("/admin", StatusCodes.SeeOther)
-                }
-              case None => complete { HttpResponse(StatusCodes.NotFound, "User not found.") }
-            }
-          }
-        } ~
-        path("user" / IntNumber / "toggleAdmin") { userId => 
-          postWithFormKey {
-            try {
-              User(UUID.fromString(userId.toString())) match {
-                case Some(other) =>
-                  if (other.admin) {
-                    other.admin = false
-                  } else {
-                    other.admin = true
+        pathPrefix("user" / IntNumber) { userId =>
+          path("delete") {
+            postWithFormKey {
+              User(userId) match {
+                case Some(deleteUser) => {
+                    deleteUser.delete()
+                    log.warning(s"User $userId deleted")
+                    redirect("/admin", StatusCodes.SeeOther)
                   }
-                  redirect(s"/admin", StatusCodes.SeeOther)
-                case None =>
-                  complete {
-                    HttpResponse(spray.http.StatusCodes.BadRequest, "That user does not exist.")
-                  }
+                case None => complete { HttpResponse(StatusCodes.NotFound, "User not found.") }
               }
-            } catch {
-                case dbe: DbError => complete { HttpResponse(StatusCodes.InternalServerError, "Database error.") }
-                case ue: UserException => complete { HttpResponse(StatusCodes.BadRequest, "Invalid info.") }
+            }
+          } ~
+          path("toggleAdmin") {
+            postWithFormKey {
+              try {
+                User(userId) match {
+                  case Some(other) =>
+                    if (other.admin) {
+                      other.admin = false
+                    } else {
+                      other.admin = true
+                    }
+                    log.info(s"User $userId promoted")
+                    redirect("/admin", StatusCodes.SeeOther)
+                  case None =>
+                    complete {
+                      HttpResponse(spray.http.StatusCodes.BadRequest, "That user does not exist.")
+                    }
+                }
+              } catch {
+                  case dbe: DbError => complete { HttpResponse(StatusCodes.InternalServerError, "Database error.") }
+                  case ue: UserException => complete { HttpResponse(StatusCodes.BadRequest, "Invalid info.") }
+              }
             }
           }
         }
