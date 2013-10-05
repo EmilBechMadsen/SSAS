@@ -12,7 +12,12 @@ protected trait Users {
     def password = column[String]("password", O.NotNull)
     def salt     = column[String]("salt", O.NotNull)
 
-    def * = id ~ name ~ address ~ email ~ password ~ salt <> ((id, name, address, email, password, salt) => User.apply(id, name, address, email, password, salt), User unapply _) 
+    def * = id ~ name ~ address ~ email ~ password ~ salt <> (
+      (id, name, address, email, password, salt) => 
+        User.apply(id, name, address, email, password, salt), 
+      User unapply _
+    )
+
     def forInsert = name ~ address ~ email ~ password ~ salt
 
     def uniqueEmail = index("idx_email", email, unique = true)

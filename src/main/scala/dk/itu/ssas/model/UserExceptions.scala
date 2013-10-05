@@ -18,6 +18,9 @@ protected trait UserExceptions {
   case class InvalidPasswordException(s: String = "Invalid password")
   extends UserException(s)
 
+  case class ExistingEmailException(s: String = "Already a user with that email")
+  extends UserException(s)
+
   case class DbError(s: String = "There was a problem updating the database")
   extends UserException(s)
 }

@@ -8,9 +8,10 @@ trait DbAccess
   with FriendRequests
   with Admins
   with Sessions
+  with FormKeys
   with EmailConfirmations {
-  import scala.slick.driver.MySQLDriver.simple._
   import dk.itu.ssas.Settings
+  import scala.slick.driver.MySQLDriver.simple._
 
   protected val Db = Database.forURL(Settings.db.dbString, 
                                      driver = Settings.db.dbDriver)
@@ -20,5 +21,5 @@ trait DbAccess
   protected val ddl = Users.ddl ++ Friends.ddl ++ Admins.ddl ++ 
                       Sessions.ddl ++ FriendRequests.ddl ++ 
                       EmailConfirmations.ddl ++ Hobbies.ddl ++ 
-                      UserHobbies.ddl
+                      UserHobbies.ddl ++ FormKeys.ddl
 }

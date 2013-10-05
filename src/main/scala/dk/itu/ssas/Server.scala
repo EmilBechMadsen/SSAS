@@ -2,7 +2,7 @@ package dk.itu.ssas
 
 import dk.itu.ssas.db.DbAccess
 
-object Server extends App with SsasSslConfiguration with DbAccess {
+object Server extends App with DbAccess {
   import akka.actor.{ActorSystem, Props}
   import akka.io.IO
   import scala.language.postfixOps
@@ -25,6 +25,7 @@ object Server extends App with SsasSslConfiguration with DbAccess {
     if (Q.queryNA[String]("SHOW TABLES LIKE 'user'").list.isEmpty) {
       ddl create
     }
+    //ddl.createStatements foreach {s => println(s"$s;")}
   }*/
 
   // create a new HttpServer using our handler and tell it where to bind to

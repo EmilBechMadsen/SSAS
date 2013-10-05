@@ -3,8 +3,9 @@ package dk.itu.ssas
 import akka.actor.{ Actor, ActorLogging, Props }
 import java.util.UUID
 
-sealed abstract class MailSenderMessage extends SSASMessage
-case class ConfirmationMail(email: String, name: String, key: UUID) extends SSASMessage
+sealed abstract class MailSenderMessage
+case class ConfirmationMail(email: String, name: String, key: UUID)
+extends MailSenderMessage
 
 class MailSender extends Actor with ActorLogging {
   import org.apache.commons.mail.HtmlEmail

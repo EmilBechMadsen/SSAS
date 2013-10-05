@@ -48,5 +48,6 @@ object Settings {
     val minHobby       = conf.getInt("ssas.security.minHobby")
     val maxHobby       = conf.getInt("ssas.security.maxHobby")
     val hobbyWhitelist = conf.getString("ssas.security.hobbyWhitelist")
+    val formKeyTimeout = conf.getInt("ssas.security.formKeyTimeout")
   }
 }

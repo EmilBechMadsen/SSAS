@@ -54,22 +54,31 @@ object User extends UserExceptions with DbAccess {
     * @throws InvalidNameException
     * @throws InvalidPasswordException
     * @throws InvalidAddressException
+    * @throws ExistingEmailException
     */
   def create(name: String, address: Option[String], email: String, password: String): Option[User] = Db withSession {
     (validEmail(email), validName(name), validPassword(password), validAddress(address)) match {
       case (true, true, true, true) => {
-        val (hashedPw, salt) = Security.newPassword(password)
-        val user = (name, address, email, hashedPw, salt)
-        val id = Users.forInsert returning Users.id insert user
+        val uniqueEmail = (for {
+          u <- Users if u.email === email
+        } yield u).firstOption.isEmpty
 
-        val key = UUID.randomUUID()
+        if (uniqueEmail) {
+          val (hashedPw, salt) = Security.newPassword(password)
+          val user = (name, address, email, hashedPw, salt)
+          val id = Users.forInsert returning Users.id insert user
 
-        val ec = EmailConfirmation(key.toString(), id)
-        EmailConfirmations insert ec
+          val key = UUID.randomUUID()
 
-        mailer ! ConfirmationMail(email, name, key)
+          val ec = EmailConfirmation(key.toString(), id)
+          EmailConfirmations insert ec
 
-        User(id)
+          mailer ! ConfirmationMail(email, name, key)
+
+          User(id)
+        } else {
+          throw new ExistingEmailException
+        }
       }
       // FIXME: What about combinations?
       case (false, _, _, _) => throw new InvalidEmailException
@@ -86,22 +95,19 @@ object User extends UserExceptions with DbAccess {
     * @param password - The users password
     * @return Maybe a user
     */
-  def login(email: String, password: String): Option[User] = Db withSession {
+  def login(email: String, password: String, session: UUID): Option[User] = Db withSession {
     (for (u <- Users if u.email === email) yield u) firstOption match {
       case Some(u) => (u.checkPassword(password), u.isConfirmed) match {
         case (true, true) => {
-          val q = (for (s <- Sessions if s.userId === u.id) yield s)
-
-          val s = Session(UUID.randomUUID().toString(), u.id)
+          val q = (for (s <- Sessions if s.key === session.toString()) yield s.userId)
 
           q firstOption match {
-            // The user is already logged in, give him a new session
-            case Some(s) => q update s
-            // The user is not logged in
-            case None    => Sessions insert s
+            case Some(s) => {
+              q update Some(u.id)
+              Some(u)
+            }
+            case None    => None
           }
-
-          Some(u)
         }
         // Wrong password or unconfirmed
         case (_, _) => None

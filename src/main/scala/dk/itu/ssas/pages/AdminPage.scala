@@ -25,7 +25,7 @@ object AdminPage extends LoggedInPage {
 
     s"""
     <tr class="adminUserEntry">
-      <form action="/admin/user/${user.id}/toggleAdmin" method="POST">
+      <form action="/admin/toggleAdmin/${user.id}" method="POST">
         ${formKeyInput(key)}
         <input type="hidden" name="adminUserId" value="${user.id}" />
         <td class="adminUserEntryName">
@@ -35,7 +35,7 @@ object AdminPage extends LoggedInPage {
           $adminStatusInput
         </td>
       </form>
-      <form action="/admin/user/${user.id}/delete" method="POST">
+      <form action="/admin/delete/${user.id}" method="DELETE">
         ${formKeyInput(key)}
         <td class="adminUserEntryRemoveButton">
           <input name="adminUserRemove" class="styledSubmitButton" type="submit" value="Remove" />
