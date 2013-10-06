@@ -3,6 +3,7 @@ package dk.itu.ssas.page
 object SignupPage extends LoggedOutPage {
   import dk.itu.ssas._
   import dk.itu.ssas.page.request._
+  import dk.itu.ssas.Settings.baseUrl
 
   type RequestType = NoRequest
 
@@ -67,10 +68,10 @@ object SignupPage extends LoggedOutPage {
         }
       </script>
       <div id="signupPageImageBox">
-        <img src="/static/velociraptor.jpg"/>
+        <img src="$baseUrl/static/velociraptor.jpg" />
       </div>
       <div id="signupBox">
-        <form name="signupForm" action="/signup" method="POST" onsubmit="return validateSignup()">
+        <form name="signupForm" action="$baseUrl/signup" method="POST" onsubmit="return validateSignup()">
           ${formKeyInput(key)}
           <fieldset>
             <legend>Sign up</legend>

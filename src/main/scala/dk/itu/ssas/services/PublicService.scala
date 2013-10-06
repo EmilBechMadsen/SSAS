@@ -6,6 +6,7 @@ object PublicService extends SsasService with UserExceptions {
   import dk.itu.ssas.model._
   import dk.itu.ssas.page._
   import dk.itu.ssas.page.request._
+  import dk.itu.ssas.Settings.baseUrl
   import dk.itu.ssas.Validate._
   import java.util.UUID
   import spray.http._
@@ -81,9 +82,9 @@ object PublicService extends SsasService with UserExceptions {
                                          path = Some("/"),
                                          httpOnly = true,
                                          secure = true)) {
-                        redirect(s"/profile/${user.id}", StatusCodes.SeeOther)
+                        redirect(s"$baseUrl/profile/${user.id}", StatusCodes.SeeOther)
                       }
-                      case None => redirect(s"/signup", StatusCodes.SeeOther)
+                      case None => redirect(s"$baseUrl/signup", StatusCodes.SeeOther)
                     }
                   } else complete {
                     HttpResponse(StatusCodes.Unauthorized, "Incorrect username or password.")
@@ -105,9 +106,9 @@ object PublicService extends SsasService with UserExceptions {
             formFields('loginEmail, 'loginPassword) { (email, password) =>
               User.login(email, password, s.key) match {
                 case Some(user) => 
-                  redirect(s"/profile/${user.id}", StatusCodes.SeeOther)
+                  redirect(s"$baseUrl/profile/${user.id}", StatusCodes.SeeOther)
                 case None => 
-                  redirect("/signup", StatusCodes.SeeOther)
+                  redirect(s"$baseUrl/signup", StatusCodes.SeeOther)
               }
             }
           }
@@ -122,7 +123,7 @@ object PublicService extends SsasService with UserExceptions {
               case Some(u) => {
                 deleteCookie(cookie) {
                   u.logout()
-                  redirect("/signup", StatusCodes.SeeOther)
+                  redirect(s"/signup", StatusCodes.SeeOther)
                 } 
               }
               case None => complete { HttpResponse(StatusCodes.InternalServerError) } 

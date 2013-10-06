@@ -3,6 +3,7 @@ package dk.itu.ssas.page
 object ProfilePage extends LoggedInPage {
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.model._
+  import dk.itu.ssas.Settings.baseUrl
 
   type RequestType = ProfilePageRequest
 
@@ -74,7 +75,7 @@ object ProfilePage extends LoggedInPage {
             ${request.other.name}
           </div>
           <div id="profileRequestBox">
-          <form action="/profile/${request.other.id}/request" method="POST">
+          <form action="$baseUrl/profile/${request.other.id}/request" method="POST">
             ${formKeyInput(key)}
             Request <select name="relationship">
               ${requestOptions(request.user, request.other)}

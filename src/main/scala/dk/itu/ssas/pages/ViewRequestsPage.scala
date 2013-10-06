@@ -3,6 +3,7 @@ package dk.itu.ssas.page
 object ViewRequestsPage extends LoggedInPage {
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.model._
+  import dk.itu.ssas.Settings.baseUrl
 
   type RequestType = ViewRequestsPageRequest
 
@@ -11,7 +12,7 @@ object ViewRequestsPage extends LoggedInPage {
     val rel = entry._2
     s"""
     <tr class="listEntryRow listEntryColor${kind}">
-      <form action="/requests" method="POST">
+      <form action="$baseUrl/requests" method="POST">
         ${formKeyInput(key)}
         <input name="friendRequestId" type="hidden" value="${user.id}" />
         <input name="friendRequestKind" type="hidden" value="$rel" />

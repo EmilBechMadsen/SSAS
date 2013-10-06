@@ -4,6 +4,7 @@ object EditProfilePage extends LoggedInPage {
   import dk.itu.ssas.model._
   import dk.itu.ssas.page.request._
   import dk.itu.ssas._
+  import dk.itu.ssas.Settings.baseUrl
 
   type RequestType = EditProfilePageRequest
 
@@ -17,7 +18,7 @@ object EditProfilePage extends LoggedInPage {
   private def hobbyEntry(hobby: String, user: User, index: Int, key: Key): HTML = {
     s"""
     <tr>
-      <form action="/profile/${user.id}/edit/hobby/remove" method="POST">
+      <form action="$baseUrl/profile/${user.id}/edit/hobby/remove" method="POST">
         ${formKeyInput(key)}
         <td class="hobbiesListItem">$hobby</td>
         <td>
@@ -131,7 +132,7 @@ object EditProfilePage extends LoggedInPage {
       </div>
       <div id="profileBox">
         <div id="profileLeftBox">
-          <form action="/profile/${user.id}/edit/info" name="profileForm" id="profileNameForm" method="POST" onsubmit="return validate()">
+          <form action="$baseUrl/profile/${user.id}/edit/info" name="profileForm" id="profileNameForm" method="POST" onsubmit="return validate()">
             ${formKeyInput(key)}
             <input id="profileNameInput" name="profileName" type="text" value="${user.name}" />
             <div id="addressBox">
@@ -156,7 +157,7 @@ object EditProfilePage extends LoggedInPage {
               <table id="hobbiesTable">
                 ${hobbies(user, key)}
                 <tr>
-                  <form action="/profile/${user.id}/edit/hobby/add" name="profileNewHobbyForm" method="POST" onsubmit="return validateNewHobby()">
+                  <form action="$baseUrl/profile/${user.id}/edit/hobby/add" name="profileNewHobbyForm" method="POST" onsubmit="return validateNewHobby()">
                     ${formKeyInput(key)}
                     <td class="hobbiesListItem">
                       <input name="profileNewHobby" id="profileNewHobbyInput" type="text" value="New hobby" onfocus="this.value='';" />

@@ -1,6 +1,8 @@
 package dk.itu.ssas.page
 
 abstract class Page extends WebPage {
+  import dk.itu.ssas.Settings.baseUrl
+
   def footer: HTML = {
     """
        	</div> <!-- close body content -->

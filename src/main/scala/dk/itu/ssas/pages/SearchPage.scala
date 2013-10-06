@@ -3,6 +3,7 @@ package dk.itu.ssas.page
 object SearchPage extends LoggedInPage {
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.model._
+  import dk.itu.ssas.Settings.baseUrl
 
   type RequestType = SearchPageRequest
 
@@ -10,7 +11,7 @@ object SearchPage extends LoggedInPage {
     s"""
     <tr class="listEntryRow listEntryColor${kind}">
       <td class="searchListEntry">
-        <a href="/profile/${user.id}">${user.name}</a>
+        <a href="$baseUrl/profile/${user.id}">${user.name}</a>
       </td>
     </tr>
     """

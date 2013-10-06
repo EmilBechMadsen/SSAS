@@ -3,6 +3,7 @@ package dk.itu.ssas.page
 object FriendsPage extends LoggedInPage {
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.model._
+  import dk.itu.ssas.Settings.baseUrl
   
   type RequestType = FriendsPageRequest
 
@@ -11,10 +12,10 @@ object FriendsPage extends LoggedInPage {
     val rel  = entry._2
     s"""
     <tr class="listEntryRow listEntryColor${kind}">
-      <form actions="/friends" method="POST">
+      <form actions="$baseUrl/friends" method="POST">
         ${formKeyInput(key)}
         <input name="friendRemoveId" type="hidden" value="${user.id}" />
-        <td class="friendEntryName"><a href="/profile/${user.id}">${user.name}</a></td>
+        <td class="friendEntryName"><a href="$baseUrl/profile/${user.id}">${user.name}</a></td>
         <td class="friendEntryStatus">${rel.prettyPrint}</td>
         <td><input name="friendRemove" class="styledSubmitButton" type="submit" value="Remove" /></td>
       </form>

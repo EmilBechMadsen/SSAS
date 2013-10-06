@@ -5,6 +5,7 @@ object AdminPage extends LoggedInPage {
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.page.exception._
   import dk.itu.ssas._
+  import dk.itu.ssas.Settings.baseUrl
 
   type RequestType = AdminPageRequest
 
@@ -25,7 +26,7 @@ object AdminPage extends LoggedInPage {
 
     s"""
     <tr class="adminUserEntry">
-      <form action="/admin/toggleAdmin/${user.id}" method="POST">
+      <form action="$baseUrl/admin/toggleAdmin/${user.id}" method="POST">
         ${formKeyInput(key)}
         <input type="hidden" name="adminUserId" value="${user.id}" />
         <td class="adminUserEntryName">
@@ -35,7 +36,7 @@ object AdminPage extends LoggedInPage {
           $adminStatusInput
         </td>
       </form>
-      <form action="/admin/delete/${user.id}" method="DELETE">
+      <form action="$baseUrl/admin/delete/${user.id}" method="DELETE">
         ${formKeyInput(key)}
         <td class="adminUserEntryRemoveButton">
           <input name="adminUserRemove" class="styledSubmitButton" type="submit" value="Remove" />
@@ -123,7 +124,7 @@ object AdminPage extends LoggedInPage {
               <div id="adminAddUserBox">
                 <fieldset id="adminAddUserFieldset">
                   <legend>Add User</legend>
-                  <form name="adminAddUserForm" action="/signup" method="POST" onsubmit="return validateAddUser()" />
+                  <form name="adminAddUserForm" action="$baseUrl/signup" method="POST" onsubmit="return validateAddUser()" />
                     ${formKeyInput(key)}
                     <div id="adminAddUserFieldsetContent">
                       <table cellspacing="0" cellpadding="0">

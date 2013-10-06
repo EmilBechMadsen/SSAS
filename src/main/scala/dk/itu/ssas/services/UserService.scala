@@ -6,6 +6,7 @@ object UserService extends SsasService with UserExceptions {
   import dk.itu.ssas.model._
   import dk.itu.ssas.page._
   import dk.itu.ssas.page.request._
+  import dk.itu.ssas.Settings.baseUrl
   import dk.itu.ssas.Validate._
   import scala.language.postfixOps
   import spray.http._
@@ -45,7 +46,7 @@ object UserService extends SsasService with UserExceptions {
                           complete { HttpResponse(StatusCodes.BadRequest, "Both or neither accept and reject was pushed.") }
                         }
                       }
-                      redirect(s"/requests", StatusCodes.SeeOther)
+                      redirect(s"$baseUrl/requests", StatusCodes.SeeOther)
                     } catch {
                       case rde: RelationshipDeserializationException => complete { HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.") }
                     }
@@ -129,7 +130,7 @@ object UserService extends SsasService with UserExceptions {
                               }
                             }
 
-                            redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+                            redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
                           } else complete {
                             HttpResponse(StatusCodes.Unauthorized, "You do not have permission to edit this profile.")
                           }
@@ -160,7 +161,7 @@ object UserService extends SsasService with UserExceptions {
                         try {
                           if (validHobby(hobby)) {
                             u.addHobby(hobby)
-                            redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+                            redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
                           } else complete {
                             HttpResponse(StatusCodes.BadRequest, "Invalid hobby.")
                           }
@@ -188,10 +189,10 @@ object UserService extends SsasService with UserExceptions {
                           if (validHobby(hobby)) {
                             if (u.hobbies.exists { h => h == hobby }) {
                               u.removeHobby(hobby)
-                              redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+                              redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
                             }
                           }
-                          redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
+                          redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
                         } catch {
                           case dbe: DbError => complete { HttpResponse(StatusCodes.InternalServerError, "Database error.") }
                           case ue: UserException => complete { HttpResponse(StatusCodes.BadRequest, "Invalid info.") }
@@ -205,32 +206,32 @@ object UserService extends SsasService with UserExceptions {
               }
             }
           }
-        }~
-        path("request") {
-          post {
-            withSession { s =>
-              withUser(s) { u =>  
-                withFormKey(s) {
-                  if (u.id == id) {
-                    complete {
-                      HttpResponse(StatusCodes.BadRequest, "Sorry, you cannot have a relationship with yourself.")
-                    }
-                  } else {
-                    formFields('relationship) { relationship =>
-                      try {
-                        val otherUser = User(id)
-                        otherUser match {
-                          case Some(other) =>
-                            u.requestFriendship(other, Relationship(relationship))
-                            redirect(s"/profile/${u.id}", StatusCodes.SeeOther)
-                          case None => complete {
-                            HttpResponse(StatusCodes.BadRequest, "User does not exist.")  
-                          }
+        }
+      } ~
+      path("request") {
+        post {
+          withSession { s =>
+            withUser(s) { u =>  
+              withFormKey(s) {
+                if (u.id == id) {
+                  complete {
+                    HttpResponse(StatusCodes.BadRequest, "Sorry, you cannot have a relationship with yourself.")
+                  }
+                } else {
+                  formFields('relationship) { relationship =>
+                    try {
+                      val otherUser = User(id)
+                      otherUser match {
+                        case Some(other) =>
+                          u.requestFriendship(other, Relationship(relationship))
+                          redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
+                        case None => complete {
+                          HttpResponse(StatusCodes.BadRequest, "User does not exist.")  
                         }
-                      } catch {
-                        case e: RelationshipDeserializationException => complete {
-                          HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.")
-                        }
+                      }
+                    } catch {
+                      case e: RelationshipDeserializationException => complete {
+                        HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.")
                       }
                     }
                   }
@@ -261,7 +262,7 @@ object UserService extends SsasService with UserExceptions {
                 User(friendId.toInt) match {
                   case Some(otherUser) =>
                     u.removeFriend(otherUser)
-                    redirect(s"/friends", StatusCodes.SeeOther)
+                    redirect(s"$baseUrl/friends", StatusCodes.SeeOther)
                   case None =>
                     complete { HttpResponse(StatusCodes.BadRequest, "User not found.") }
                 }

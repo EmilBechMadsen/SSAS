@@ -6,6 +6,7 @@ object AdminService extends SsasService with UserExceptions {
   import dk.itu.ssas.model._
   import dk.itu.ssas.page._
   import dk.itu.ssas.page.request._
+  import dk.itu.ssas.Settings.baseUrl
   import dk.itu.ssas.Validate._
   import spray.http._
   import spray.routing._
@@ -44,7 +45,7 @@ object AdminService extends SsasService with UserExceptions {
                         }
 
                         log.info(s"User $userId promoted")
-                        redirect("/admin", StatusCodes.SeeOther)
+                        redirect(s"$baseUrl/admin", StatusCodes.SeeOther)
                       }
                       case None => {
                         complete {
@@ -71,7 +72,7 @@ object AdminService extends SsasService with UserExceptions {
                       case Some(deleteUser) => {
                         deleteUser.delete()
                         log.warn(s"User $userId deleted")
-                        redirect("/admin", StatusCodes.SeeOther)
+                        redirect(s"$baseUrl/admin", StatusCodes.SeeOther)
                       }
                       case None => complete { HttpResponse(StatusCodes.NotFound, "User not found.") }
                     }

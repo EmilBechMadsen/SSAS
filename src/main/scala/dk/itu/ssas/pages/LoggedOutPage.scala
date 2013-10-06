@@ -4,6 +4,7 @@ abstract class LoggedOutPage extends Page {
   import dk.itu.ssas._
   import dk.itu.ssas.model._
   import dk.itu.ssas.page.exception._
+  import dk.itu.ssas.Settings.baseUrl
 
   def header(title: String, key: Key, user: Option[User]): HTML = {
     user match {
@@ -15,10 +16,10 @@ abstract class LoggedOutPage extends Page {
           <html>
             <head>
               <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-              <link rel="stylesheet" type="text/css" href="/static/style.css" />
-              <script type="text/javascript" src="/static/xregexp-min.js"></script>
-              <script type="text/javascript" src="/static/unicode-base.js"></script>
-              <script type="text/javascript" src="/static/verimail.js"></script>
+              <link rel="stylesheet" type="text/css" href="$baseUrl/static/style.css" />
+              <script type="text/javascript" src="$baseUrl/static/xregexp-min.js"></script>
+              <script type="text/javascript" src="$baseUrl/static/unicode-base.js"></script>
+              <script type="text/javascript" src="$baseUrl/static/verimail.js"></script>
               <script type="text/javascript">
                 function validateLogin() {
                   var email = document.forms["loginForm"]["loginEmail"].value;
@@ -56,7 +57,7 @@ abstract class LoggedOutPage extends Page {
                   RaptorDating.com
                 </div>
                 <div id="loginBox">
-                  <form name="loginForm" action="/login" method="POST" onsubmit="return validateLogin()">
+                  <form name="loginForm" action="$baseUrl/login" method="POST" onsubmit="return validateLogin()">
                     ${formKeyInput(key)}
                     Email: <input name="loginEmail" type="text" />
                     Password: <input name="loginPassword" type="password" />
