@@ -34,6 +34,7 @@ object Settings {
     val dbPassword = conf.getString("ssas.db.dbPassword")
     val dbString   = s"jdbc:mysql://$dbServer/$db?user=$dbUser&password=$dbPassword"
     val dbDriver   = "com.mysql.jdbc.Driver"
+    val cleanPass  = conf.getLong("ssas.db.cleanPass")
   }
 
   object security {
@@ -48,6 +49,7 @@ object Settings {
     val minHobby       = conf.getInt("ssas.security.minHobby")
     val maxHobby       = conf.getInt("ssas.security.maxHobby")
     val hobbyWhitelist = conf.getString("ssas.security.hobbyWhitelist")
-    val formKeyTimeout = conf.getInt("ssas.security.formKeyTimeout")
+    val formKeyTimeout = conf.getLong("ssas.security.formKeyTimeout")
+    val sessionTimeout = conf.getLong("ssas.security.sessionTimeout")
   }
 }
