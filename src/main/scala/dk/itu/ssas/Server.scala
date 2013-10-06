@@ -14,8 +14,9 @@ object Server extends App with DbAccess {
   implicit val system = ActorSystem("ssas")
 
   // create and start our service actor
-  val service = system.actorOf(Props[Service], "service")
-  val mailer  = system.actorOf(Props[MailSender], "mailer")
+  val service  = system.actorOf(Props[Service], "service")
+  val mailer   = system.actorOf(Props[MailSender], "mailer")
+  val dbWorker = system.actorOf(Props[DbWorker], "dbWorker")
 
   // create database if it doesn't exists
   /*Db withSession {
@@ -25,7 +26,7 @@ object Server extends App with DbAccess {
     if (Q.queryNA[String]("SHOW TABLES LIKE 'user'").list.isEmpty) {
       ddl create
     }
-    //ddl.createStatements foreach {s => println(s"$s;")}
+    ddl.createStatements foreach {s => println(s"$s;")}
   }*/
 
   // create a new HttpServer using our handler and tell it where to bind to
