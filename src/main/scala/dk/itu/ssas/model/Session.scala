@@ -1,6 +1,7 @@
 package dk.itu.ssas.model
 
 import dk.itu.ssas.db.DbAccess
+import java.sql.Timestamp
 import java.util.UUID
 import scala.language.postfixOps
 import scala.slick.driver.MySQLDriver.simple._
@@ -8,7 +9,11 @@ import scala.slick.driver.MySQLDriver.simple.Database.threadLocalSession
 
 object Session extends DbAccess {
   def apply(): Session = Db withSession {
-    val s = Session(UUID.randomUUID().toString(), None)
+    import dk.itu.ssas.Settings.security.sessionTimeout
+
+    val time     = System.currentTimeMillis()
+    val creation = new Timestamp(time)
+    val s = Session(UUID.randomUUID().toString(), None, creation)
     Sessions insert s
 
     s
@@ -19,7 +24,10 @@ object Session extends DbAccess {
   }
 }
 
-case class Session(private val _key: String, private val _userId: Option[Int])
+case class Session(
+    private val _key: String, 
+    private val _userId: Option[Int],
+    val expiration: Timestamp)
   extends DbAccess {
   import dk.itu.ssas.model.User
   import dk.itu.ssas.Settings.security.formKeyTimeout
@@ -39,11 +47,11 @@ case class Session(private val _key: String, private val _userId: Option[Int])
   def newFormKey(): UUID = Db withSession {
     import java.sql.Timestamp
 
-    val formKey = UUID.randomUUID()
-    val time    = System.currentTimeMillis() + formKeyTimeout
-    val exp     = new Timestamp(time)
+    val formKey  = UUID.randomUUID()
+    val now      = System.currentTimeMillis()
+    val creation = new Timestamp(now)
 
-    FormKeys insert FormKey(formKey.toString(), _key, exp)
+    FormKeys insert FormKey(formKey.toString(), _key, creation)
 
     formKey
   }
@@ -56,26 +64,20 @@ case class Session(private val _key: String, private val _userId: Option[Int])
   def checkFormKey(formKey: UUID): Boolean = Db withSession {
     import java.sql.Timestamp
 
-    val fks = for {
-      fk <- FormKeys if fk.sessionKey === _key
+    val now = System.currentTimeMillis()
+    val exp = new Timestamp((now - formKeyTimeout * 60000))
+
+    val fk = for {
+      fk <- FormKeys if fk.key === formKey.toString() &&
+                        fk.creation >= exp
     } yield fk
 
-    var valid = false // FIXME: Better solution?
-    val now   = new Timestamp(System.currentTimeMillis())
-
-    fks foreach { f => 
-      if (f.expiration before now) {
-        deleteFk(f.key)
-      } else if (f.key == formKey.toString()) {
-        deleteFk(f.key)
-        valid = true
+    fk firstOption match {
+      case Some(f) => {
+        fk delete;
+        true
       }
+      case None    => false
     }
-
-    def deleteFk(key: String): Unit = {
-      (for (fk <- FormKeys if fk.key === key) yield fk) delete
-    }
-
-    valid
   }
 }
