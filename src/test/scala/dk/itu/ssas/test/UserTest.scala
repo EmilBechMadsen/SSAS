@@ -11,7 +11,7 @@ class UserTest extends FunSuite with DatabaseTests with DbAccess {
   import dk.itu.ssas.model._
 
   var user1Id = 1
-  val name  = "John Doe"
+  val name  = "John Døe"
   val email = "john@doe.com"
   val pass  = "password1"
   var user2Id = 2
@@ -174,7 +174,8 @@ class UserTest extends FunSuite with DatabaseTests with DbAccess {
   }
 
   test("User can log in") {
-    val user = User.login(email, pass)
+    val s    = Session()
+    val user = User.login(email, pass, s.key)
 
     user match {
       case Some(u) => {

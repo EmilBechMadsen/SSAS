@@ -10,22 +10,24 @@ trait DatabaseTests extends FunSuite with BeforeAndAfterAll with DbAccess {
   import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
 
   val dropStmts = List(
-    "DROP TABLE IF EXISTS ssas.user_hobby",
-    "DROP TABLE IF EXISTS ssas.hobby;",
-    "DROP TABLE IF EXISTS ssas.email_confirmation;",
-    "DROP TABLE IF EXISTS ssas.friend_request;",
-    "DROP TABLE IF EXISTS ssas.session;",
-    "DROP TABLE IF EXISTS ssas.admin;",
-    "DROP TABLE IF EXISTS ssas.friend;",
-    "DROP TABLE IF EXISTS ssas.user;")
+    "DROP TABLE IF EXISTS user_hobby",
+    "DROP TABLE IF EXISTS hobby;",
+    "DROP TABLE IF EXISTS email_confirmation;",
+    "DROP TABLE IF EXISTS friend_request;",
+    "DROP TABLE IF EXISTS formkey;",
+    "DROP TABLE IF EXISTS session;",
+    "DROP TABLE IF EXISTS admin;",
+    "DROP TABLE IF EXISTS friend;",
+    "DROP TABLE IF EXISTS user;")
 
-  def resetDb = Db withSession {
+  private def resetDb() = Db withSession {
     dropStmts foreach (s => (Q.u + s).execute)
     ddl create
   }
 
   override def beforeAll = Db withSession {
-    ddl create
+    dk.itu.ssas.Server.main(Array[String]())
+    resetDb()
   }
 
   override def afterAll = Db withSession {

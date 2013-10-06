@@ -8,7 +8,7 @@ case class ConfirmationMail(email: String, name: String, key: UUID)
 extends MailSenderMessage
 
 class MailSender extends Actor with ActorLogging {
-  import org.apache.commons.mail.HtmlEmail
+  import org.apache.commons.mail.{ EmailException, HtmlEmail }
   import Settings.{ baseUrl, siteName }
   import Settings.email._
 
@@ -16,18 +16,22 @@ class MailSender extends Actor with ActorLogging {
     case ConfirmationMail(email, name, confirmationGuid) => confirmationMail(email, name, confirmationGuid)
   }
 
-  def sendEmail(email: String, name: String, subject: String, body: String) = {
+  def sendEmail(email: String, name: String, subject: String, body: String): Unit = {
     val message = new HtmlEmail()
-    message.setHostName(host) // Ofc needs to have smtp running locally (default port 25)
-    message.addTo(email, name)
-    message.setFrom(address, siteName)
-    message.setSubject(subject)
-    message.setHtmlMsg(body)
-    message.send()
-    log.info(s"Email to $email sent")
+    try {
+      message.setHostName(host) // Ofc needs to have smtp running locally (default port 25)
+      message.addTo(email, name)
+      message.setFrom(address, siteName)
+      message.setSubject(subject)
+      message.setHtmlMsg(body)
+      message.send()
+      log.info(s"Email to $email sent")
+    } catch {
+      case e: EmailException => log.error(s"Error sending mail to $email")
+    }
   }
 
-  def confirmationMail(email: String, name: String, confirmationGuid: UUID) = {
+  def confirmationMail(email: String, name: String, confirmationGuid: UUID): Unit = {
     log.info(s"Sending confirmation mail to $email")
     val url = s"$baseUrl/confirm/$confirmationGuid"
   
@@ -35,7 +39,7 @@ class MailSender extends Actor with ActorLogging {
     val body = s"Hi $name <br><br>" +
                 "Please confirm your registration by navigating to this address:<br><br>" +
                s"$url <br><br>" +
-               "Regards, The Raptor Dating Team" 
+                "Regards, The Raptor Dating Team" 
 
     // Send confirmation mail
     sendEmail(email, name, subject, body)
