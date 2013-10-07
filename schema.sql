@@ -1,73 +1,28 @@
 use ssas;
 
-DROP TABLE IF EXISTS USER_HOBBY;
-DROP TABLE IF EXISTS HOBBY;
-DROP TABLE IF EXISTS EMAIL_CONFIRMATION;
-DROP TABLE IF EXISTS FRIEND_REQUEST;
-DROP TABLE IF EXISTS SESSION;
-DROP TABLE IF EXISTS ADMIN;
-DROP TABLE IF EXISTS FRIEND;
-DROP TABLE IF EXISTS USER;
-
-CREATE TABLE USER (
-  ID int NOT NULL auto_increment,
-  NAME Varchar(255) NOT NULL,
-  ADDRESS Varchar(255),
-  EMAIL Varchar(255) NOT NULL,
-  PASSWORD Varchar(255) NOT NULL,
-  SALT varchar(64) NOT NULL,
-  PRIMARY KEY (ID),
-  UNIQUE (Email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE FRIEND (
-  USER1 int NOT NULL,
-  USER2 int NOT NULL,
-  RELATIONSHIP Enum('ROMANCE', 'BROMANCE', 'FRIENDSHIP') NOT NULL DEFAULT 'FRIENDSHIP',
-  PRIMARY KEY (USER1, USER2),
-  CONSTRAINT `FK_FRIEND_USER1` FOREIGN KEY (`USER1`) REFERENCES `USER` (`ID`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  CONSTRAINT `FK_FRIEND_USER2` FOREIGN KEY (`USER2`) REFERENCES `USER` (`ID`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE ADMIN (
-	USER int NOT NULL,
-	PRIMARY KEY (USER),
-	CONSTRAINT `FK_ADMIN_USER` FOREIGN KEY (`USER`) REFERENCES `USER` (`ID`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE SESSION (
-	SESSION_KEY varchar(36) NOT NULL,
-	USER int NOT NULL,
-	PRIMARY KEY (SESSION_KEY),
-	CONSTRAINT `FK_SESSION_USER` FOREIGN KEY (`USER`) REFERENCES `USER` (`ID`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE FRIEND_REQUEST (
-	FROM_USER int NOT NULL,
-	TO_USER int NOT NULL,
-	RELATIONSHIP Enum('ROMANCE', 'BROMANCE', 'FRIENDSHIP') NOT NULL DEFAULT 'FRIENDSHIP',
-	PRIMARY KEY (FROM_USER, TO_USER),
-	CONSTRAINT `FK_FRIEND_REQUEST_USER1` FOREIGN KEY (`FROM_USER`) REFERENCES `USER` (`ID`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  CONSTRAINT `FK_FRIEND_REQUEST_USER2` FOREIGN KEY (`TO_USER`) REFERENCES `USER` (`ID`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE EMAIL_CONFIRMATION (
-	GUID varchar(36) NOT NULL,
-	USER int NOT NULL,
-	PRIMARY KEY (GUID),
-	CONSTRAINT `FK_EMAIL_CONFIRMATION_USER` FOREIGN KEY (`USER`) REFERENCES `USER` (`ID`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE HOBBY (
-	ID int NOT NULL auto_increment,
-	NAME varchar(255) NOT NULL,
-	PRIMARY KEY (ID)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE USER_HOBBY (
-	USER int NOT NULL,
-	HOBBY int NOT NULL,
-	PRIMARY KEY (USER, HOBBY),
-	CONSTRAINT `FK_USER_HOBBY_USER` FOREIGN KEY (`USER`) REFERENCES `USER` (`ID`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  CONSTRAINT `FK_USER_HOBBY_HOBBY` FOREIGN KEY (`HOBBY`) REFERENCES `HOBBY` (`ID`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+create table `user` (`id` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,`name` VARCHAR(254) NOT NULL,`address` VARCHAR(254),`email` VARCHAR(254) NOT NULL,`password` VARCHAR(254) NOT NULL,`salt` VARCHAR(254) NOT NULL);
+create unique index `idx_email` on `user` (`email`);
+create table `friend` (`user1` INTEGER NOT NULL,`user2` INTEGER NOT NULL,`relationship` VARCHAR(254) DEFAULT 'FRIENDSHIP' NOT NULL);
+alter table `friend` add constraint `pk_friend` primary key(`user1`,`user2`);
+create table `admin` (`user` INTEGER NOT NULL PRIMARY KEY);
+create table `session` (`session_key` VARCHAR(254) NOT NULL PRIMARY KEY,`user` INTEGER,`creation` TIMESTAMP NOT NULL);
+create index `idx_session` on `session` (`creation`);
+create table `friend_request` (`from_user` INTEGER NOT NULL,`to_user` INTEGER NOT NULL,`relationship` VARCHAR(254) DEFAULT 'FRIENDSHIP' NOT NULL);
+alter table `friend_request` add constraint `pk_friend_request` primary key(`from_user`,`to_user`);
+create table `email_confirmation` (`guid` VARCHAR(254) NOT NULL PRIMARY KEY,`user` INTEGER NOT NULL);
+create table `hobby` (`id` INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,`name` VARCHAR(254) NOT NULL);
+create unique index `idx_name` on `hobby` (`name`);
+create table `user_hobby` (`user` INTEGER NOT NULL,`hobby` INTEGER NOT NULL);
+alter table `user_hobby` add constraint `pk_friend_request` primary key(`user`,`hobby`);
+create table `formkey` (`form_key` VARCHAR(254) NOT NULL PRIMARY KEY,`session` VARCHAR(254) NOT NULL,`creation` TIMESTAMP NOT NULL);
+create index `idx_formkey` on `formkey` (`creation`);
+alter table `friend` add constraint `fk_friend_user1` foreign key(`user1`) references `user`(`id`) on update NO ACTION on delete CASCADE;
+alter table `friend` add constraint `fk_friend_user2` foreign key(`user2`) references `user`(`id`) on update NO ACTION on delete CASCADE;
+alter table `admin` add constraint `fk_admin_user` foreign key(`user`) references `user`(`id`) on update NO ACTION on delete CASCADE;
+alter table `session` add constraint `fk_session_user` foreign key(`user`) references `user`(`id`) on update NO ACTION on delete CASCADE;
+alter table `friend_request` add constraint `fk_friend_request_user1` foreign key(`from_user`) references `user`(`id`) on update NO ACTION on delete CASCADE;
+alter table `friend_request` add constraint `fk_friend_request_user2` foreign key(`to_user`) references `user`(`id`) on update NO ACTION on delete CASCADE;
+alter table `email_confirmation` add constraint `fk_email_confirmation_user` foreign key(`user`) references `user`(`id`) on update NO ACTION on delete CASCADE;
+alter table `user_hobby` add constraint `fk_user_hobby_user` foreign key(`user`) references `user`(`id`) on update NO ACTION on delete CASCADE;
+alter table `user_hobby` add constraint `fk_user_hobby_hobby` foreign key(`hobby`) references `hobby`(`id`) on update NO ACTION on delete CASCADE;
+alter table `formkey` add constraint `fk_formkey_session` foreign key(`session`) references `session`(`session_key`) on update NO ACTION on delete CASCADE;
