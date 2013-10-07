@@ -41,7 +41,7 @@ class DbWorker extends Actor with ActorLogging with DbAccess {
     } yield s
 
     val c = ss.list.length
-    if (c >= 0) log.info(s"Deleting $c sessions")
+    if (c > 0) log.info(s"Deleting $c sessions")
 
     ss delete;
   }
@@ -55,7 +55,7 @@ class DbWorker extends Actor with ActorLogging with DbAccess {
     } yield fk
 
     val c = fks.list.length
-    if (c >= 0) log.info(s"Deleting $c form keys")
+    if (c > 0) log.info(s"Deleting $c form keys")
 
     fks delete;
   }
