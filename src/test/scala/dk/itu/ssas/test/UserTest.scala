@@ -175,10 +175,12 @@ class UserTest extends FunSuite with DatabaseTests with DbAccess {
 
   test("User can log in") {
     val s    = Session()
-    val user = User.login(email, pass, s.key)
+    val user = User(user1Id)
 
     user match {
       case Some(u) => {
+        assert(u.session isEmpty)
+        User.login(email, pass, s.key)
         assert(u.session isDefined)
       }
       case None    => assert(false)
@@ -190,11 +192,24 @@ class UserTest extends FunSuite with DatabaseTests with DbAccess {
 
     user match {
       case Some(u) => {
-        assert(u.session.isDefined)
+        assert(u.session isDefined)
         u.logout()
         assert(u.session === None)
       }
       case None    => assert(false)
+    }
+  }
+
+  test("User can't log in with wrong password") {
+    val s    = Session()
+    val user = User(user1Id)
+
+    user match {
+      case Some(u) => {
+        assert(u.session isEmpty)
+        User.login(email, s"a$pass", s.key)
+        assert(u.session isEmpty)
+      }
     }
   }
 
