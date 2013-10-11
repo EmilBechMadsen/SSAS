@@ -20,6 +20,7 @@ object UserService extends SsasService with UserExceptions {
           withUser(s) { u =>
             html(s) { (s, formKey) =>
               complete {
+                log.debug(s"Showing friend requests for user $u with session $s")
                 ViewRequestsPage.render("Your friend requests", formKey, Some(u), ViewRequestsPageRequest(u))
               }
             }
@@ -37,21 +38,29 @@ object UserService extends SsasService with UserExceptions {
                     try {
                       (accept, reject) match {
                         case (Some(_), None) => {
+                          log.debug(s"User $u with session $s accepted friend request from user $otherUser")
                           val k = u.acceptFriendRequest(otherUser, Relationship(requestKind))
                         }
                         case (None, Some(_)) => {
+                          log.debug(s"User $u with session $s rejected friend request from user $otherUser")
                           val k = u.rejectFriendRequest(otherUser, Relationship(requestKind))
                         }
                         case (_,_) => {
+                          log.warn(s"Invalid friend request attempted by user $u with session $s")
                           complete { HttpResponse(StatusCodes.BadRequest, "Both or neither accept and reject was pushed.") }
                         }
                       }
                       redirect(s"$baseUrl/requests", StatusCodes.SeeOther)
                     } catch {
-                      case rde: RelationshipDeserializationException => complete { HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.") }
+                      case rde: RelationshipDeserializationException => complete {
+                        log.error(s"Invalid reationship sent by user $u with session $s")
+                        HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.") 
+                      }
                     }
-                  case None =>
-                    complete { HttpResponse(StatusCodes.BadRequest, "User not found.") }
+                  case None => complete { 
+                    log.error(s"User $u with session $s tried to accept or reject request from nonexistant user $friendId")
+                    HttpResponse(StatusCodes.BadRequest, "User not found.") 
+                  }
                 }
               }
             }
@@ -67,6 +76,7 @@ object UserService extends SsasService with UserExceptions {
               if (u.id == id) {
                 html(s) { (s, formKey) =>
                   complete {
+                    log.debug(s"Showing own profile for user $u, with session $s")
                     EditProfilePage.render("Profile: " + u.name, formKey, Some(u), EditProfilePageRequest(u))
                   }
                 }
@@ -75,10 +85,12 @@ object UserService extends SsasService with UserExceptions {
                 otherUser match {
                   case Some(other) => html(s) { (s, formKey) =>
                     complete {
+                      log.debug(s"Showing profile for $other to $u, with session $s")
                       ProfilePage.render("Profile: " + other.name, formKey, Some(u), ProfilePageRequest(u, other))
                     }
                   }
                   case None => complete {
+                    log.warn(s"User $s with session $s tried to view profile of nonexistant user $id")
                     HttpResponse(StatusCodes.NotFound, "The requested user does not exist.")
                   }
                 }
