@@ -69,7 +69,7 @@ object UserService extends SsasService with UserExceptions {
       }
     } ~
     pathPrefix("profile" / IntNumber) { id =>
-      path("") {
+      pathEnd {
         get {
           withSession { s =>
             withUser(s) { u =>

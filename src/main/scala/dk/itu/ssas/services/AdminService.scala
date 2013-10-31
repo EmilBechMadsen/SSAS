@@ -14,7 +14,7 @@ object AdminService extends SsasService with UserExceptions {
 
   def route = {
     pathPrefix("admin") {
-      path("") {
+      pathEnd {
         withSession { s =>
           withUser(s) { u =>
             withAdmin(u) {
