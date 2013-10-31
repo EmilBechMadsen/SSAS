@@ -1,11 +1,16 @@
 package dk.itu.ssas.db
 
 protected trait Hugs extends Users {
+  import dk.itu.ssas.model.User
   import java.sql.Timestamp
   import scala.slick.driver.MySQLDriver.simple._
   import scala.slick.lifted.ForeignKeyAction
 
-  protected case class Hug(id: Int, seen: Boolean, time: Timestamp, fromUser: Int, toUser: Int)
+  protected case class Hug(id: Int, seen: Boolean, time: Timestamp, fromUserId: Int, toUserId: Int) {
+    def fromUser: Option[User] = User(fromUserId)
+    
+    def toUser: Option[User] = User(toUserId)
+  }
 
   protected object Hugs extends Table[Hug]("hug") {
     def id           = column[Int]("id", O.PrimaryKey, O.AutoInc)
