@@ -48,6 +48,7 @@ object User extends UserExceptions with DbAccess {
     * @param address - The user's address
     * @param email - The user's email
     * @param password - The user's password
+    * @param confirmed - If true, the user is created confirmed 
     * @return The created user
     * 
     * @throws InvalidEmailException
@@ -56,7 +57,7 @@ object User extends UserExceptions with DbAccess {
     * @throws InvalidAddressException
     * @throws ExistingEmailException
     */
-  def create(name: String, address: Option[String], email: String, password: String): Option[User] = Db withSession {
+  def create(name: String, address: Option[String], email: String, password: String, confirmed: Boolean = false): Option[User] = Db withSession {
     (validEmail(email), validName(name), validPassword(password), validAddress(address)) match {
       case (true, true, true, true) => {
         val uniqueEmail = (for {
@@ -68,13 +69,15 @@ object User extends UserExceptions with DbAccess {
           val user = (name, address, email, hashedPw, salt)
           val id = Users.forInsert returning Users.id insert user
 
-          val key = UUID.randomUUID()
+          if (!confirmed) {
+            val key = UUID.randomUUID()
 
-          val ec = EmailConfirmation(key.toString(), id)
-          EmailConfirmations insert ec
+            val ec = EmailConfirmation(key.toString(), id)
+            EmailConfirmations insert ec
 
-          mailer ! ConfirmationMail(email, name, key)
-
+            mailer ! ConfirmationMail(email, name, key)
+          }
+          
           User(id)
         } else {
           throw new ExistingEmailException
@@ -378,7 +381,56 @@ case class User(
     fq delete
   }
 
-  /** Returns the a list of the users hobbies
+  /** Hugs the user u
+    *
+    * @param u - The user to hug
+    *
+    * @throws StrangerException
+    */
+  def hug(u: User): Unit = Db withSession {
+    if (isFriend(u)) {
+      val hug = Hugs.forInsert insert (id, u.id)
+    } else {
+      throw new StrangerException
+    }
+  }
+
+  /** Returns a list of hugs the user has received
+    *
+    * @return A tuple of lists containing the user's received hugs. The first list holds unseen hugs, the second seen hugs.
+    */
+  def hugs: (List[Hug], List[Hug]) = Db withSession {
+    val hs = for {
+      hs <- Hugs if hs.toUserId === id
+    } yield hs
+
+    hs.list.partition(h => !h.seen)
+  }
+
+  /** Marks a user's hug as seen
+    *
+    * @param hId - The hug to mark as seen
+    */
+  def seenHug(hId: Int): Unit = Db withSession {
+    (for (hs <- Hugs if hs.id === hId && hs.toUserId === id && hs.seen === false) yield hs.seen) update true
+  }
+
+  /** Marks all of a user's unread hugs as seen
+    *
+    */
+  def seenHugs: Unit = Db withSession {
+    (for (hs <- Hugs if hs.toUserId === id && hs.seen === false) yield hs.seen) update true
+  }
+
+  /** Returns the number of unseen hugs
+    *
+    * @return The number of unseen hugs
+    */
+  def unseenHugs: Int = Db withSession {
+    (for (hs <- Hugs if hs.toUserId === id && hs.seen === false) yield hs.id.count) first
+  }
+
+  /** Returns a list of the users hobbies
     *
     * @return A list of the user's hobbies
     */

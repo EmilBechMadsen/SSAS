@@ -4,6 +4,7 @@ trait DbAccess
   extends Friends
   with Hobbies
   with UserHobbies
+  with Hugs
   with Relationships
   with FriendRequests
   with Admins
@@ -21,5 +22,5 @@ trait DbAccess
   protected val ddl = Users.ddl ++ Friends.ddl ++ Admins.ddl ++ 
                       Sessions.ddl ++ FriendRequests.ddl ++ 
                       EmailConfirmations.ddl ++ Hobbies.ddl ++ 
-                      UserHobbies.ddl ++ FormKeys.ddl
+                      UserHobbies.ddl ++ Hugs.ddl ++ FormKeys.ddl
 }

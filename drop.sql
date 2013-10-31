@@ -1,4 +1,5 @@
 use ssas;
+DROP TABLE IF EXISTS hug;
 DROP TABLE IF EXISTS user_hobby;
 DROP TABLE IF EXISTS hobby;
 DROP TABLE IF EXISTS email_confirmation;
