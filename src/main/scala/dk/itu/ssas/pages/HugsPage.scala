@@ -48,7 +48,14 @@ object HugsPage extends LoggedInPage {
     val user = request.user
     val (unseenHugs, seenHugs) = user.hugs
     s"""
-    <div id="hugsContent" class="content">
+    <script type="text/javascript">
+      function hugsSeen() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("POST", "${baseUrl}/hugs/seen", true);
+        xmlhttp.send();
+      }
+    </script>
+    <div id="hugsContent" class="content" onload="hugsSeen();">
       <div class="header">
         <div id="caption">
           <h2>My Hugs</h2>
