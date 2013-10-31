@@ -66,12 +66,12 @@ object ProfilePage extends LoggedInPage {
       }
   }
 
-  private def hugButton(rel: Option[Relationship], fromUser: User, toUser: User) = {
+  private def hugButton(rel: Option[Relationship], fromUser: User, toUser: User, key: Key) = {
     s"""
     <div id="hugBox">
-      <form action="${baseUrl}/hug/${toUser}" method="POST">
+      <form action="${baseUrl}/hug/${toUser.id}" method="POST">
         ${formKeyInput(key)}
-        <input type="hidden" name="hugFromUserId" value="${fromUser}" />
+        <input type="hidden" name="hugFromUserId" value="${fromUser.id}" />
         <input type="submit" class="styledSubmitButton" value="Hug ${toUser.name}" />
       </form>
     </div>
@@ -111,10 +111,10 @@ object ProfilePage extends LoggedInPage {
             <div id="addressBox">
               <span class="profileLabel">Address</span><br />
               <div id="addressInfoBox">
-                ${address(rel, request.other)}
+                ${address(rel, request.user, request.other)}
               </div>
             </div>
-            ${hugButton(rel, request.user, request.other)}
+            ${hugButton(rel, request.user, request.other, key)}
           </div>
           <div id="profileRightBox">
             <div id="hobbiesBox">

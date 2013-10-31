@@ -302,13 +302,29 @@ object UserService extends SsasService with UserExceptions {
         }
       }
     } ~
-    path("hugs") {
-      get {
-        withSession { s =>
-          withUser(s) { u =>
-            html(s) { (s, formKey) =>
-              complete {
-                HugsPage.render("Your hugs", formKey, Some(u), HugsPageRequest(u))
+    pathPrefix("hugs") {
+      pathEnd {
+        get {
+          withSession { s =>
+            withUser(s) { u =>
+              html(s) { (s, formKey) =>
+                complete {
+                  val site = HugsPage.render("Your hugs", formKey, Some(u), HugsPageRequest(u))
+                  u.seenHugs
+                  site
+                }
+              }
+            }
+          }
+        }
+      }~
+      path("seen") {
+        post { 
+          withSession { s =>
+            withUser(s) { u =>
+              withFormKey(s) {
+                u.seenHugs
+                complete{ HttpResponse(StatusCodes.OK) }
               }
             }
           }

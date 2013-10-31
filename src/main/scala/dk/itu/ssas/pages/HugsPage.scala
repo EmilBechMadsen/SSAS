@@ -17,7 +17,7 @@ object HugsPage extends LoggedInPage {
     dateFormat.format(date)
   }
 
-  def unseenHugTableRow(hug: Hug, fromUser: User): HTML = {
+  def unseenHugTableRow (hug: Hug)(fromUser: User): HTML = {
     s"""
     <tr class="hugsTableRow">
      <td class="hugsTableName"><a href="${baseUrl}/profile/${fromUser.id}" class="hugProfileLink">${fromUser.name}</a> just hugged you!</td>
@@ -26,7 +26,7 @@ object HugsPage extends LoggedInPage {
     """
   }
 
-  def seenHugTableRow(hug: Hug, fromUser: User): HTML = {
+  def seenHugTableRow (hug: Hug)(fromUser: User): HTML = {
     s"""
     <tr class="hugsTableRow">
      <td class="hugsTableName"><a href="${baseUrl}/profile/${fromUser.id}" class="hugProfileLink">${fromUser.name}</a> hugged you</td>
