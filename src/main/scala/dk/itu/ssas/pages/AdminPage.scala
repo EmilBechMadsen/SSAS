@@ -124,7 +124,7 @@ object AdminPage extends LoggedInPage {
               <div id="adminAddUserBox">
                 <fieldset id="adminAddUserFieldset">
                   <legend>Add User</legend>
-                  <form name="adminAddUserForm" action="$baseUrl/signup" method="POST" onsubmit="return validateAddUser()" />
+                  <form name="adminAddUserForm" action="$baseUrl/admin/createUser" method="POST" onsubmit="return validateAddUser()" />
                     ${formKeyInput(key)}
                     <div id="adminAddUserFieldsetContent">
                       <table cellspacing="0" cellpadding="0">

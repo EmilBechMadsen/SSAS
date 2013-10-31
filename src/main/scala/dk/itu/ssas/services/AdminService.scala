@@ -29,6 +29,36 @@ object AdminService extends SsasService with UserExceptions {
           }
         }
       } ~
+      path("createUser") {
+        post {
+          withSession { s =>
+            withUser(s) { u =>
+              withAdmin(u) {
+                withFormKey(s) {
+                  formFields('signupEmail, 'signupName, 'signupPassword, 'signupPasswordConfirm) {
+                    (email, name, pass1, pass2) =>
+                    if (pass1 == pass2 && validEmail(email) && validName(name) && validPassword(pass1)) {
+                      try {
+                        User.create(name, None, email, pass1, true) match {
+                          case Some(u) =>
+                            redirect(s"$baseUrl/admin", StatusCodes.SeeOther)
+                          case None    => complete {
+                            HttpResponse(StatusCodes.InternalServerError)
+                          }
+                        } 
+                      } catch {
+                        case eee: ExistingEmailException => complete { HttpResponse(StatusCodes.BadRequest, "User with that email already exists.") }
+                      }
+                    } else complete {
+                      HttpResponse(StatusCodes.BadRequest, "Invalid information.")
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }~
       path("toggleAdmin" / IntNumber) { userId =>
         post {
           withSession { s =>

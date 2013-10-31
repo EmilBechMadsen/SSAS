@@ -301,6 +301,45 @@ object UserService extends SsasService with UserExceptions {
           }
         }
       }
+    } ~
+    path("hugs") {
+      get {
+        withSession { s =>
+          withUser(s) { u =>
+            html(s) { (s, formKey) =>
+              complete {
+                HugsPage.render("Your hugs", formKey, Some(u), HugsPageRequest(u))
+              }
+            }
+          }
+        }
+      }
+    }~
+    path("hug" / IntNumber) { id =>
+      post { 
+        withSession { s =>
+          withUser(s) { u =>
+            withFormKey(s) {
+              User(id) match {
+                case Some(user) => 
+                  if(u.friends contains user) {
+                    try {
+                      u hug user
+                    } catch {
+                      case se: StrangerException => 
+                        complete { HttpResponse(StatusCodes.Unauthorized, "You can only hug your friends.") }
+                    }
+                    redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
+                  } else {
+                    complete { HttpResponse(StatusCodes.Unauthorized, "You can only hug your friends.") }
+                  }
+                case None =>
+                  complete { HttpResponse(StatusCodes.BadRequest, "User not found.") }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
