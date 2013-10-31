@@ -427,7 +427,9 @@ case class User(
     * @return The number of unseen hugs
     */
   def unseenHugs: Int = Db withSession {
-    (for (hs <- Hugs if hs.toUserId === id && hs.seen === false) yield hs.id.count) first
+    val q = (for (hs <- Hugs if hs.toUserId === id && hs.seen === false) yield hs.id)
+
+    Query(q.length) first
   }
 
   /** Returns a list of the users hobbies
