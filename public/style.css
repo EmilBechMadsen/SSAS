@@ -39,6 +39,29 @@ a:visited {
   border: 2px solid;
 }
 
+.content {
+  margin-top: 6%;
+}
+
+.header {
+  width: 100%;
+  float: left;
+  margin-bottom: -15px;
+}
+
+#caption {
+  font-size: 16pt;
+  padding-left: 10px;  
+  float: left;
+}
+
+#contentBody {
+  width: 100%;
+  border: 1px solid;
+  border-radius: 10px;
+  float: left;
+}
+
 /* Login header */
 #topBarProfileBox {
   width: 20%;
@@ -281,6 +304,11 @@ input.profileInput {
   padding-bottom: 5px;
 }
 
+#hugBox {
+  padding-top: 15px;
+  padding-left: 35px;
+}
+
 #addressInfoBox, #relationStatus {
   padding-left: 20px;
   padding-top: 5px;
@@ -435,4 +463,47 @@ input.profileInput {
 }
 
 
+/* Hugs */
+#hugsContent {
+  width: 60%;
+  margin-left: 20%;
+  margin-right: 20%;
+}
 
+.hugsCaption {
+  margin-left: 10px;
+  margin-top: 10px;
+  margin-bottom: 0px;
+}
+
+#hugsTable {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  margin-left: 25px;
+  width: 100%;
+}
+
+.hugsTableRow {
+  height: 25px;
+}
+
+.hugsTableName {
+  width: 60%;
+}
+
+.hugsTableDate {
+  width: 20%;
+}
+
+.hugProfileLink {
+  font-weight: bold;
+  color: #900;
+}
+
+.hugProfileLink:hover {
+  color: #900;
+}
+
+.hugProfileLink:visited {
+  color: #900;
+}

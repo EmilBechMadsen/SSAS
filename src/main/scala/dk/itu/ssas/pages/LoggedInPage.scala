@@ -66,6 +66,11 @@ abstract class LoggedInPage extends Page {
                 </a>
               </div>
               <div class="topBarButtonBox">
+                <a href="$baseUrl/hugs">
+                  <button class="styledButton" type="button">Hugs (${user.unseenHugs})</button>
+                </a>
+              </div>
+              <div class="topBarButtonBox">
                 <a href="$baseUrl/friends">
                   <button class="styledButton" type="button">Friends</button>
                 </a>

@@ -12,3 +12,4 @@ case class NoRequest() extends Request
 case class ProfilePageRequest(user: User, other: User) extends Request
 case class SearchPageRequest(result: List[User]) extends Request
 case class ViewRequestsPageRequest(user: User) extends Request
+case class HugsPageRequest(user: User) extends Request

@@ -50,14 +50,32 @@ object ProfilePage extends LoggedInPage {
     sb.toString()
   }
 
-  private def address(rel: Option[Relationship], other: User): HTML = {
-    rel match {
-      case Some(r) => other.address match {
+  private def address(rel: Option[Relationship], user: User, other: User): HTML = {
+    val addr =
+      other.address match {
         case Some(a) => a
         case None    => "Not listed"
       }
-      case None    => "Only available to friends"
-    }
+
+    if (user.admin)
+      addr
+    else 
+      rel match {
+        case Some(r) => addr
+        case None    => "Only available to friends"
+      }
+  }
+
+  private def hugButton(rel: Option[Relationship], fromUser: User, toUser: User) = {
+    s"""
+    <div id="hugBox">
+      <form action="${baseUrl}/hug/${toUser}" method="POST">
+        ${formKeyInput(key)}
+        <input type="hidden" name="hugFromUserId" value="${fromUser}" />
+        <input type="submit" class="styledSubmitButton" value="Hug ${toUser.name}" />
+      </form>
+    </div>
+    """ 
   }
 
   private def hobbies(other: User): HTML = {
@@ -86,16 +104,17 @@ object ProfilePage extends LoggedInPage {
         </div>
         <div id="profileBox">
           <div id="profileLeftBox">
-          <div id="relationBox">
-            <span class="profileLabel">Your relationship</span><br />
-            <span id="relationStatus">${relationshipText(rel)}</span>
-          </div>
-          <div id="addressBox">
-            <span class="profileLabel">Address</span><br />
-            <div id="addressInfoBox">
-              ${address(rel, request.other)}
+            <div id="relationBox">
+              <span class="profileLabel">Your relationship</span><br />
+              <span id="relationStatus">${relationshipText(rel)}</span>
             </div>
-          </div>
+            <div id="addressBox">
+              <span class="profileLabel">Address</span><br />
+              <div id="addressInfoBox">
+                ${address(rel, request.other)}
+              </div>
+            </div>
+            ${hugButton(rel, request.user, request.other)}
           </div>
           <div id="profileRightBox">
             <div id="hobbiesBox">

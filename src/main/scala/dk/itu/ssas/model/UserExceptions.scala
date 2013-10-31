@@ -21,6 +21,9 @@ protected trait UserExceptions {
   case class ExistingEmailException(s: String = "Already a user with that email")
   extends UserException(s)
 
+  case class StrangerException(s: String = "The user is not a friend of this user")
+  extends UserException(s)
+
   case class DbError(s: String = "There was a problem updating the database")
   extends UserException(s)
 }
