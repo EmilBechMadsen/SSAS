@@ -66,16 +66,20 @@ object ProfilePage extends LoggedInPage {
       }
   }
 
-  private def hugButton(rel: Option[Relationship], fromUser: User, toUser: User, key: Key) = {
-    s"""
-    <div id="hugBox">
-      <form action="${baseUrl}/hug/${toUser.id}" method="POST">
-        ${formKeyInput(key)}
-        <input type="hidden" name="hugFromUserId" value="${fromUser.id}" />
-        <input type="submit" class="styledSubmitButton" value="Hug ${toUser.name}" />
-      </form>
-    </div>
-    """ 
+  private def hugButton(rel: Option[Relationship], fromUser: User, toUser: User, key: Key): HTML = {
+    rel match {
+      case Some(r) =>
+        s"""
+        <div id="hugBox">
+          <form action="${baseUrl}/hug/${toUser.id}" method="POST">
+            ${formKeyInput(key)}
+            <input type="hidden" name="hugFromUserId" value="${fromUser.id}" />
+            <input type="submit" class="styledSubmitButton" value="Hug ${toUser.name}" />
+          </form>
+        </div>
+        """
+      case None => ""
+    }
   }
 
   private def hobbies(other: User): HTML = {
