@@ -35,93 +35,50 @@
         document.getElementById('profilePasswordForm').submit()
       }
       </script>
-      <div id="profileWrapper">
-        <div id="profileHeader">
-          <div id="profileCaption">
-          <form id="profileNameForm" method="POST">
-            <input id="profileNameInput" name="profileName" type="text" value="Thorstein Immanuel Højreb" />
-          </form>
-          </div>
-          <div id="profileSaveChangesBox">
-            <button type="submit" class="styledSubmitButton" form="profileNameForm profileAddressForm profilePasswordForm">Save Changes</button>
-          </div>
+    <div id="profileWrapper">
+      <div id="profileHeader">
+        <div id="profileCaption">
+          <h2>Edit profile</h2>
         </div>
-        <div id="profileBox">
-          <div id="profileLeftBox">
+      </div>
+      <div id="profileBox">
+        <div id="profileLeftBox">
+          <form action="$baseUrl/profile/${user.id}/edit/info" name="profileForm" id="profileNameForm" method="POST" onsubmit="return validate()">
+            ${formKeyInput(key)}
+            <input id="profileNameInput" name="profileName" type="text" value="${user.name}" />
             <div id="addressBox">
               <span class="profileLabel">Address</span><br />
-              <form id="profileAddressForm" method="POST">
-                <textarea id="profileAddressInput">Leningrad Road 24
-90210 Los Angeles
-California, USA
-                </textarea>
-              </form>
+                <textarea name="profileAddress" id="profileAddressInput">${address(user)}</textarea>
             </div>
             <div id="profilePasswordBox">
-              <form id="profilePasswordForm" method="POST">
                 <span class="profileLabel">Current Password</span><br />
-                <input class="profileInput" name="profilePasswordInput" type="password" /><br />
+                <input class="profileInput" name="profileCurrentPassword" type="password" /><br />
                 <span class="profileLabel">New Password</span><br />
-                <input class="profileInput" name="profilePasswordInput" type="password" /><br />
+                <input class="profileInput" name="profileNewPassword" type="password" /><br />
                 <span class="profileLabel">Confirm New Password</span><br />
-                <input class="profileInput" name="profilePasswordInput" type="password" />
-              </form>
+                <input class="profileInput" name="profileNewPasswordConfirm" type="password" />
             </div>
-          </div>
-          <div id="profileRightBox">
-            <div id="hobbiesBox">
-              <span class="profileLabel">Your Hobbies</span>
-              <div id="hobbiesListBox">
-                <table id="hobbiesTable">
-                  <tr>
-                    <form method="POST">
-                    <td class="hobbiesListItem">Horses</td>
-                    <td>
-                    <input type="submit" value="X" class="styledSubmitButton" />
-                    <input type="hidden" name="hobbyId" value="1" />
-                    </td>
-                    </form>
-                  </tr>
-                  <tr>
-                    <form method="POST">
-                    <td class="hobbiesListItem">Dogs</td>
-                    <td>
-                    <input type="submit" value="X" class="styledSubmitButton" />
-                    <input type="hidden" name="hobbyId" value="2" />
-                    </td>
-                    </form>
-                  </tr>
-                  <tr>
-                    <form method="POST">
-                    <td class="hobbiesListItem">Antelopes</td>
-                    <td>
-                    <input type="submit" value="X" class="styledSubmitButton" />
-                    <input type="hidden" name="hobbyId" value="3" />
-                    </td>
-                    </form>
-                  </tr>
-                  <tr>
-                    <form method="POST">
-                    <td class="hobbiesListItem">Kitesurfing</td>
-                    <td>
-                    <input type="submit" value="X" class="styledSubmitButton" />
-                    <input type="hidden" name="hobbyId" value="4" />
-                    </td>
-                    </form>
-                  </tr>
-                  <tr>
-                    <form method="POST">
+            <input type="submit" class="styledSubmitButton" value="Save Changes" />
+          </form>
+        </div>
+        <div id="profileRightBox">
+          <div id="hobbiesBox">
+            <span class="profileLabel">Your Hobbies</span>
+            <div id="hobbiesListBox">
+              <table id="hobbiesTable">
+                ${hobbies(user, key)}
+                <tr>
+                  <form action="$baseUrl/profile/${user.id}/edit/hobby/add" name="profileNewHobbyForm" method="POST" onsubmit="return validateNewHobby()">
+                    ${formKeyInput(key)}
                     <td class="hobbiesListItem">
-                      <input id="profileNewHobbyInput" type="text" value="New hobby" onfocus="this.value='';" />
+                      <input name="profileNewHobby" id="profileNewHobbyInput" type="text" value="New hobby" onfocus="this.value='';" />
                     </td>
                     <td>
-                    <input type="submit" value="+" class="styledSubmitButton" />
-                    <input type="hidden" name="hobbyId" value="4" />
+                      <input name="profileNewHobbySubmit" type="submit" value="+" class="styledSubmitButton" />
                     </td>
-                    </form>
-                  </tr>
-                </table>
-              </div>
+                  </form>
+                </tr>
+              </table>
             </div>
           </div>
         </div>

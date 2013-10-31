@@ -86,16 +86,23 @@ object ProfilePage extends LoggedInPage {
         </div>
         <div id="profileBox">
           <div id="profileLeftBox">
-          <div id="relationBox">
-            <span class="profileLabel">Your relationship</span><br />
-            <span id="relationStatus">${relationshipText(rel)}</span>
-          </div>
-          <div id="addressBox">
-            <span class="profileLabel">Address</span><br />
-            <div id="addressInfoBox">
-              ${address(rel, request.other)}
+            <div id="relationBox">
+              <span class="profileLabel">Your relationship</span><br />
+              <span id="relationStatus">${relationshipText(rel)}</span>
             </div>
-          </div>
+            <div id="addressBox">
+              <span class="profileLabel">Address</span><br />
+              <div id="addressInfoBox">
+                ${address(rel, request.other)}
+              </div>
+            </div>
+            <div id="hugBox">
+              <form action="${baseUrl}/hug/${request.other.id}" method="POST">
+                ${formKeyInput(key)}
+                <input type="hidden" name="hugFromUserId" value="${request.user.id}" />
+                <input type="submit" class="styledSubmitButton" value="Hug ${request.other.name}" />
+              </form>
+            </div>
           </div>
           <div id="profileRightBox">
             <div id="hobbiesBox">
