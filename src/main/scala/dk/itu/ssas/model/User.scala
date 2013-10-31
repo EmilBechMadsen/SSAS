@@ -19,8 +19,21 @@ object User extends UserExceptions with DbAccess {
     * @return Maybe a user
     */
   def apply(id: Int): Option[User] = Db withSession {
-    (for (u <- Users if u.id === id) yield u) firstOption
+    val user = (for {
+      u <- Users if u.id === id
+    } yield u) firstOption
+    
+    user match {
+      case Some(u) => {
+        u.validate
+        user
+      }
+      case None => None
+    }
   }
+
+
+
 
   /** Returns a user if the key matches either a session of email confirmation key
     *
@@ -166,6 +179,11 @@ case class User(
     (for (u <- Users if u.id === id) yield u) delete
   }
 
+  def validate: Unit = {
+    if (!validName(_name)) throw new InvalidNameException
+    if (!validEmail(_email)) throw new InvalidEmailException
+    if (!validAddress(_address)) throw new InvalidAddressException
+  }
   /** Confirms a user
     *
     * @param key - The key used to confirm the user
@@ -383,10 +401,14 @@ case class User(
     * @return A list of the user's hobbies
     */
   def hobbies: List[String] = Db withSession {
-    (for {
+    val hobbies = (for {
       uh <- UserHobbies if uh.userId === id
       h <- Hobbies if uh.hobbyId === h.id
     } yield h.name) list
+
+    if (!(hobbies forall (h => validHobby(h))))
+      throw new InvalidHobbyException
+    hobbies
   }
 
   /** Adds a hobby to a user's list of hobbies

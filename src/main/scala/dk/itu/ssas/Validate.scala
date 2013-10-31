@@ -2,6 +2,7 @@ package dk.itu.ssas
 
 object Validate {
   import org.apache.commons.validator.routines.EmailValidator
+
   private val ev = EmailValidator.getInstance()
 
   /** Checks an email address for validity
