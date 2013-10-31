@@ -10,7 +10,8 @@ trait DatabaseTests extends FunSuite with BeforeAndAfterAll with DbAccess {
   import scala.slick.jdbc.{ GetResult, StaticQuery => Q }
 
   val dropStmts = List(
-    "DROP TABLE IF EXISTS user_hobby",
+    "DROP TABLE IF EXISTS hug;",
+    "DROP TABLE IF EXISTS user_hobby;",
     "DROP TABLE IF EXISTS hobby;",
     "DROP TABLE IF EXISTS email_confirmation;",
     "DROP TABLE IF EXISTS friend_request;",
