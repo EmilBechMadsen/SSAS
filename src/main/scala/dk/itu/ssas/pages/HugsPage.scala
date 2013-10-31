@@ -63,11 +63,11 @@ object HugsPage extends LoggedInPage {
       </div>
       <div id="contentBody">
         <h3 class="hugsCaption">New hugs</h3>
-          <table id="hugsTable" cellspacing="0" cellpadding="0">
+          <table class="hugsTable" cellspacing="0" cellpadding="0">
             ${listHugs(unseenHugs, unseenHugTableRow)}
           </table>
         <h3 class="hugsCaption">Old hugs</h3>
-          <table id="hugsTable" cellspacing="0" cellpadding="0">
+          <table class="hugsTable" cellspacing="0" cellpadding="0">
             ${listHugs(seenHugs, seenHugTableRow)}
           </table>
       </div>
