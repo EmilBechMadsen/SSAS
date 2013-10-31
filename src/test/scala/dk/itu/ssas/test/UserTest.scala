@@ -208,6 +208,32 @@ class UserTest extends FunSuite with UserExceptions with DatabaseTests with DbAc
     }
   }
 
+  test("User can add hobbies") {
+    User(user1Id) match {
+      case Some(u) => {
+        u addHobby "Fishing"
+
+        assert(u hasHobby "fishing")
+      }
+      case None => assert(false)
+    }
+  }
+
+  test("User can remove hobbies") {
+    User(user1Id) match {
+      case Some(u) => {
+        u addHobby "boxing"
+
+        assert(u hasHobby "boxIng")
+
+        u removeHobby "boxing"
+
+        assert((u hasHobby "BOXING") === false)
+      }
+      case None => assert(false)
+    }
+  }
+
   test("Remove friend") {
     val user1 = User(user1Id)
     val user2 = User(user2Id)

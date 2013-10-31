@@ -465,6 +465,18 @@ case class User(
     hobbies
   }
 
+  /** Checks if a user has a given hobby
+    *
+    * @param h - The hobby to check
+    * @return True if the user has the hobby
+    */
+  def hasHobby(h : String): Boolean = Db withSession {
+    (for {
+      uh <- UserHobbies if uh.userId === id
+      hobby <- Hobbies.map(h => (h.id, upper(h.name))) if hobby._2 === h.toUpperCase() && uh.hobbyId === hobby._1
+    } yield h).firstOption.isDefined
+  }
+
   /** Adds a hobby to a user's list of hobbies
     *
     * @param h - The hobby to add
@@ -474,15 +486,17 @@ case class User(
   def addHobby(h: String): Unit = Db withSession {
     if (!validHobby(h)) throw new InvalidHobbyException
 
-    val hobby = for {
-      hobby <- Hobbies.map(h => (h.id, upper(h.name))) if hobby._2 === h.toUpperCase()
-    } yield hobby
+    if (!hasHobby(h)) {
+      val hobby = for {
+        hobby <- Hobbies.map(h => (h.id, upper(h.name))) if hobby._2 === h.toUpperCase()
+      } yield hobby
 
-    hobby firstOption match {
-      case Some(h) => UserHobbies insert UserHobby(id, h._1)
-      case None => {
-        val hId = Hobbies.forInsert returning Hobbies.id insert h
-        UserHobbies insert UserHobby(id, hId)
+      hobby firstOption match {
+        case Some(h) => UserHobbies insert UserHobby(id, h._1)
+        case None => {
+          val hId = Hobbies.forInsert returning Hobbies.id insert h
+          UserHobbies insert UserHobby(id, hId)
+        }
       }
     }
   }
