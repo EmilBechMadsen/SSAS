@@ -8,7 +8,7 @@ abstract class LoggedInPage extends Page {
 
   def adminButton(user: User): HTML = {
     if (user.admin) {
-      """
+      s"""
       <div class="topBarButtonBox">
         <a href="$baseUrl/admin">
           <button class="styledButton" type="button">Admin</button>
