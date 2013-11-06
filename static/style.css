@@ -41,6 +41,7 @@ a:visited {
 
 .content {
   margin-top: 6%;
+  margin-bottom: 6%;
 }
 
 .header {
@@ -476,7 +477,7 @@ input.profileInput {
   margin-bottom: 0px;
 }
 
-#hugsTable {
+.hugsTable {
   margin-top: 10px;
   margin-bottom: 20px;
   margin-left: 25px;
