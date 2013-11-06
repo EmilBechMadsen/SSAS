@@ -10,7 +10,7 @@ object EditProfilePage extends LoggedInPage {
 
   private def address(user: User): HTML = {
     user.address match {
-      case Some(a) => a
+      case Some(a) => a.html
       case None => ""
     }
   }
@@ -32,7 +32,7 @@ object EditProfilePage extends LoggedInPage {
 
   private def hobbies(user: User, key: Key): HTML = {
     user.hobbies mapi {
-      case (hobby, i) => hobbyEntry(hobby, user, i, key)
+      case (hobby, i) => hobbyEntry(hobby.html, user, i, key)
     } mkString("\n")
   }
 
@@ -134,7 +134,7 @@ object EditProfilePage extends LoggedInPage {
         <div id="profileLeftBox">
           <form action="$baseUrl/profile/${user.id}/edit/info" name="profileForm" id="profileNameForm" method="POST" onsubmit="return validate()">
             ${formKeyInput(key)}
-            <input id="profileNameInput" name="profileName" type="text" value="${user.name}" />
+            <input id="profileNameInput" name="profileName" type="text" value="${user.name.html}" />
             <div id="addressBox">
               <span class="profileLabel">Address</span><br />
                 <textarea name="profileAddress" id="profileAddressInput">${address(user)}</textarea>

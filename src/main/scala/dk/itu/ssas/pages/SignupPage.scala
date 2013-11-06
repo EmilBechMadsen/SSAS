@@ -77,7 +77,7 @@ object SignupPage extends LoggedOutPage {
             <li>Packet sniffing</li>
             <li>Replay attacks</li>
             <li>Response splitting</li>
-            <li>SQL Injection</li>
+            <li>SQL injection</li>
             <li>XSRF attacks</li>
             <li>XSS attacks</li>
           </ul>

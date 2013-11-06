@@ -11,7 +11,7 @@ object SearchPage extends LoggedInPage {
     s"""
     <tr class="listEntryRow listEntryColor${kind}">
       <td class="searchListEntry">
-        <a href="$baseUrl/profile/${user.id}">${user.name}</a>
+        <a href="$baseUrl/profile/${user.id}">${user.name.html}</a>
       </td>
     </tr>
     """

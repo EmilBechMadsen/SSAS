@@ -20,7 +20,7 @@ object HugsPage extends LoggedInPage {
   def unseenHugTableRow (hug: Hug)(fromUser: User): HTML = {
     s"""
     <tr class="hugsTableRow">
-     <td class="hugsTableName"><a href="${baseUrl}/profile/${fromUser.id}" class="hugProfileLink">${fromUser.name}</a> just hugged you!</td>
+     <td class="hugsTableName"><a href="${baseUrl}/profile/${fromUser.id}" class="hugProfileLink">${fromUser.name.html}</a> just hugged you!</td>
      <td class="hugsTableDate">${formatTime(hug.time)}</td>
     </tr>
     """
@@ -29,7 +29,7 @@ object HugsPage extends LoggedInPage {
   def seenHugTableRow (hug: Hug)(fromUser: User): HTML = {
     s"""
     <tr class="hugsTableRow">
-     <td class="hugsTableName"><a href="${baseUrl}/profile/${fromUser.id}" class="hugProfileLink">${fromUser.name}</a> hugged you</td>
+     <td class="hugsTableName"><a href="${baseUrl}/profile/${fromUser.id}" class="hugProfileLink">${fromUser.name.html}</a> hugged you</td>
      <td class="hugsTableDate">${formatTime(hug.time)}</td>
     </tr>
     """

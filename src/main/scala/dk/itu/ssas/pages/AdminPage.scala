@@ -1,6 +1,7 @@
 package dk.itu.ssas.page
 
 object AdminPage extends LoggedInPage {
+  import dk.itu.ssas.page.HTML
   import dk.itu.ssas.model._
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.page.exception._
@@ -12,25 +13,24 @@ object AdminPage extends LoggedInPage {
   private def promoteInput: HTML = {
     """
     <input name="adminUserPromote" class="styledSubmitButton" type="submit" value="Promote" />
-    """    
+    """
   }
 
   private def demoteInput: HTML = {
     """
     <input name="adminUserDemote" class="styledSubmitButton" type="submit" value="Demote " />
-    """    
+    """
   }
 
   private def userToHTML(user: User, key: Key): HTML = {
     val adminStatusInput: HTML = if (user.admin) demoteInput; else promoteInput
-
     s"""
     <tr class="adminUserEntry">
       <form action="$baseUrl/admin/toggleAdmin/${user.id}" method="POST">
         ${formKeyInput(key)}
         <input type="hidden" name="adminUserId" value="${user.id}" />
         <td class="adminUserEntryName">
-          ${user.name}
+          ${user.name.html}
         </td>
         <td class="adminUserEntryAdminButton adminUserEntryButton">
           $adminStatusInput
@@ -60,6 +60,7 @@ object AdminPage extends LoggedInPage {
         val maxName = Settings.security.maxName
         val minPassword = Settings.security.minPassword
         val maxPassword = Settings.security.maxPassword
+
         s"""
           <script type="text/javascript">
             function validateName(name) {

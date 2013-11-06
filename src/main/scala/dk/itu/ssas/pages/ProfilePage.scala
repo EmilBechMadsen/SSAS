@@ -53,7 +53,7 @@ object ProfilePage extends LoggedInPage {
   private def address(rel: Option[Relationship], user: User, other: User): HTML = {
     val addr =
       other.address match {
-        case Some(a) => a
+        case Some(a) => a.html
         case None    => "Not listed"
       }
 
@@ -74,7 +74,7 @@ object ProfilePage extends LoggedInPage {
           <form action="${baseUrl}/hug/${toUser.id}" method="POST">
             ${formKeyInput(key)}
             <input type="hidden" name="hugFromUserId" value="${fromUser.id}" />
-            <input type="submit" class="styledSubmitButton" value="Hug ${toUser.name}" />
+            <input type="submit" class="styledSubmitButton" value="Hug ${toUser.name.html}" />
           </form>
         </div>
         """
@@ -84,7 +84,7 @@ object ProfilePage extends LoggedInPage {
 
   private def hobbies(other: User): HTML = {
     other.hobbies map { hobby =>
-      s"""<li class="hobbiesListItem">$hobby</li>"""
+      s"""<li class="hobbiesListItem">${hobby.html}</li>"""
     } mkString("\n")
   }
 
@@ -94,7 +94,7 @@ object ProfilePage extends LoggedInPage {
 	    <div id="profileWrapper">
         <div id="profileHeader">
           <div id="profileCaption">
-            ${request.other.name}
+            ${request.other.name.html}
           </div>
           <div id="profileRequestBox">
           <form action="$baseUrl/profile/${request.other.id}/request" method="POST">

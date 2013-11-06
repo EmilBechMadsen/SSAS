@@ -16,7 +16,7 @@ object ViewRequestsPage extends LoggedInPage {
         ${formKeyInput(key)}
         <input name="friendRequestId" type="hidden" value="${user.id}" />
         <input name="friendRequestKind" type="hidden" value="$rel" />
-        <td class="requestsEntryName">${user.name}</td>
+        <td class="requestsEntryName">${user.name.html}</td>
         <td class="requestsEntryStatus">${rel.prettyPrint}</td>
         <td class="requestsEntryButton">
           <input name="friendRequestAccept" class="styledSubmitButton" type="submit" value="Accept" />

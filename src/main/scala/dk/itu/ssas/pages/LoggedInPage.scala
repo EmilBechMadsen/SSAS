@@ -56,7 +56,7 @@ abstract class LoggedInPage extends Page {
               </div>
               <div id="topBarProfileBox">
                 <a href="$baseUrl/profile/${user.id}">
-                  <button class="styledButton" type="button">${user.name}</button>
+                  <button class="styledButton" type="button">${user.name.html}</button>
                 </a>
               </div>
               <div id="searchBox">
