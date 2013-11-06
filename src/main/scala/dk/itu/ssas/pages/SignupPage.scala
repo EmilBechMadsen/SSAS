@@ -69,6 +69,19 @@ object SignupPage extends LoggedOutPage {
       </script>
       <div id="signupPageImageBox">
         <img src="$baseUrl/static/velociraptor.jpg" />
+        <p>
+          At RaptorDating, we take security seriously. That means we are doing everything to protect you, our valued customer, against attacks from malicious users.
+          <br />
+          Currently, we provide defenses against the following attacks:
+          <ul>
+            <li>Packet sniffing</li>
+            <li>Replay attacks</li>
+            <li>Response splitting</li>
+            <li>SQL Injection</li>
+            <li>XSRF attacks</li>
+            <li>XSS attacks</li>
+          </ul>
+        </p>
       </div>
       <div id="signupBox">
         <form name="signupForm" action="$baseUrl/signup" method="POST" onsubmit="return validateSignup()">
