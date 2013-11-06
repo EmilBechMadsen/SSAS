@@ -354,4 +354,21 @@ class UserTest extends FunSuite with UserExceptions with DatabaseTests with DbAc
       case None => assert(false)
     }
   }
+
+  test("XSS attack in hobbies") {
+    User.create("Test user", None, "testparty@partytests.com", "testpassword", true) match {
+      case Some(user) => {
+        intercept[InvalidHobbyException] {
+          user.addHobby("""<script>alert("ALERT")</script>""")
+        }
+      }
+      case None => assert(false)
+    }
+  }
+
+  test("XSS attack in name") {
+    intercept[InvalidNameException] {
+      User.create("""<script>alert("ALERT")</script>""", None, "testparty1@partytests.com", "testpassword1", true)
+    }
+  }
 }
