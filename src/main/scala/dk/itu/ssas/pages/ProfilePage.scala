@@ -88,6 +88,17 @@ object ProfilePage extends LoggedInPage {
     } mkString("\n")
   }
 
+  private def emailInfo(user: User, other: User): HTML = {
+    if (user.admin) {
+      s"""
+      <div id="emailBox">
+        <span class="profileLabel">Email</span><br />
+        <span id="emailText">${other.email.html}</span>
+      </div>
+      """
+    } else ""
+  }
+
   def content(request: ProfilePageRequest, key: Key): HTML = {
     val rel = relationship(request.user, request.other)
   	s"""
@@ -108,6 +119,7 @@ object ProfilePage extends LoggedInPage {
         </div>
         <div id="profileBox">
           <div id="profileLeftBox">
+            ${emailInfo(request.user, request.other)}
             <div id="relationBox">
               <span class="profileLabel">Your relationship</span><br />
               <span id="relationStatus">${relationshipText(rel)}</span>

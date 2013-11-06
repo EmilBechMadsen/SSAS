@@ -299,7 +299,7 @@ input.profileInput {
   font-weight: bold;
 }
 
-#addressBox, #relationBox, #profilePasswordBox {
+#addressBox, #relationBox, #profilePasswordBox, #emailBox {
   padding-top: 10px;
   padding-left: 30px;
   padding-bottom: 5px;
@@ -310,7 +310,7 @@ input.profileInput {
   padding-left: 35px;
 }
 
-#addressInfoBox, #relationStatus {
+#addressInfoBox, #relationStatus, #emailText {
   padding-left: 20px;
   padding-top: 5px;
 }
