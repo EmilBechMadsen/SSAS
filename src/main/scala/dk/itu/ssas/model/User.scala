@@ -118,7 +118,7 @@ object User extends UserExceptions with DbAccess {
           q firstOption match {
             case Some(s) => {
               q delete
-              
+
               val time     = System.currentTimeMillis()
               val creation = new Timestamp(time)
               val s = Session(UUID.randomUUID().toString(), Some(u.id), creation)
@@ -427,7 +427,7 @@ case class User(
       hs <- Hugs if hs.toUserId === id
     } yield hs
 
-    hs.list.partition(h => !h.seen)
+    hs.list.reverse.partition(h => !h.seen)
   }
 
   /** Marks a user's hug as seen
