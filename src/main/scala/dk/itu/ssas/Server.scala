@@ -19,15 +19,15 @@ object Server extends App with DbAccess {
   val dbWorker = system.actorOf(Props[DbWorker], "dbWorker")
 
   // create database if it doesn't exists
-  /*Db withSession {
+  Db withSession {
     val createDatabase = Q.u + "CREATE DATABASE IF NOT EXISTS ssas;"
     createDatabase.execute()
 
     if (Q.queryNA[String]("SHOW TABLES LIKE 'user'").list.isEmpty) {
       ddl create
     }
-    ddl.createStatements foreach {s => println(s"$s;")}
-  }*/
+    //ddl.createStatements foreach {s => println(s"$s;")}
+  }
 
   // create a new HttpServer using our handler and tell it where to bind to
   IO(Http) ! Http.Bind(service, Settings.interface, Settings.port)
