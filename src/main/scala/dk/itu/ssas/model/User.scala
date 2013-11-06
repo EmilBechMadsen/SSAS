@@ -174,6 +174,7 @@ case class User(
   extends DbAccess {
   import User._
   import dk.itu.ssas.Validate._
+  import java.sql.Timestamp
 
   /** Deletes the user. *WARNING* this is permanent
     *
@@ -407,7 +408,7 @@ case class User(
     */
   def hug(u: User): Unit = Db withSession {
     if (isFriend(u)) {
-      val hug = Hugs.forInsert insert (id, u.id)
+      val hug = Hugs.forInsert insert (new Timestamp(System.currentTimeMillis()), id, u.id)
     } else {
       throw new StrangerException
     }
