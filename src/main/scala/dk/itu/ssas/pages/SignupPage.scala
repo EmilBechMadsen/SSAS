@@ -3,7 +3,7 @@ package dk.itu.ssas.page
 object SignupPage extends LoggedOutPage {
   import dk.itu.ssas._
   import dk.itu.ssas.page.request._
-  import dk.itu.ssas.Settings.baseUrl
+  import dk.itu.ssas.Settings.{ baseUrl, staticBaseUrl }
 
   type RequestType = NoRequest
 
@@ -68,7 +68,7 @@ object SignupPage extends LoggedOutPage {
         }
       </script>
       <div id="signupPageImageBox">
-        <img src="$baseUrl/static/velociraptor.jpg" />
+        <img src="$staticBaseUrl/velociraptor.jpg" />
         <p>
           At RaptorDating, we take security seriously. That means we are doing everything to protect you, our valued customer, against attacks from malicious users.
           <br />

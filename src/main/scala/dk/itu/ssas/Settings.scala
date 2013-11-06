@@ -19,7 +19,8 @@ object Settings {
   val interface     = conf.getString("ssas.interface")
   val port          = conf.getInt("ssas.port")
   val timeout       = conf.getInt("ssas.timeout")
-  val baseUrl       = conf.getString("ssas.baseUrl") 
+  val baseUrl       = conf.getString("ssas.baseUrl")
+  val staticBaseUrl = conf.getString("ssas.staticBaseUrl")
   val siteName      = conf.getString("ssas.siteName")
 
   object email {

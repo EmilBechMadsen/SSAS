@@ -4,7 +4,7 @@ abstract class LoggedOutPage extends Page {
   import dk.itu.ssas._
   import dk.itu.ssas.model._
   import dk.itu.ssas.page.exception._
-  import dk.itu.ssas.Settings.baseUrl
+  import dk.itu.ssas.Settings.{ baseUrl, staticBaseUrl }
 
   def header(title: String, key: Key, user: Option[User]): HTML = {
     user match {
@@ -16,10 +16,10 @@ abstract class LoggedOutPage extends Page {
           <html>
             <head>
               <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-              <link rel="stylesheet" type="text/css" href="$baseUrl/static/style.css" />
-              <script type="text/javascript" src="$baseUrl/static/xregexp-min.js"></script>
-              <script type="text/javascript" src="$baseUrl/static/unicode-base.js"></script>
-              <script type="text/javascript" src="$baseUrl/static/verimail.js"></script>
+              <link rel="stylesheet" type="text/css" href="$staticBaseUrl/style.css" />
+              <script type="text/javascript" src="$staticBaseUrl/xregexp-min.js"></script>
+              <script type="text/javascript" src="$staticBaseUrl/unicode-base.js"></script>
+              <script type="text/javascript" src="$staticBaseUrl/verimail.js"></script>
               <script type="text/javascript">
                 function validateLogin() {
                   var email = document.forms["loginForm"]["loginEmail"].value;
