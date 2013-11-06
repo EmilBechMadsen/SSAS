@@ -2,6 +2,7 @@ package dk.itu.ssas.model
 
 import dk.itu.ssas.db.DbAccess
 import dk.itu.ssas.Settings
+import java.sql.Timestamp
 import java.util.UUID
 import scala.language.postfixOps
 import scala.slick.driver.MySQLDriver.simple._
@@ -31,9 +32,6 @@ object User extends UserExceptions with DbAccess {
       case None => None
     }
   }
-
-
-
 
   /** Returns a user if the key matches either a session of email confirmation key
     *
@@ -115,11 +113,18 @@ object User extends UserExceptions with DbAccess {
     (for (u <- Users if u.email === email) yield u) firstOption match {
       case Some(u) => (u.checkPassword(password), u.isConfirmed) match {
         case (true, true) => {
-          val q = (for (s <- Sessions if s.key === session.toString()) yield s.userId)
+          val q = (for (s <- Sessions if s.key === session.toString()) yield s)
 
           q firstOption match {
             case Some(s) => {
-              q update Some(u.id)
+              q delete
+              
+              val time     = System.currentTimeMillis()
+              val creation = new Timestamp(time)
+              val s = Session(UUID.randomUUID().toString(), Some(u.id), creation)
+
+              Sessions insert s
+
               Some(u)
             }
             case None    => None
@@ -174,7 +179,6 @@ case class User(
   extends DbAccess {
   import User._
   import dk.itu.ssas.Validate._
-  import java.sql.Timestamp
 
   /** Deletes the user. *WARNING* this is permanent
     *

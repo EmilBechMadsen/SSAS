@@ -14,15 +14,15 @@ trait SsasService {
 
   val log = Logger.getLogger("Service")
 
-  protected def withSession(c: Session => RequestContext => Unit): RequestContext => Unit = {
-    def setSessionCookie(session: UUID): Directive0 = {
-      setCookie(HttpCookie(sessionCookieName, 
-        session.toString(),
-        path = Some("/"),
-        httpOnly = true,
-        secure = Settings.security.ssl))
-    }
+  def setSessionCookie(session: UUID): Directive0 = {
+    setCookie(HttpCookie(sessionCookieName, 
+      session.toString(),
+      path = Some("/"),
+      httpOnly = true,
+      secure = Settings.security.ssl))
+  }
 
+  protected def withSession(c: Session => RequestContext => Unit): RequestContext => Unit = {
     def runWithSession(c: Session => RequestContext => Unit): RequestContext => Unit = {
       val s = Session()
       setSessionCookie(s.key) {

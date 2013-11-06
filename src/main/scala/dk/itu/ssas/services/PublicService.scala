@@ -105,8 +105,13 @@ object PublicService extends SsasService with UserExceptions {
           withFormKey(s) {
             formFields('loginEmail, 'loginPassword) { (email, password) =>
               User.login(email, password, s.key) match {
-                case Some(user) => 
-                  redirect(s"$baseUrl/profile/${user.id}", StatusCodes.SeeOther)
+                case Some(user) => user.session match {
+                  case Some(session) => setSessionCookie(session) {
+                    redirect(s"$baseUrl/profile/${user.id}", StatusCodes.SeeOther)
+                  }
+                  case None =>
+                    redirect(s"$baseUrl/signup", StatusCodes.SeeOther)
+                }
                 case None => 
                   redirect(s"$baseUrl/signup", StatusCodes.SeeOther)
               }
