@@ -16,11 +16,11 @@ object Settings {
   private val conf = ConfigFactory.load()
 
   // Immutable settings
-  val interface  = conf.getString("ssas.interface")
-  val port       = conf.getInt("ssas.port")
-  val timeout    = conf.getInt("ssas.timeout")
-  val baseUrl    = conf.getString("ssas.baseUrl")
-  val siteName   = conf.getString("ssas.siteName")
+  val interface     = conf.getString("ssas.interface")
+  val port          = conf.getInt("ssas.port")
+  val timeout       = conf.getInt("ssas.timeout")
+  val baseUrl       = conf.getString("ssas.baseUrl") 
+  val siteName      = conf.getString("ssas.siteName")
 
   object email {
     val host    = conf.getString("ssas.email.host")
@@ -38,6 +38,7 @@ object Settings {
   }
 
   object security {
+    val ssl            = conf.getBoolean("ssas.security.ssl")
     val minPassword    = conf.getInt("ssas.security.minPassword")
     val maxPassword    = conf.getInt("ssas.security.maxPassword")
     val minName        = conf.getInt("ssas.security.minName")

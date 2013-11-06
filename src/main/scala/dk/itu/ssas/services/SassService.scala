@@ -4,6 +4,7 @@ import spray.routing._
 
 trait SsasService {
   import dk.itu.ssas.model._
+  import dk.itu.ssas.Settings
   import java.util.UUID
   import org.apache.log4j.Logger
   import spray.http._
@@ -19,7 +20,7 @@ trait SsasService {
         session.toString(),
         path = Some("/"),
         httpOnly = true,
-        secure = true))
+        secure = Settings.security.ssl))
     }
 
     def runWithSession(c: Session => RequestContext => Unit): RequestContext => Unit = {
