@@ -5,6 +5,18 @@ abstract class LoggedInPage extends Page {
   import dk.itu.ssas.model._
   import dk.itu.ssas._
   import dk.itu.ssas.Settings.baseUrl
+
+  def adminButton(user: User): HTML = {
+    if (user.admin) {
+      """
+      <div class="topBarButtonBox">
+        <a href="$baseUrl/admin">
+          <button class="styledButton" type="button">Admin</button>
+        </a>
+      </div>
+      """
+    } else ""
+  }
   
   def header(title: String, key: Key, user: Option[User]): HTML = {
     user match {
@@ -75,6 +87,7 @@ abstract class LoggedInPage extends Page {
                   <button class="styledButton" type="button">Friends</button>
                 </a>
               </div>
+              ${adminButton(user)}
             </div>
             <div> <!-- body content -->
         """
