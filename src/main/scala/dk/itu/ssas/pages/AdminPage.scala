@@ -30,7 +30,7 @@ object AdminPage extends LoggedInPage {
         ${formKeyInput(key)}
         <input type="hidden" name="adminUserId" value="${user.id}" />
         <td class="adminUserEntryName">
-          ${user.name.html}
+          <a href="${baseUrl}/profile/${user.id}">${user.name.html}</a>
         </td>
         <td class="adminUserEntryAdminButton adminUserEntryButton">
           $adminStatusInput

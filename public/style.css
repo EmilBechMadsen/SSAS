@@ -448,10 +448,18 @@ input.profileInput {
   padding-left: 10px;
 }
 
+.adminUserEntryName a {
+  color: #000;
+}
+
 .adminUserEntryName:hover {
   color: #FFFFFF;
   background-color: #900;
   border: 1px solid;
+}
+
+.adminUserEntryName:hover a {
+  color: #FFF;
 }
 
 .adminUserEntryAdminButton {
