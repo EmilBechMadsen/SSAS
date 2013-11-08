@@ -91,21 +91,21 @@ object AdminService extends SsasService with UserExceptions {
               }
             }
           }
-        } ~
-        path("delete" / IntNumber) { userId =>
-          delete {
-            withSession { s =>
-              withUser(s) { u =>
-                withAdmin(u) {
-                  withFormKey(s) {
-                    User(userId) match {
-                      case Some(deleteUser) => {
-                        deleteUser.delete()
-                        log.warn(s"User $userId deleted")
-                        redirect(s"$baseUrl/admin", StatusCodes.SeeOther)
-                      }
-                      case None => complete { HttpResponse(StatusCodes.NotFound, "User not found.") }
+        }
+      } ~
+      path("delete" / IntNumber) { userId =>
+        post {
+          withSession { s =>
+            withUser(s) { u =>
+              withAdmin(u) {
+                withFormKey(s) {
+                  User(userId) match {
+                    case Some(deleteUser) => {
+                      deleteUser.delete()
+                      log.warn(s"User $userId deleted")
+                      redirect(s"${baseUrl}/admin", StatusCodes.SeeOther)
                     }
+                    case None => complete { HttpResponse(StatusCodes.NotFound, "User not found.") }
                   }
                 }
               }

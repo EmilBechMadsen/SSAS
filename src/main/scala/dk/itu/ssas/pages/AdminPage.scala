@@ -26,7 +26,7 @@ object AdminPage extends LoggedInPage {
     val adminStatusInput: HTML = if (user.admin) demoteInput; else promoteInput
     s"""
     <tr class="adminUserEntry">
-      <form action="$baseUrl/admin/toggleAdmin/${user.id}" method="POST">
+      <form action="${baseUrl}/admin/toggleAdmin/${user.id}" method="POST">
         ${formKeyInput(key)}
         <input type="hidden" name="adminUserId" value="${user.id}" />
         <td class="adminUserEntryName">
@@ -36,7 +36,7 @@ object AdminPage extends LoggedInPage {
           $adminStatusInput
         </td>
       </form>
-      <form action="$baseUrl/admin/delete/${user.id}" method="DELETE">
+      <form action="${baseUrl}/admin/delete/${user.id}" method="POST">
         ${formKeyInput(key)}
         <td class="adminUserEntryRemoveButton">
           <input name="adminUserRemove" class="styledSubmitButton" type="submit" value="Remove" />
