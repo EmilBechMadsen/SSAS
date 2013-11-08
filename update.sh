@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo "Setting permissions on script"
-sudo chmod g+x *.sh
+sudo chmod g+rwx *.sh
 sudo chgrp admin *.sh
 
 echo "Backing up old version of ssas.jar"
