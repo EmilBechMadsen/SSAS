@@ -115,13 +115,13 @@ object AdminPage extends WebPage {
               return result;
             }
           </script>
-          <div id="adminWrapper">
-            <div id="adminHeader">
-              <div id="adminCaption">
-                Admin page
+          <div id="adminWrapper" class="content">
+            <div class="header">
+              <div id="caption">
+                <h2>Admin page</h2>
               </div>
             </div>
-            <div id="adminBox">
+            <div id="contentBody">
               <div id="adminAddUserBox">
                 <fieldset id="adminAddUserFieldset">
                   <legend>Add User</legend>

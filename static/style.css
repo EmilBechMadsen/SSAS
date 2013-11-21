@@ -124,7 +124,8 @@ a:visited {
 /* Friends page */
 #myFriendsBox {
   width: 40%;
-  margin: 6% 30% 0 30%;
+  margin-left: 30%;
+  margin-right: 30%;
 }
 
 #myFriendsCaption {
@@ -144,24 +145,20 @@ a:visited {
 
 .listEntryRow {
   height: 35px;
-}
-
-.listEntryColor1 {
-  background-color: FFFFFF;
-}
-
-.listEntryColor2 {
-  background-color: DDDDDD;
+  background-color: #FFF;
 }
 
 .listEntryRow:hover {
-  background-color: CCCCCC;
+  background-color: #900;
+}
+
+.listEntryRow:hover a {
+  color: #FFF;
 }
 
 .friendEntryName {
   width: 80%;
   padding-left: 5px;
-  color: 0099CC;
 }
 
 .friendEntryStatus {
@@ -171,7 +168,8 @@ a:visited {
 /* Search results page */
 #searchResultsBox {
   width: 30%;
-  margin: 6% 35% 0 35%;
+  margin-left: 35%;
+  margin-right: 35%;
 }
 
 #searchResultsCaption {
@@ -193,7 +191,8 @@ a:visited {
 /* Pending requests */
 #requestsBox {
   width: 50%;
-  margin: 6% 25% 0 25%;
+  margin-left: 25%;
+  margin-right: 25%;
 }
 
 #requestsCaption {
@@ -377,7 +376,6 @@ input.profileInput {
   width: 70%;
   margin-left: 15%;
   margin-right: 15%;
-  margin-top: 1%;
   float: left;
 }
 

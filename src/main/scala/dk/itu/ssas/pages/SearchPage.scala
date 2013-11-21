@@ -8,9 +8,9 @@ object SearchPage extends WebPage {
 
   type RequestType = SearchPageRequest
 
-  private def searchResultEntry(user: User, kind: Int): HTML = {
+  private def searchResultEntry(user: User): HTML = {
     s"""
-    <tr class="listEntryRow listEntryColor${kind}">
+    <tr class="listEntryRow">
       <td class="searchListEntry">
         <a href="$baseUrl/profile/${user.id}">${user.name.html}</a>
       </td>
@@ -19,21 +19,21 @@ object SearchPage extends WebPage {
   }
 
   private def searchResult(result: List[User]): HTML = {
-    result mapi { 
-      case (u, i) => searchResultEntry(u, if (i % 2 == 0) 1; else 2) 
-    } mkString("\n")
+    result map { u => searchResultEntry(u) } mkString("\n")
   }
 
   def content(request: SearchPageRequest, u: Option[User], key: Key): HTML = {
     val user = u.getOrElse(throw NoUserException())
     val result = request.result
   	s"""
-    <div id="searchResultsBox">
-      <div id="searchResultsCaption">
-        Search Results
+    <div id="searchResultsBox" class="content">
+      <div class="header">
+        <div id="caption">
+          <h2>Search Results</h2>
+        </div>
       </div>
-      <div id="searchResultsListBox">
-        <table cellspacing="0" style="width: 100%;">
+      <div id="contentBody">
+        <table cellspacing="0" style="padding-top: 10px; padding-bottom: 10px;">
           ${searchResult(result)}
         </table>
       </div>  

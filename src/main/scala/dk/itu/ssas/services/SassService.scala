@@ -8,6 +8,7 @@ trait SsasService {
   import java.util.UUID
   import org.apache.log4j.Logger
   import spray.http._
+  import spray.http.HttpHeaders._
   import spray.routing.HttpService._
 
   val sessionCookieName = "ssas_session"
@@ -93,6 +94,33 @@ trait SsasService {
       case false => complete {
         log.warn(s"Non admin ${u.id} trying to access admin area")
         HttpResponse(spray.http.StatusCodes.Forbidden, "You must be an admin to enter this area.")
+      }
+    }
+  }
+
+  protected def withApiKey(c: RequestContext => Unit): RequestContext => Unit = {
+    optionalHeaderValueByName("Authorization") { key =>
+      key match {
+        case None => complete {
+          log.warn(s"API request with no key")
+          HttpResponse(spray.http.StatusCodes.Unauthorized, "You need to supply a valid API key in the Authroization header")
+        }
+        case Some(key) => {
+          try {
+            ApiKey(UUID.fromString(key)) match {
+              case None => complete {
+                log.warn(s"API request with invalid key, $key")
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "Invalid API key")
+              }
+              case Some(_) => c
+            }
+          } catch {
+            case e: IllegalArgumentException => complete {
+              log.error(s"Key $key could not be deserialized")
+              HttpResponse(spray.http.StatusCodes.BadRequest, "API key could not be deserialized")
+            }
+          }
+        }
       }
     }
   }

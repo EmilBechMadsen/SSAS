@@ -289,8 +289,8 @@ object UserService extends SsasService with UserExceptions {
         withSession { s =>
           withUser(s) { u =>
             withFormKey(s) {
-              formFields('searchTerm) { search => 
-                val users = u.search(search)
+              formFields('searchTerm) { name => 
+                val users = u search name
                 html(s) { (s, formKey) =>
                   complete {
                     SearchPage.render("Search results", formKey, Some(u), SearchPageRequest(users))

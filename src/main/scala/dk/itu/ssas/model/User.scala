@@ -158,6 +158,26 @@ object User extends UserExceptions with DbAccess {
     } yield u
     admins.list
   }
+
+
+  /** Searches for other users by name
+    *
+    * @param s - The search string
+    * @param user - This user, if given, won't be included in the results. Useful if this is the user searching.
+    * @return A list of users with names matching the search string
+    */
+  def search(s: String, user: Option[User] = None): List[User] = Db withSession {
+    if (validName(s)) {
+      val users = for {
+        u <- Users if u.name like s"%$s%"
+      } yield u
+
+      user match {
+        case None       => users.list
+        case Some(user) => users.list filter (u => u.id != user.id)
+      }
+    } else List()
+  }
 }
 
 /** A user
@@ -245,15 +265,7 @@ case class User(
     * @param s - The search string
     * @return A list of users with names matching the search string
     */
-  def search(s: String): List[User] = Db withSession {
-    if (validName(s)) {
-      val users = for {
-        u <- Users if u.name like s"%$s%"
-      } yield u
-
-      users.list filter (u => u.id != id)
-    } else List()
-  }
+  def search(s: String): List[User] = User.search(s, Some(this))
 
   /** Returns the user's friends
     *

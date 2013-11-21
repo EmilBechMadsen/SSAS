@@ -10,7 +10,8 @@ trait DbAccess
   with Admins
   with Sessions
   with FormKeys
-  with EmailConfirmations {
+  with EmailConfirmations
+  with ApiKeys {
   import dk.itu.ssas.Settings
   import scala.slick.driver.MySQLDriver.simple._
 
@@ -22,5 +23,6 @@ trait DbAccess
   protected val ddl = Users.ddl ++ Friends.ddl ++ Admins.ddl ++ 
                       Sessions.ddl ++ FriendRequests.ddl ++ 
                       EmailConfirmations.ddl ++ Hobbies.ddl ++ 
-                      UserHobbies.ddl ++ Hugs.ddl ++ FormKeys.ddl
+                      UserHobbies.ddl ++ Hugs.ddl ++ FormKeys.ddl ++
+                      ApiKeys.ddl
 }
