@@ -8,7 +8,7 @@ object ViewRequestsPage extends WebPage {
 
   type RequestType = NoRequest
 
-  private def requestEntry(entry: (User, Relationship) key: Key): HTML = {
+  private def requestEntry(entry: (User, Relationship), key: Key): HTML = {
     val user = entry._1
     val rel = entry._2
     s"""
