@@ -8,11 +8,11 @@ object FriendsPage extends WebPage {
   
   type RequestType = NoRequest
 
-  private def friendEntry(entry: (User, Relationship), kind: Int, key: Key): HTML = {
+  private def friendEntry(entry: (User, Relationship), key: Key): HTML = {
     val user = entry._1
     val rel  = entry._2
     s"""
-    <tr class="listEntryRow listEntryColor${kind}">
+    <tr class="listEntryRow">
       <form actions="$baseUrl/friends" method="POST">
         ${formKeyInput(key)}
         <input name="friendRemoveId" type="hidden" value="${user.id}" />
@@ -25,20 +25,19 @@ object FriendsPage extends WebPage {
   }
 
   private def friendsToHTML(friends: Map[User, Relationship], key: Key): HTML = {
-    friends mapi {
-      case (entry, i) => friendEntry(entry, if (i % 2 == 0) 1; else 2, key)
-    } mkString("\n")
+    friends map { entry => friendEntry(entry, key) } mkString("\n")
   }
 
   def content(request: NoRequest, u: Option[User], key: Key): HTML = {
     val user = u.getOrElse(throw NoUserException())
     s"""
-      <div id="myFriendsBox">
-        <div id="myFriendsCaption">
-          My Friends
-        </div>
-        <div id="myFriendsListBox">
-          <table cellspacing="0">
+      <div id="myFriendsBox" class="content">
+        <div class="header"
+          <div id="caption">
+            <h2>My Friends</h2>
+          </div>
+        <div id="contentBody">
+          <table cellspacing="0" style="padding-top: 10px; padding-bottom: 10px;">
             <tr>
               <th class="myFriendsListHeaders">Name</th>
               <th class="myFriendsListHeaders">Status</th>
