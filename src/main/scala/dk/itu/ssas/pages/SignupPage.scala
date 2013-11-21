@@ -1,13 +1,14 @@
 package dk.itu.ssas.page
 
-object SignupPage extends LoggedOutPage {
+object SignupPage extends WebPage {
   import dk.itu.ssas._
+  import dk.itu.ssas.model._
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.Settings.{ baseUrl, staticBaseUrl }
 
   type RequestType = NoRequest
 
-  def content(request: NoRequest, key: Key): HTML = {
+  def content(request: NoRequest, user: Option[User], key: Key): HTML = {
     val minPassword = Settings.security.minPassword
     val maxPassword = Settings.security.maxPassword
     val nameRegex = Settings.security.nameWhitelist.replace("\\", "\\\\")

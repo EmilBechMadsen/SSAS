@@ -1,6 +1,6 @@
 package dk.itu.ssas.page
 
-object AdminPage extends LoggedInPage {
+object AdminPage extends WebPage {
   import dk.itu.ssas.page.HTML
   import dk.itu.ssas.model._
   import dk.itu.ssas.page.request._
@@ -8,8 +8,8 @@ object AdminPage extends LoggedInPage {
   import dk.itu.ssas._
   import dk.itu.ssas.Settings.baseUrl
 
-  type RequestType = AdminPageRequest
-
+  type RequestType = NoRequest
+  
   private def promoteInput: HTML = {
     """
     <input name="adminUserPromote" class="styledSubmitButton" type="submit" value="Promote" />
@@ -50,8 +50,8 @@ object AdminPage extends LoggedInPage {
     userList map { u => userToHTML(u, key) } mkString("\n")
   }
 
-  def content(request: AdminPageRequest, key: Key): HTML = {
-    val user = request.user
+  def content(request: NoRequest, u: Option[User], key: Key): HTML = {
+    val user = u.getOrElse(throw new NoUserException())
     user.admin match {
       case false => throw new NotAdminException()
       case true  =>

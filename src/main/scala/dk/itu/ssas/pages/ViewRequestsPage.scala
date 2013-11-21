@@ -1,11 +1,12 @@
 package dk.itu.ssas.page
 
-object ViewRequestsPage extends LoggedInPage {
+object ViewRequestsPage extends WebPage {
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.model._
+  import dk.itu.ssas.page.exception._
   import dk.itu.ssas.Settings.baseUrl
 
-  type RequestType = ViewRequestsPageRequest
+  type RequestType = NoRequest
 
   private def requestEntry(entry: (User, Relationship), kind: Int, key: Key): HTML = {
     val user = entry._1
@@ -33,7 +34,8 @@ object ViewRequestsPage extends LoggedInPage {
     } mkString("\n")
   }
 
-  def content(request: ViewRequestsPageRequest, key: Key): HTML = {
+  def content(request: NoRequest, u: Option[User], key: Key): HTML = {
+    val user = u.getOrElse(throw NoUserException())
     s"""
     <div id="requestsBox">
       <div id="requestsCaption">
@@ -41,7 +43,7 @@ object ViewRequestsPage extends LoggedInPage {
       </div>
       <div id="requestsListBox">
         <table cellspacing="0" style="width: 100%;">
-          ${requestsToHTML(request.user.friendRequests, key)}
+          ${requestsToHTML(user.friendRequests, key)}
         </table>
       </div>
     </div>

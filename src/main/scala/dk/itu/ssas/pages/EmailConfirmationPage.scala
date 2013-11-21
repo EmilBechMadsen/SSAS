@@ -1,12 +1,13 @@
 package dk.itu.ssas.page
 
-object EmailConfirmationPage extends LoggedOutPage {
+object EmailConfirmationPage extends WebPage {
   import dk.itu.ssas._
+  import dk.itu.ssas.model._
   import dk.itu.ssas.page.request._
 
   type RequestType = EmailConfirmationPageRequest
   
-  def content(request: EmailConfirmationPageRequest, key: Key): HTML = {
+  def content(request: EmailConfirmationPageRequest, user: Option[User], key: Key): HTML = {
     val minPassword = Settings.security.minPassword
     val maxPassword = Settings.security.maxPassword
     val token = request.token

@@ -1,14 +1,15 @@
 package dk.itu.ssas.page
 
-object HugsPage extends LoggedInPage {
+object HugsPage extends WebPage {
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.model._
+  import dk.itu.ssas.page.exception._
   import dk.itu.ssas.Settings.baseUrl
   import java.sql.Timestamp
   import java.text.SimpleDateFormat
   import java.sql.Date
 
-  type RequestType = HugsPageRequest
+  type RequestType = NoRequest
 
   def formatTime(timestamp: Timestamp): HTML = {
     val date = new Date(timestamp.getTime)
@@ -44,8 +45,8 @@ object HugsPage extends LoggedInPage {
     } mkString("\n")
   }
 
-  def content(request: HugsPageRequest, key: Key): HTML = {
-    val user = request.user
+  def content(request: NoRequest, u: Option[User], key: Key): HTML = {
+    val user = u.getOrElse(throw new NoUserException())
     val (unseenHugs, seenHugs) = user.hugs
     s"""
     <script type="text/javascript">

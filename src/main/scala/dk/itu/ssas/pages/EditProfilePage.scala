@@ -1,12 +1,13 @@
-package dk.itu.ssas.page
+package dk.itu.ssas.page  
 
-object EditProfilePage extends LoggedInPage {
+object EditProfilePage extends WebPage {
   import dk.itu.ssas.model._
   import dk.itu.ssas.page.request._
+  import dk.itu.ssas.page.exception._
   import dk.itu.ssas._
   import dk.itu.ssas.Settings.baseUrl
 
-  type RequestType = EditProfilePageRequest
+  type RequestType = NoRequest
 
   private def address(user: User): HTML = {
     user.address match {
@@ -36,8 +37,8 @@ object EditProfilePage extends LoggedInPage {
     } mkString("\n")
   }
 
-  def content(request: EditProfilePageRequest, key: Key): HTML = {
-    val user = request.user
+  def content(request: NoRequest, u: Option[User], key: Key): HTML = {
+    val user = u.getOrElse(throw NoUserException())
     val nameRegex = Settings.security.nameWhitelist.replace("\\", "\\\\")
     val minName = Settings.security.minName
     val maxName = Settings.security.maxName

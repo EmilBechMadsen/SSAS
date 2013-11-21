@@ -1,12 +1,20 @@
 package dk.itu.ssas.page
 
-abstract class LoggedInPage extends Page {
-  import dk.itu.ssas.page.exception._
-  import dk.itu.ssas.model._
+import dk.itu.ssas.model._
+
+object LoggedInHeader {
+  def apply(title: String, key: Key, user: Option[User]): HTML = {
+    val header = new LoggedInHeader()
+    header.render(title, key, user)
+  }
+}
+
+class LoggedInHeader extends Header {
   import dk.itu.ssas._
+  import dk.itu.ssas.page.exception._
   import dk.itu.ssas.Settings.{ baseUrl, staticBaseUrl }
 
-  def adminButton(user: User): HTML = {
+  private def adminButton(user: User): HTML = {
     if (user.admin) {
       s"""
       <div class="topBarButtonBox">
@@ -18,7 +26,7 @@ abstract class LoggedInPage extends Page {
     } else ""
   }
   
-  def header(title: String, key: Key, user: Option[User]): HTML = {
+  def render(title: String, key: Key, user: Option[User]): HTML = {
     user match {
       case None => throw NoUserException()
       case Some(user) =>

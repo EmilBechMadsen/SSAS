@@ -1,11 +1,12 @@
 package dk.itu.ssas.page
 
-object FriendsPage extends LoggedInPage {
+object FriendsPage extends WebPage {
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.model._
+  import dk.itu.ssas.page.exception._
   import dk.itu.ssas.Settings.baseUrl
   
-  type RequestType = FriendsPageRequest
+  type RequestType = NoRequest
 
   private def friendEntry(entry: (User, Relationship), kind: Int, key: Key): HTML = {
     val user = entry._1
@@ -29,7 +30,8 @@ object FriendsPage extends LoggedInPage {
     } mkString("\n")
   }
 
-  def content(request: FriendsPageRequest, key: Key): HTML = {
+  def content(request: NoRequest, u: Option[User], key: Key): HTML = {
+    val user = u.getOrElse(throw NoUserException())
     s"""
       <div id="myFriendsBox">
         <div id="myFriendsCaption">
@@ -42,7 +44,7 @@ object FriendsPage extends LoggedInPage {
               <th class="myFriendsListHeaders">Status</th>
               <th></th>
             </tr>
-            ${friendsToHTML(request.user.friends, key)}
+            ${friendsToHTML(user.friends, key)}
           </table>
         </div>  
       </div>

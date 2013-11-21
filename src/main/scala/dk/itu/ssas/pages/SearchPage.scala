@@ -1,8 +1,9 @@
 package dk.itu.ssas.page
 
-object SearchPage extends LoggedInPage {
+object SearchPage extends WebPage {
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.model._
+  import dk.itu.ssas.page.exception._
   import dk.itu.ssas.Settings.baseUrl
 
   type RequestType = SearchPageRequest
@@ -23,18 +24,20 @@ object SearchPage extends LoggedInPage {
     } mkString("\n")
   }
 
-  def content(request: SearchPageRequest, key: Key): HTML = {
-	s"""
-  <div id="searchResultsBox">
-    <div id="searchResultsCaption">
-      Search Results
+  def content(request: SearchPageRequest, u: Option[User], key: Key): HTML = {
+    val user = u.getOrElse(throw NoUserException())
+    val result = request.result
+  	s"""
+    <div id="searchResultsBox">
+      <div id="searchResultsCaption">
+        Search Results
+      </div>
+      <div id="searchResultsListBox">
+        <table cellspacing="0" style="width: 100%;">
+          ${searchResult(result)}
+        </table>
+      </div>  
     </div>
-    <div id="searchResultsListBox">
-      <table cellspacing="0" style="width: 100%;">
-        ${searchResult(request.result)}
-      </table>
-    </div>  
-  </div>
-	"""  	
+  	"""  	
   }
 }

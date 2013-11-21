@@ -1,8 +1,9 @@
 package dk.itu.ssas.page
 
-object ProfilePage extends LoggedInPage {
+object ProfilePage extends WebPage {
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.model._
+  import dk.itu.ssas.page.exception._
   import dk.itu.ssas.Settings.baseUrl
 
   type RequestType = ProfilePageRequest
@@ -99,19 +100,21 @@ object ProfilePage extends LoggedInPage {
     } else ""
   }
 
-  def content(request: ProfilePageRequest, key: Key): HTML = {
-    val rel = relationship(request.user, request.other)
+  def content(request: ProfilePageRequest, u: Option[User], key: Key): HTML = {
+    val user = u.getOrElse(throw NoUserException())
+    val other = request.other
+    val rel = relationship(user, other)
   	s"""
 	    <div id="profileWrapper">
         <div id="profileHeader">
           <div id="profileCaption">
-            ${request.other.name.html}
+            ${other.name.html}
           </div>
           <div id="profileRequestBox">
-          <form action="$baseUrl/profile/${request.other.id}/request" method="POST">
+          <form action="$baseUrl/profile/${other.id}/request" method="POST">
             ${formKeyInput(key)}
             Request <select name="relationship">
-              ${requestOptions(request.user, request.other)}
+              ${requestOptions(user, other)}
             </select>
             <input class="styledSubmitButton" type="submit" value="Do it" />
           </form>
@@ -119,7 +122,7 @@ object ProfilePage extends LoggedInPage {
         </div>
         <div id="profileBox">
           <div id="profileLeftBox">
-            ${emailInfo(request.user, request.other)}
+            ${emailInfo(user, other)}
             <div id="relationBox">
               <span class="profileLabel">Your relationship</span><br />
               <span id="relationStatus">${relationshipText(rel)}</span>
@@ -127,17 +130,17 @@ object ProfilePage extends LoggedInPage {
             <div id="addressBox">
               <span class="profileLabel">Address</span><br />
               <div id="addressInfoBox">
-                ${address(rel, request.user, request.other)}
+                ${address(rel, user, other)}
               </div>
             </div>
-            ${hugButton(rel, request.user, request.other, key)}
+            ${hugButton(rel, user, other, key)}
           </div>
           <div id="profileRightBox">
             <div id="hobbiesBox">
               <span class="profileLabel">Hobbies</span>
               <div id="hobbiesListBox">
                 <ul id="hobbiesList">
-                  ${hobbies(request.other)}
+                  ${hobbies(other)}
                 </ul>
               </div>
             </div>

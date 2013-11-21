@@ -1,12 +1,20 @@
 package dk.itu.ssas.page
 
-abstract class LoggedOutPage extends Page {
+import dk.itu.ssas.model._
+
+object LoggedOutHeader {
+  def apply(title: String, key: Key, user: Option[User]): HTML = {
+    val header = new LoggedOutHeader()
+    header.render(title, key, user)
+  }
+}
+
+class LoggedOutHeader extends Header {
   import dk.itu.ssas._
-  import dk.itu.ssas.model._
   import dk.itu.ssas.page.exception._
   import dk.itu.ssas.Settings.{ baseUrl, staticBaseUrl }
 
-  def header(title: String, key: Key, user: Option[User]): HTML = {
+  def render(title: String, key: Key, user: Option[User]): HTML = {
     user match {
       case Some(_) => throw UnexpectedUserException()
       case None => {
