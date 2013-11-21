@@ -669,6 +669,17 @@ case class User(
     }
   }
 
+  /** The login status of the user
+    *
+    * @return True if the user is logged in; False otherwise. 
+    */  
+  def isLoggedIn: Boolean = {
+    session match {
+      case Some(_) => true
+      case None    => false
+    }
+  }
+
   override def toString(): String = {
     s"User($id, $name, $address, $email)"
   }
