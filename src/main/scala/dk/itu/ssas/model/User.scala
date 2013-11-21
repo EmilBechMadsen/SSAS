@@ -3,7 +3,7 @@ package dk.itu.ssas.model
 import dk.itu.ssas.db.DbAccess
 import dk.itu.ssas.Settings
 import java.sql.Timestamp
-import java.util.UUID
+import java.util.{UUID, Calendar}
 import scala.language.postfixOps
 import scala.slick.driver.MySQLDriver.simple._
 import scala.slick.driver.MySQLDriver.simple.Database.threadLocalSession
@@ -83,7 +83,7 @@ object User extends UserExceptions with DbAccess {
           if (!confirmed) {
             val key = UUID.randomUUID()
 
-            val ec = EmailConfirmation(key.toString(), id)
+            val ec = EmailConfirmation (key.toString(), id, new Timestamp(Calendar.getInstance.getTimeInMillis()))
             EmailConfirmations insert ec
 
             mailer ! ConfirmationMail(email, name, key)

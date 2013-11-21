@@ -9,7 +9,7 @@ object CleanDb extends DbWorkerMessage
 
 class DbWorker extends Actor with ActorLogging with DbAccess {
   import dk.itu.ssas.Settings.db.cleanPass
-  import dk.itu.ssas.Settings.security.{ formKeyTimeout, sessionTimeout }
+  import dk.itu.ssas.Settings.security.{ formKeyTimeout, sessionTimeout, confirmationTimeout }
   import java.sql.Timestamp
   import scala.concurrent.duration._
   import scala.slick.driver.MySQLDriver.simple._
@@ -24,12 +24,27 @@ class DbWorker extends Actor with ActorLogging with DbAccess {
     case CleanDb => {
       cleanSessions()
       cleanFormKeys()
+      cleanConfirmations()
       schedule()
     }
   }
 
   private def schedule(): Unit = {
     s.scheduleOnce(cleanPass minutes, self, CleanDb)(d)
+  }
+
+  private def cleanConfirmations(): Unit = Db withSession {
+    val expTime = System.currentTimeMillis() - confirmationTimeout * 60000
+    val exp = new Timestamp(expTime)
+
+    val cs = for {
+      c <- EmailConfirmations if c.timestamp <= exp
+    } yield c
+
+    val count = cs.list.length
+    if (count > 0) log.info(s"Deleting $count EmailConfirmations (Expired)")
+
+    cs delete;
   }
 
   private def cleanSessions(): Unit = Db withSession {

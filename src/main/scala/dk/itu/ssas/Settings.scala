@@ -53,5 +53,6 @@ object Settings {
     val hobbyWhitelist = conf.getString("ssas.security.hobbyWhitelist")
     val formKeyTimeout = conf.getLong("ssas.security.formKeyTimeout")
     val sessionTimeout = conf.getLong("ssas.security.sessionTimeout")
+    val confirmationTimeout = conf.getLong("ssas.security.confirmationTimeout")
   }
 }
