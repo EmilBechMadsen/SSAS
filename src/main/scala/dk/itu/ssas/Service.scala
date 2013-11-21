@@ -38,6 +38,7 @@ class Service
       redirects ~
       PublicService.route ~ 
       UserService.route ~ 
-      AdminService.route
+      AdminService.route ~
+      ApiService.route  
    }
  }
