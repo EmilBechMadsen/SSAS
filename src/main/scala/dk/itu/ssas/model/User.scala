@@ -260,6 +260,13 @@ case class User(
     Security.checkPassword(p, _password, _salt)
   }
 
+  /** Searches for other users by name
+    *
+    * @param s - The search string
+    * @return A list of users with names matching the search string
+    */
+  def search(s: String): List[User] = User.search(s, Some(this))
+
   /** Returns the user's friends
     *
     * @return A map from the relationship to the user
