@@ -412,7 +412,17 @@ case class User(
     */
   def hug(u: User): Unit = Db withSession {
     if (isFriend(u)) {
-      val hug = Hugs.forInsert insert (new Timestamp(System.currentTimeMillis()), id, u.id)
+      val hs = for {
+        h <- Hugs if h.fromUserId === id
+      } yield h
+
+      if (hs.list.length > Settings.security.maxHugs) {
+        val largestId = hs.list.reverse.splitAt(Settings.security.maxHugs)._2.maxBy(hug => hug.id).id
+        hs.filter (h => h.id <= largestId) delete
+      }
+
+
+      Hugs.forInsert insert (new Timestamp(System.currentTimeMillis()), id, u.id)
     } else {
       throw new StrangerException
     }

@@ -8,6 +8,7 @@ sealed abstract class DbWorkerMessage
 object CleanDb extends DbWorkerMessage
 
 class DbWorker extends Actor with ActorLogging with DbAccess {
+  import dk.itu.ssas.model.User
   import dk.itu.ssas.Settings.db.cleanPass
   import dk.itu.ssas.Settings.security.{ formKeyTimeout, sessionTimeout, confirmationTimeout }
   import java.sql.Timestamp
@@ -37,14 +38,15 @@ class DbWorker extends Actor with ActorLogging with DbAccess {
     val expTime = System.currentTimeMillis() - confirmationTimeout * 60000
     val exp = new Timestamp(expTime)
 
-    val cs = for {
+    val us = for {
       c <- EmailConfirmations if c.timestamp <= exp
-    } yield c
+      u <- Users if u.id === c.userId
+    } yield u
 
-    val count = cs.list.length
+    val count = us.list.length
     if (count > 0) log.info(s"Deleting $count EmailConfirmations (Expired)")
 
-    cs delete;
+    us delete;
   }
 
   private def cleanSessions(): Unit = Db withSession {
