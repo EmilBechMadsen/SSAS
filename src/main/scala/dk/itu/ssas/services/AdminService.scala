@@ -21,7 +21,7 @@ object AdminService extends SsasService with UserExceptions {
               get {
                 html(s) { (s, formKey) =>
                   complete {
-                    AdminPage.render("Admin Area", formKey, Some(u), AdminPageRequest(u))
+                    AdminPage.render("Admin Area", formKey, Some(u), NoRequest())
                   }
                 }
               }

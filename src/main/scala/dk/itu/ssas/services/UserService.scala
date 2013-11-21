@@ -21,7 +21,7 @@ object UserService extends SsasService with UserExceptions {
             html(s) { (s, formKey) =>
               complete {
                 log.debug(s"Showing friend requests for user $u with session $s")
-                ViewRequestsPage.render("Your friend requests", formKey, Some(u), ViewRequestsPageRequest(u))
+                ViewRequestsPage.render("Your friend requests", formKey, Some(u), NoRequest())
               }
             }
           }
@@ -77,7 +77,7 @@ object UserService extends SsasService with UserExceptions {
                 html(s) { (s, formKey) =>
                   complete {
                     log.debug(s"Showing own profile for user $u, with session $s")
-                    EditProfilePage.render("Profile: " + u.name, formKey, Some(u), EditProfilePageRequest(u))
+                    EditProfilePage.render("Profile: " + u.name, formKey, Some(u), NoRequest())
                   }
                 }
               } else {
@@ -86,7 +86,7 @@ object UserService extends SsasService with UserExceptions {
                   case Some(other) => html(s) { (s, formKey) =>
                     complete {
                       log.debug(s"Showing profile for $other to $u, with session $s")
-                      ProfilePage.render("Profile: " + other.name, formKey, Some(u), ProfilePageRequest(u, other))
+                      ProfilePage.render("Profile: " + other.name, formKey, Some(u), ProfilePageRequest(other))
                     }
                   }
                   case None => complete {
@@ -260,7 +260,7 @@ object UserService extends SsasService with UserExceptions {
           withUser(s) { u =>
             html(s) { (s, formKey) =>
               complete {
-                FriendsPage.render("Your friends", formKey, Some(u), FriendsPageRequest(u))
+                FriendsPage.render("Your friends", formKey, Some(u), NoRequest())
               }
             }
           }
@@ -309,7 +309,7 @@ object UserService extends SsasService with UserExceptions {
             withUser(s) { u =>
               html(s) { (s, formKey) =>
                 complete {
-                  val site = HugsPage.render("Your hugs", formKey, Some(u), HugsPageRequest(u))
+                  val site = HugsPage.render("Your hugs", formKey, Some(u), NoRequest())
                   u.seenHugs
                   site
                 }
