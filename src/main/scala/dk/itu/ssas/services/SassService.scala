@@ -112,7 +112,10 @@ trait SsasService {
                 log.warn(s"API request with invalid key, $key")
                 HttpResponse(spray.http.StatusCodes.Unauthorized, "Invalid API key")
               }
-              case Some(_) => c
+              case Some(apiKey) => if (!apiKey.revoked) c else complete {
+                log.warn(s"API request with revoked key, $key")
+                HttpResponse(spray.http.StatusCodes.Unauthorized, "The supplied API key has been revoked")
+              } 
             }
           } catch {
             case e: IllegalArgumentException => complete {
