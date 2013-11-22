@@ -48,6 +48,15 @@ object ApiService extends SsasService with UserExceptions {
             }
           }
         }~
+        path("list") {
+          get {
+            withApiKey {
+              complete {
+                User.all.toJson.toString()
+              }
+            }
+          }
+        }~
         path(IntNumber) { id =>
           get {
             withApiKey {
