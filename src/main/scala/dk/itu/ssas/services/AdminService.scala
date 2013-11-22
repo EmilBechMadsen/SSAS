@@ -112,6 +112,43 @@ object AdminService extends SsasService with UserExceptions {
             }
           }
         }
+      }~
+      path("revoke" / JavaUUID) { key =>
+        post {
+          withSession { s =>
+            withUser(s) { u =>
+              withAdmin(u) {
+                withFormKey(s) {
+                  ApiKey(key) match {
+                    case Some(apiKey) => {
+                      apiKey.revoked = true
+                      log.info(s"API key $key revoked")
+                      redirect(s"${baseUrl}/admin", StatusCodes.SeeOther)
+                    }
+                    case None => complete {
+                      log.warn(s"API key $key could not be found to be revoked")
+                      HttpResponse(StatusCodes.NotFound, "API key not found")
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }~
+      path("createAPIKey") {
+        post {
+          withSession { s =>
+            withUser(s) { u =>
+              withAdmin(u) {
+                withFormKey(s) {
+                  ApiKey.create()
+                  redirect(s"${baseUrl}/admin", StatusCodes.SeeOther)
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
