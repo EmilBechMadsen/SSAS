@@ -46,8 +46,29 @@ object AdminPage extends WebPage {
     """
   }
 
+  private def apiKeyToHTML(apiKey: ApiKey, key: Key): HTML = {
+    val a = apiKey.toString()
+    s"""
+    <tr class="adminApiKeyEntry">
+      <td class="adminApiKeyEntryKey">
+        $a
+      </td>
+      <td class="adminApiKeyEntryRevoke">
+        <form action="${baseUrl}/admin/revoke/$a" method="POST">
+          ${formKeyInput(key)}
+          <input name="adminRevokeApiKey" class="styledSubmitButton" type="submit" value="Revoke" />
+        </form>
+      </td>
+    </tr>
+    """
+  }
+
   private def users(userList: List[User], key: Key): HTML = {
     userList map { u => userToHTML(u, key) } mkString("\n")
+  }
+
+  private def apiKeys(apiKeys: List[ApiKey], key: Key): HTML = {
+    apiKeys map { k => apiKeyToHTML(k, key) } mkString("\n")
   }
 
   def content(request: NoRequest, u: Option[User], key: Key): HTML = {
@@ -159,6 +180,18 @@ object AdminPage extends WebPage {
                     </div>
                   </form>
                 </fieldset>
+              </div>
+              <div id="adminApiKeyBox">
+                <h2>API Keys</h2>
+                <div id="adminApiKeyCreateBox">
+                  <form action="${baseUrl}/admin/createAPIKey" method="POST">
+                    ${formKeyInput(key)}
+                    <input type="submit" value="Create new" class="styledSubmitButton" />
+                  </form>
+                </div>
+                <table cellspacing="0" cellpadding="0" id="adminApiKeysTable">
+                  ${apiKeys(ApiKey.list, key)}
+                </table>
               </div>
               <div id="adminUsersBox">
                 <h2>Users</h2>

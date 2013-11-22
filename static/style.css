@@ -421,7 +421,7 @@ input.profileInput {
   padding-right: 5px;
 }
 
-#adminUsersBox {
+#adminUsersBox, #adminApiKeyBox {
   width: 90%;
   margin-left: 5%;
   margin-right: 5%;
@@ -429,12 +429,12 @@ input.profileInput {
   float: left;
 }
 
-#adminUsersTable {
+#adminUsersTable, #adminApiKeysTable {
   width: 100%;
   padding-bottom: 10px;
 }
 
-.adminUserEntry {
+.adminUserEntry, .adminApiKeyEntry {
   height: 35px;
 }
 
@@ -448,6 +448,22 @@ input.profileInput {
 
 .adminUserEntryName a {
   color: #000;
+}
+
+.adminApiKeyEntryKey {
+  padding-left: 10px;
+  width: 80%;
+}
+
+.adminApiKeyEntryKey:hover {
+  color: #FFF;
+  background-color: #900;
+  border: 1px solid;
+}
+
+.adminApiKeyEntryRevoke {
+  padding-right: 5px;
+  text-align: right;
 }
 
 .adminUserEntryName:hover {
@@ -469,6 +485,12 @@ input.profileInput {
   text-align: left;
 }
 
+#adminApiKeyCreateBox {
+  margin-left: 5%;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  float: left;  
+}
 
 /* Hugs */
 #hugsContent {
