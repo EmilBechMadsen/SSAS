@@ -26,6 +26,14 @@ object ApiKey extends DbAccess {
 
     apiKey
   }
+
+  /** Returns a list of all API keys.
+    *
+    * @return A list of all API keys.
+    */
+  def list: List[ApiKey] = Db withSession {
+    (for (a <- ApiKeys) yield a).list
+  }
 }
 
 case class ApiKey(private val _key: String, private var _revoked: Boolean) extends DbAccess {
