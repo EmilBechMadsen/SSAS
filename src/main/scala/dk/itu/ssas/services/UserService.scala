@@ -289,12 +289,17 @@ object UserService extends SsasService with UserExceptions {
         withSession { s =>
           withUser(s) { u =>
             withFormKey(s) {
-              formFields('searchTerm) { name => 
-                val users = u search name
-                html(s) { (s, formKey) =>
-                  complete {
-                    SearchPage.render("Search results", formKey, Some(u), SearchPageRequest(users))
+              formFields('searchTerm) { searchTerm =>
+                if (validHobby(searchTerm) || validEmail(searchTerm)) {
+                  val users = u search searchTerm
+                  html(s) { (s, formKey) =>
+                    complete {
+                      SearchPage.render("Search results", formKey, Some(u), SearchPageRequest(users))
+                    }
                   }
+                }
+                else {
+                  complete { HttpResponse(StatusCodes.BadRequest, "Search term is improperly formatted") }
                 }
               }
             }

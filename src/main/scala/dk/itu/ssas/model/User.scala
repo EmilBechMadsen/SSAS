@@ -160,23 +160,41 @@ object User extends UserExceptions with DbAccess {
   }
 
 
-  /** Searches for other users by name
+  /** Searches for other users by name, email, or hobby
     *
     * @param s - The search string
     * @param user - This user, if given, won't be included in the results. Useful if this is the user searching.
     * @return A list of users with names matching the search string
     */
   def search(s: String, user: Option[User] = None): List[User] = Db withSession {
-    if (validName(s)) {
-      val users = for {
-        u <- Users if u.name like s"%$s%"
+    // If the search string is a valid name, it is also a valid hobby.
+    val users = if (validHobby(s)) {
+      val u = for {
+        u <- Users if ((u.name like s"%$s%") || (u.email like s"%$s%"))
       } yield u
 
-      user match {
-        case None       => users.list
-        case Some(user) => users.list filter (u => u.id != user.id)
-      }
-    } else List()
+      val uh= for {
+        h  <- Hobbies     if (h.name like s"%$s%")
+        uh <- UserHobbies if (h.id === uh.hobbyId)
+        u  <- Users       if (uh.userId === u.id)
+      } yield u
+
+      (u.list ++ uh.list).distinct
+    }
+    // If we get and e-mail, we only look in emails
+    else if (validEmail(s)) {
+      val u = for {
+        u <- Users if (upper(u.email) === s.toUpperCase())
+      } yield u
+
+      u.list
+    }
+    else List()
+
+    user match {
+      case None       => users
+      case Some(user) => users filter (u => u.id != user.id)
+    }
   }
 }
 
