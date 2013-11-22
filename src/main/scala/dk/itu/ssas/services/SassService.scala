@@ -103,7 +103,7 @@ trait SsasService {
       key match {
         case None => complete {
           log.warn(s"API request with no key")
-          HttpResponse(spray.http.StatusCodes.Unauthorized, "You need to supply a valid API key in the Authroization header")
+          HttpResponse(spray.http.StatusCodes.Unauthorized, "You need to supply a valid API key in the Authorization header")
         }
         case Some(key) => {
           try {
