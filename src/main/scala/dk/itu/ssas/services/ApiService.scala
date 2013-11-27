@@ -7,7 +7,7 @@ object ApiService extends SsasService with UserExceptions {
   import dk.itu.ssas.Validate._
   import java.util.UUID
   import spray.http._
-  import spray.httpx.SprayJsonSupport
+  import spray.httpx.SprayJsonSupport._
   import spray.json._
   import spray.routing._
   import spray.routing.HttpService._
@@ -32,38 +32,41 @@ object ApiService extends SsasService with UserExceptions {
 
   import SSASJsonProtocol._
 
+  def userRoute(key: String) = pathPrefix("user") {
+    path("search") {
+      post {
+        entity(as[String]) { searchTerm =>
+          complete {
+            log.info(s"""API: Search for "$searchTerm" from API key: $key""")
+            User.search(searchTerm).map(u => JsObject(("id", u.id.toJson), ("name", u.name.toJson)))
+          }
+        }
+      }
+    }~
+    path("list") {
+      get {
+        complete {
+          log.info(s"API: Request for all users from API key: $key")
+          User.all
+        }
+      }
+    }~
+    path(IntNumber) { id =>
+      get {
+        complete {
+          log.info(s"API: Request for user $id from API key: $key")
+          User(id)
+        }
+      }
+    }
+  }
+
   def route = {
     pathPrefix("api") {
-      pathPrefix("user") {
-        path("search") {
-          post {
-            withApiKey {
-              entity(as[String]) { searchTerm =>
-                val us = User.search(searchTerm).map(u => JsObject(("id", u.id.toJson), ("name", u.name.toJson)))
-
-                complete {
-                  us.toJson.toString()
-                }
-              }
-            }
-          }
-        }~
-        path("list") {
-          get {
-            withApiKey {
-              complete {
-                User.all.toJson.toString()
-              }
-            }
-          }
-        }~
-        path(IntNumber) { id =>
-          get {
-            withApiKey {
-              complete {
-                User(id).toJson.toString()
-              }
-            }
+      respondWithMediaType(MediaTypes.`application/json`) {
+        headerValueByName("Authorization") { key =>
+          withApiKey(key) {
+            userRoute(key)
           }
         }
       }

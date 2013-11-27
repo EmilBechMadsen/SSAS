@@ -98,32 +98,29 @@ trait SsasService {
     }
   }
 
-  protected def withApiKey(c: RequestContext => Unit): RequestContext => Unit = {
-    optionalHeaderValueByName("Authorization") { key =>
-      key match {
-        case None => complete {
-          log.warn(s"API request with no key")
-          HttpResponse(spray.http.StatusCodes.Unauthorized, "You need to supply a valid API key in the Authorization header")
+  protected def withApiKey(key: String): Directive0 = {
+    try {
+      ApiKey(UUID.fromString(key)) match {
+        case None => reject {
+          log.warn(s"API request with invalid key, $key")
+          AuthenticationFailedRejection(AuthenticationFailedRejection.CredentialsRejected, List())
         }
-        case Some(key) => {
-          try {
-            ApiKey(UUID.fromString(key)) match {
-              case None => complete {
-                log.warn(s"API request with invalid key, $key")
-                HttpResponse(spray.http.StatusCodes.Unauthorized, "Invalid API key")
-              }
-              case Some(apiKey) => if (!apiKey.revoked) c else complete {
-                log.warn(s"API request with revoked key, $key")
-                HttpResponse(spray.http.StatusCodes.Unauthorized, "The supplied API key has been revoked")
-              } 
+        case Some(apiKey) => {
+          if (apiKey.revoked) {
+            reject {
+              log.warn(s"API request with revoked key, $key")
+              AuthenticationFailedRejection(AuthenticationFailedRejection.CredentialsRejected, List())
             }
-          } catch {
-            case e: IllegalArgumentException => complete {
-              log.error(s"Key $key could not be deserialized")
-              HttpResponse(spray.http.StatusCodes.BadRequest, "API key could not be deserialized")
-            }
+          } 
+          else {
+            pass
           }
         }
+      }
+    } catch {
+      case e: IllegalArgumentException => reject {
+        log.error(s"Key $key could not be deserialized")
+        AuthenticationFailedRejection(AuthenticationFailedRejection.CredentialsRejected, List())
       }
     }
   }
