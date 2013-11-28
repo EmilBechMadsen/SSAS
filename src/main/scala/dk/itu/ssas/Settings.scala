@@ -55,5 +55,6 @@ object Settings {
     val sessionTimeout      = conf.getLong("ssas.security.sessionTimeout")
     val confirmationTimeout = conf.getLong("ssas.security.confirmationTimeout")
     val maxHugs             = conf.getInt("ssas.security.maxHugs")
+    val maxHobbies          = conf.getInt("ssas.security.maxHobbies")
   }
 }

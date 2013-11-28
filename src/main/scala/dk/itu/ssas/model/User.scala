@@ -530,6 +530,11 @@ case class User(
     */
   def addHobby(h: String): Unit = Db withTransaction {
     if (!validHobby(h)) throw new InvalidHobbyException
+    
+    val maxHobbiesReached = (for (uh <- UserHobbies if uh.userId === id) yield uh.hobbyId)
+        .list.length >= Settings.security.maxHobbies
+    if (maxHobbiesReached)
+        return // Don't add it. User is displayed a javascript error.
 
     if (!hasHobby(h)) {
       val hobby = for {
