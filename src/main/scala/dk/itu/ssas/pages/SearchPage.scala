@@ -8,23 +8,35 @@ object SearchPage extends WebPage {
 
   type RequestType = SearchPageRequest
 
-  private def searchResultEntry(user: User): HTML = {
+  private def searchResultEntry(url: String, name: String): HTML = {
     s"""
     <tr class="listEntryRow">
       <td class="searchListEntry">
-        <a href="$baseUrl/profile/${user.id}">${user.name.html}</a>
+        <a href="$url">${name.html}</a>
       </td>
     </tr>
     """
   }
 
   private def searchResult(result: List[User]): HTML = {
-    result map { u => searchResultEntry(u) } mkString("\n")
+    result map { u => searchResultEntry(s"$baseUrl/profile/${u.id}", u.name) } mkString("\n")
+  }
+
+  private def remoteSearchResult(remoteResult: Map[String, List[RemoteUser]]): HTML = {
+   (for ((name, result) <- remoteResult) yield if(result.length > 0) {
+      s"""
+      <h3>$name</h3>
+      <table cellspacing="0" style="padding-top: 10px; padding-bottom: 10px;">
+          ${result map { u => searchResultEntry(u.url, u.name) } mkString("\n")}
+      </table>"""
+   }).mkString("\n")
   }
 
   def content(request: SearchPageRequest, u: Option[User], key: Key): HTML = {
     val user = u.getOrElse(throw NoUserException())
-    val result = request.result
+    val result = request.local
+    val remoteResult = request.remote
+
   	s"""
     <div id="searchResultsBox" class="content">
       <div class="header">
@@ -36,6 +48,7 @@ object SearchPage extends WebPage {
         <table cellspacing="0" style="padding-top: 10px; padding-bottom: 10px;">
           ${searchResult(result)}
         </table>
+        ${remoteSearchResult(remoteResult)}
       </div>  
     </div>
   	"""  	

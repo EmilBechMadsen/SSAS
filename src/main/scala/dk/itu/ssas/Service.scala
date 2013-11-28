@@ -1,7 +1,7 @@
 package dk.itu.ssas
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import dk.itu.ssas.services.SsasService
+import dk.itu.ssas.services._
 import spray.routing._
 import spray.http._
 import spray.httpx.SprayJsonSupport
@@ -10,11 +10,10 @@ import spray.httpx.SprayJsonSupport
 class Service
   extends Actor
   with HttpService
-  with SsasService
+  with UserService
   with SprayJsonSupport {
 
   import akka.util.Timeout
-  import dk.itu.ssas.services._
   
   // The default timeout for all requests
   implicit val timeout = Timeout(Settings.timeout)
@@ -37,7 +36,7 @@ class Service
   val route = {
       redirects ~
       PublicService.route ~ 
-      UserService.route ~ 
+      userRoute ~ 
       AdminService.route ~
       ApiService.route  
    }

@@ -1,19 +1,29 @@
 package dk.itu.ssas.services
 
+import akka.actor.{ Actor, Props }
 import dk.itu.ssas.model.UserExceptions
 
-object UserService extends SsasService with UserExceptions {
+trait UserService extends SsasService with UserExceptions with Actor {
   import dk.itu.ssas.model._
   import dk.itu.ssas.page._
   import dk.itu.ssas.page.request._
+  import dk.itu.ssas.remotes._
   import dk.itu.ssas.Settings.baseUrl
   import dk.itu.ssas.Validate._
+  import scala.concurrent.{ Await, Future }
+  import scala.concurrent.duration._
   import scala.language.postfixOps
+  import spray.client.pipelining._
   import spray.http._
+  import spray.httpx.SprayJsonSupport._
+  import spray.json._
   import spray.routing._
   import spray.routing.HttpService._
 
-  def route = {
+  val remotes: List[RemoteSite] = List(new BrocialNetwork(context.system))
+  private implicit val executionContext = context.system.dispatcher
+
+  def userRoute = {
     path("requests") {
       get {
         withSession { s =>
@@ -291,10 +301,23 @@ object UserService extends SsasService with UserExceptions {
             withFormKey(s) {
               formFields('searchTerm) { searchTerm =>
                 if (validHobby(searchTerm) || validEmail(searchTerm)) {
-                  val users = u search searchTerm
+                  val remoteSearches = for (r <- remotes) yield (r, r.search(searchTerm))
+                  val localUsers = u search searchTerm
+
                   html(s) { (s, formKey) =>
                     complete {
-                      SearchPage.render("Search results", formKey, Some(u), SearchPageRequest(users))
+                      val remoteUsers: Map[String, List[RemoteUser]] = (for ((site, search) <- remoteSearches) yield {
+                        try {
+                          site.name -> Await.result(search, 2 seconds)
+                        } catch {
+                          case x: Throwable => {
+                            log.error(s"Request ${site.name} failed")
+                            site.name -> List()
+                          }
+                        }
+                      }).toMap
+                      
+                      SearchPage.render("Search results", formKey, Some(u), SearchPageRequest(localUsers, remoteUsers))
                     }
                   }
                 }
