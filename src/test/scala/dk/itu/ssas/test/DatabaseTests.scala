@@ -22,7 +22,7 @@ trait DatabaseTests extends FunSuite with BeforeAndAfterAll with DbAccess {
     "DROP TABLE IF EXISTS user;",
     "DROP TABLE IF EXISTS api_key;")
 
-  private def resetDb() = Db withSession {
+  def resetDb() = Db withSession {
     dropStmts foreach (s => (Q.u + s).execute)
     ddl create
   }

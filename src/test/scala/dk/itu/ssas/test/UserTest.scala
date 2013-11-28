@@ -3,19 +3,36 @@ package dk.itu.ssas.test
 import dk.itu.ssas.db.DbAccess
 import dk.itu.ssas.model._
 import java.util.UUID
-import org.scalatest.FunSuite
+import org.scalatest.{ BeforeAndAfterEach, BeforeAndAfter, FunSuite }
 import scala.language.postfixOps
 import scala.slick.driver.MySQLDriver.simple._
 import scala.slick.driver.MySQLDriver.simple.Database.threadLocalSession
 
-class UserTest extends FunSuite with UserExceptions with DatabaseTests with DbAccess {
-  var user1Id = 1
-  val name  = "John Døe"
-  val email = "john@doe.com"
-  val pass  = "password1"
-  var user2Id = 2
+class UserTest extends FunSuite 
+                  with BeforeAndAfter
+                  with UserExceptions 
+                  with DatabaseTests 
+                  with DbAccess
+                  with TestData {
+
+  var users: List[User] = _
+  var confirmedUsers: List[User] = _
+
+  //override def beforeEach() {
+  before {
+    users = randomUsers(2, true, false) map { p => p._1 } // with address, not confirmed
+    confirmedUsers = randomUsers(2, true, true) map { p => p._1 }
+  }
+
+  //override def afterEach() {
+  after {
+    resetDb()
+  }
 
   test("Creating user") {
+    val name  = "John Døe"
+    val email = "john@doe.com"
+    val pass  = "password1"
     val addr  = Some("Road 123\n521614 Place town, Place\nSweden")
     val user  = User.create(name, addr, email, pass)
 
@@ -24,37 +41,29 @@ class UserTest extends FunSuite with UserExceptions with DatabaseTests with DbAc
         assert(u.name     === name)
         assert(u.email    === email)
         assert(u.address  === addr)
-        user1Id = u.id
       }
       case None    => assert(false)
     }
   }
 
   test("Newly created user is unconfirmed") {
-    val user = User(user1Id)
-
-    user match {
-      case Some(u) => {
-        assert(u.isConfirmed === false)
-      }
-      case None    => assert(false)
-    }
+    for (u <- users) assert(u.isConfirmed === false)
   }
 
   test("User is confirmed") {
-    val user = User(user1Id)
+    val user = users.head
 
     val key = Db withSession {
       (for {
-        e <- EmailConfirmations if e.userId === user1Id
+        e <- EmailConfirmations if e.userId === user.id
       } yield e) firstOption
     }
 
-    (user, key) match {
-      case (Some(u), Some(k)) => {
-        assert(u.isConfirmed === false)
-        u.confirm(UUID.fromString(k.key))
-        assert(u.isConfirmed === true)
+    key match {
+      case Some(k) => {
+        assert(user.isConfirmed === false)
+        user.confirm(UUID.fromString(k.key))
+        assert(user.isConfirmed === true)
       }
       case _    => assert(false)
     }
@@ -72,220 +81,183 @@ class UserTest extends FunSuite with UserExceptions with DatabaseTests with DbAc
         assert(u.name     === name)
         assert(u.email    === email)
         assert(u.address  === addr)
-        user2Id = u.id
+
+        val key = Db withSession {
+          (for {
+            e <- EmailConfirmations if e.userId === u.id
+          } yield e) firstOption
+        }
+
+        key match {
+          case None => assert(u.isConfirmed === true)
+          case _    => assert(false)
+        }
       }
       case None    => assert(false)
-    }
-  }
-
-  test("Second user is confirmed") {
-    val user = User(user2Id)
-
-    val key = Db withSession {
-      (for {
-        e <- EmailConfirmations if e.userId === user1Id
-      } yield e) firstOption
-    }
-
-    (user, key) match {
-      case (Some(u), None) => assert(u.isConfirmed === true)
-      case _               => assert(false)
     }
   }
 
   test ("Set user to admin") {
-    User(user1Id) match {
-      case (Some(user)) => {
-        user.admin = true
-        assert(user.admin === true)
-      }
-      case None => assert(false)
-    }
+    val user = confirmedUsers.head
+    user.admin = true
+    assert(user.admin === true)
   }
 
   test("Search Works") {
-    (User(1), User(2)) match {
-      case (Some(u1), Some(u2)) => {
-        val search1 = u2 search "John"
-        assert(search1.length === 1)
-        assert(search1(0).id === user1Id)
+    val user1 = confirmedUsers.head
+    val user2 = confirmedUsers.tail.head
 
-        val search2 = u1 search "Pantson"
-        assert(search2.length === 1)
-        assert(search2(0).id === user2Id)
-      }
-      case _ => assert(false)
-    }
+    val search1 = user2 search (user1.name)
+    assert(search1.length === 1)
+    assert(search1.exists { u => u.id == user1.id })
+
+    val search2 = user1 search (user2.name)
+    assert(search2.length === 1)
+    assert(search2.exists { u => u.id == user2.id })
   }
 
   test("You cannot hug a stranger") {
-    (User(1), User(2)) match {
-      case (Some(u1), Some(u2)) => {
-        intercept[StrangerException] {
-          u1 hug u2
-        }
-      }
-      case (_, _) => assert(false)
+    val user1 = users.head
+    val user2 = users.tail.head
+
+    intercept[StrangerException] {
+      user1 hug user2
     }
   }
 
-  test("Request friendship") {
-    val user1 = User(user1Id)
-    val user2 = User(user2Id)
+  test("Request and accept friendship") {
+    val user1 = confirmedUsers.head
+    val user2 = confirmedUsers.tail.head
 
-    (user1, user2) match {
-      case (Some(u1), Some(u2)) => {
-        u1.requestFriendship(u2, Friendship)
-      }
-      case _ => assert(false)
-    }
-  }
+    user1.requestFriendship(user2, Friendship)
+    // user2 has received friendship request
+    assert(user2.friendRequests(user1) === Friendship)
 
-  test("Receive friendship request") {
-    val user1 = User(user1Id)
-    val user2 = User(user2Id)
-
-    (user1, user2) match {
-      case (Some(u1), Some(u2)) => {
-        assert(u2.friendRequests(u1) === Friendship)
-      }
-      case _ => assert(false)
-    }
-  }
-
-  test("Accept friendship request") {
-    val user1 = User(user1Id)
-    val user2 = User(user2Id)
-
-    (user1, user2) match {
-      case (Some(u1), Some(u2)) => {
-        assert(u2.acceptFriendRequest(u1, Friendship) === true)
-        assert(u2.friends(u1) === Friendship)
-        assert(u1.friends(u2) === Friendship)
-        assert(u2.friendRequests.isEmpty)
-      }
-      case _ => assert(false)
-    }
+    assert(user2.acceptFriendRequest(user1, Friendship) === true)
+    assert(user2.friends(user1) === Friendship)
+    assert(user1.friends(user2) === Friendship)
+    assert(user2.isFriend(user1.id))
+    assert(user1.isFriend(user2.id))
+    assert(user2.friendRequests.isEmpty)
   }
 
   test("You can hug a friend, many times!") {
-    (User(user1Id), User(user2Id)) match {
-      case (Some(u1), Some(u2)) => {
-        u1 hug u2
-
-        assert(u2.unseenHugs === 1)
-
-        u1 hug u2
-
-        assert(u2.unseenHugs === 2)
-      }
-      case _ => assert(false)
-    }
+    val (u1, u2) = createFriends
+    val unseen = u2.unseenHugs
+    u1 hug u2
+    assert(u2.unseenHugs === unseen+1)
+    u1 hug u2
+    assert(u2.unseenHugs === unseen+2)
   }
 
   test("You can mark a single hug as seen") {
-    (User(user1Id), User(user2Id)) match {
-      case (Some(u1), Some(u2)) => {
-        u2 seenHug 1
-
-        assert(u2.unseenHugs === 1)
-      }
-      case _ => assert(false)
-    }
+    val (u1, u2) = createFriends
+    u1 hug u2
+    u1 hug u2
+    u2 seenHug 1
+    assert(u2.unseenHugs === 1)
   }
 
   test("You can see unseen and seen hugs") {
-    (User(user1Id), User(user2Id)) match {
-      case (Some(u1), Some(u2)) => {
-        val (unseen, seen) = u2 hugs
+    val (u1, u2) = createFriends
+    u1 hug u2
+    u1 hug u2
+    u2 seenHug 1
 
-        assert(unseen.length === 1)
-        assert(unseen.head.id === 2)
-        assert(seen.length === 1)
-        assert(seen.head.id === 1)
-      }
-      case _ => assert(false)
-    }
+    val (unseen, seen) = u2 hugs
+
+    assert(unseen.length === 1)
+    assert(unseen.head.id === 2)
+    assert(seen.length === 1)
+    assert(seen.head.id === 1)
+  }
+
+  test("seenHugs marks all hugs as seen") {
+    val (user1, user2) = createFriends
+
+    def seen = user2.hugs._2.length
+    def unseen = user2.hugs._1.length
+
+    assert(unseen === 0)
+    assert(seen === 0)
+
+    user1 hug user2
+    user1 hug user2
+
+    assert(unseen === 2)
+    assert(seen === 0)
+
+    user2.seenHugs
+
+    assert(unseen === 0)
+    assert(seen === 2)
   }
 
   test("User can add hobbies") {
-    User(user1Id) match {
-      case Some(u) => {
-        u addHobby "Fishing"
+    val user = confirmedUsers.head
 
-        assert(u hasHobby "fishing")
-      }
-      case None => assert(false)
-    }
+    val hobby = addRandomHobby(user)
+
+    assert(user hasHobby hobby)
   }
 
   test("User can remove hobbies") {
-    User(user1Id) match {
-      case Some(u) => {
-        u addHobby "boxing"
+    val user = confirmedUsers.head
+    val hobby = addRandomHobby(user)
 
-        assert(u hasHobby "boxIng")
+    assert(user hasHobby hobby)
+    assert(user.hobbies exists { h => h == hobby })
 
-        u removeHobby "boxing"
+    user removeHobby hobby
 
-        assert((u hasHobby "BOXING") === false)
-      }
-      case None => assert(false)
-    }
+    assert((user hasHobby hobby) === false)
+    assert(!(user.hobbies exists { h => h == hobby }))
   }
 
   test("Remove friend") {
-    val user1 = User(user1Id)
-    val user2 = User(user2Id)
-
-    (user1, user2) match {
-      case (Some(u1), Some(u2)) => {
-        u1.removeFriend(u2)
-        assert(u1.friends.isEmpty)
-        assert(u2.friends.isEmpty)
-      }
-      case _ => assert(false)
-    }
+    val (u1, u2) = createFriends
+    u1.removeFriend(u2)
+    assert(u1.friends.isEmpty)
+    assert(u2.friends.isEmpty)
   }
 
   test("Reject friendship") {
-    val user1 = User(user1Id)
-    val user2 = User(user2Id)
+    val user1 = confirmedUsers.head
+    val user2 = confirmedUsers.tail.head
 
-    (user1, user2) match {
-      case (Some(u1), Some(u2)) => {
-        u2.requestFriendship(u1, Bromance)
-        assert(u1.friendRequests(u2) === Bromance)
-        u1.rejectFriendRequest(u2, Bromance)
-        assert(u1.friendRequests.isEmpty)
-        assert(u1.friends.isEmpty)
-      }
-      case _ => assert(false)
-    }
+    user2.requestFriendship(user1, Bromance)
+    assert(user1.friendRequests(user2) === Bromance)
+    user1.rejectFriendRequest(user2, Bromance)
+    assert(user1.friendRequests.isEmpty)
+    assert(user1.friends.isEmpty)
   }
 
   test("User can log in") {
     val s    = Session()
-    val user = User(user1Id)
+    val (user, password) = randomUser(true, true) //User.create("Thomas", None, "thomas@thomas.dk", "hest1234", true)
 
-    user match {
-      case Some(u) => {
-        assert(u.session isEmpty)
-        User.login(email, pass, s.key)
-        assert(u.session isDefined)
-      }
-      case None    => assert(false)
+    assert(user.session isEmpty, "User was already logged in")
+    
+    val newUser = User.login(user.email, password, s.key)
+    newUser match {
+      case Some(u) => assert(u.session isDefined, "User session was not defined")
+                      assert(u.isLoggedIn === true)
+      case None    => assert(false, "User could not login")
     }
+    
   }
 
   test("User can log out") {
-    val user = User(user1Id)
+    val (user, password) = randomUser(true, true)
+    val s = Session()
 
-    user match {
+    val newUser = User.login(user.email, password, s.key)
+    newUser match {
       case Some(u) => {
         assert(u.session isDefined)
         u.logout()
         assert(u.session === None)
+        assert(u.isLoggedIn === false)
       }
       case None    => assert(false)
     }
@@ -293,82 +265,121 @@ class UserTest extends FunSuite with UserExceptions with DatabaseTests with DbAc
 
   test("User can't log in with wrong password") {
     val s    = Session()
-    val user = User(user1Id)
+    val user = confirmedUsers.head
+    val wrongPassword = randomPassword
 
-    user match {
-      case Some(u) => {
-        assert(u.session isEmpty)
-        User.login(email, s"a$pass", s.key)
-        assert(u.session isEmpty)
-      }
-      case None    => assert(false)
-    }
+    assert(user.session isEmpty)
+    User.login(user.email, wrongPassword, s.key)
+    assert(user.session isEmpty)
   }
 
   test("Change name") {
-    val name = "John Doe"
-    val user = User(user1Id)
+    val user = confirmedUsers.head
+    val newName = randomName
 
-    user match {
-      case Some(u) => {
-        u.name = name
-        assert(u.name === name)
-      }
-      case None    => assert(false)
-    }
+    user.name = newName
+    assert(user.name === newName)
 
-    val changedUser = User(1)
+    val changedUser = User(user.id)
     changedUser match {
-      case Some(u) => assert(u.name === name)
+      case Some(u) => assert(u.name === newName)
       case None    => assert(false)
     }
   }
 
   test("Change email") {
-    val email = "jane@doe.net"
-    val user  = User(user1Id)
+    val user  = confirmedUsers.head
+    val email = randomEmail
 
-    user match {
-      case Some(u) => {
-        u.email = email
-        assert(u.email === email)
-      }
-      case None    => assert(false)
-    }
+    user.email = email
+    assert(user.email === email)
 
-    val changedUser = User(1)
+    val changedUser = User(user.id)
     changedUser match {
       case Some(u) => assert(u.email === email)
       case None    => assert(false)
     }
   }
 
-  test("Delete user") {
-    val user2 = User(user2Id)
+  test("Change password") {
+    val user = confirmedUsers.head
+    val password = randomPassword
 
-    user2 match {
-      case Some(u) => {
-        u.delete()
-        assert(User(user2Id) === None)
-      }
-      case None => assert(false)
+    user.password = password
+    assert(user.checkPassword(password))
+
+    val changedUser = User(user.id)
+    changedUser match {
+      case Some(u) => assert(u.checkPassword(password))
+      case None    => assert(false)
     }
   }
 
+  test("Delete user") {
+    val user = confirmedUsers.head
+    val id = user.id
+    user.delete()
+    assert(User(id) === None)
+  }
+
+  test("List all users") {
+    val allUsers = User.all
+
+    val f : User => Boolean = { u => allUsers exists { v => u == v }}
+    assert(users forall f)
+    assert(confirmedUsers forall f)
+    assert(allUsers.length == users.length + confirmedUsers.length)
+  }
+
+  test("List all admins") {
+    val user1 = confirmedUsers.head
+    val user2 = confirmedUsers.tail.head
+
+    user1.admin = true
+    assert(user1.admin)
+    user2.admin = true
+    assert(user2.admin)
+
+    val allAdmins = User.allAdmins
+    assert(allAdmins exists { u => u == user1 })
+    assert(allAdmins exists { u => u == user2 })
+    assert(allAdmins.length === 2)
+  }
+
   test("XSS attack in hobbies") {
-    User.create("Test user", None, "testparty@partytests.com", "testpassword", true) match {
-      case Some(user) => {
-        intercept[InvalidHobbyException] {
-          user.addHobby("""<script>alert("ALERT")</script>""")
-        }
-      }
-      case None => assert(false)
+    val user = confirmedUsers.head
+    intercept[InvalidHobbyException] {
+      user.addHobby("""<script>alert("ALERT")</script>""")
     }
   }
 
   test("XSS attack in name") {
     intercept[InvalidNameException] {
-      User.create("""<script>alert("ALERT")</script>""", None, "testparty1@partytests.com", "testpassword1", true)
+      User.create("""<script>alert("ALERT")</script>""", None, randomEmail, randomPassword, true)
     }
+  }
+
+  test("Create ApiKey") {
+    val n = ApiKey.list.length
+
+    val key = ApiKey.create
+    val keys = ApiKey.list
+
+    assert(keys exists { k => k == key })
+
+    val m = keys.length
+
+    assert(m === n+1)
+  }
+
+  test("Revoke ApiKey") {
+    val key = ApiKey.create
+    val keys = ApiKey.list
+
+    assert(keys exists { k => k == key })
+
+    key.revoked = false
+
+    assert(key.revoked === false)
   }
 }
