@@ -382,4 +382,30 @@ class UserTest extends FunSuite
 
     assert(key.revoked === false)
   }
+
+  test("Create and Validate Formkey") {
+    val (user, password) = randomUser(true,true)
+    val s = Session()
+    val userLoggedIn = User.login(user.email, password, s.key)
+    val sessionKey = user.session match {
+      case Some(s) => s
+      case None => throw StrangerException("Session not found")
+    }
+
+      
+    userLoggedIn match {
+      case Some(u) => u.session match {
+        case Some(s) => {
+          val session = Session(s) match {
+            case Some(s) => s
+            case None => throw StrangerException("No session for logged in user")
+          }
+          val formKey = session.newFormKey()
+          assert(session.checkFormKey(formKey), "Formkey did not match what was expected.")
+        }
+        case None => assert(false, "No session found")
+      }
+      case None => assert(false, "No user found")
+    }
+  }
 }
