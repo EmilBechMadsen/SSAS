@@ -50,6 +50,7 @@ object EditProfilePage extends WebPage {
     val hobbyRegex = Settings.security.hobbyWhitelist.replace("\\", "\\\\")
     val minHobby = Settings.security.minHobby
     val maxHobby = Settings.security.maxHobby
+    val maxHobbies = Settings.security.maxHobbies
     s"""
     <script type="text/javascript">
       function validateName() {
@@ -109,6 +110,12 @@ object EditProfilePage extends WebPage {
       }
 
       function validateNewHobby() {
+        var hobbyCount = document.querySelectorAll(".hobbiesListItem").length;
+        if (hobbyCount >= $maxHobbies) {
+          alert("You have too many hobbies!");
+          return false;
+        }
+
         var hobby = document.forms["profileNewHobbyForm"]["profileNewHobby"].value;
         var pattern = XRegExp("$hobbyRegex", 'i');
         var validLength = hobby.length >= $minAddr && hobby.length <= $maxAddr;
