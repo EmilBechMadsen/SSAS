@@ -33,7 +33,7 @@ object User extends UserExceptions with DbAccess {
     }
   }
 
-  /** Returns a user if the key matches either a session of email confirmation key
+  /** Returns a user if the key matches either a session or email confirmation key
     *
     * @param key - The session of email confirmation key
     * @return May a user
@@ -68,7 +68,7 @@ object User extends UserExceptions with DbAccess {
     * @throws InvalidAddressException
     * @throws ExistingEmailException
     */
-  def create(name: String, address: Option[String], email: String, password: String, confirmed: Boolean = false): Option[User] = Db withSession {
+  def create(name: String, address: Option[String], email: String, password: String, confirmed: Boolean = false): Option[User] = Db withTransaction {
     (validEmail(email), validName(name), validPassword(password), validAddress(address)) match {
       case (true, true, true, true) => {
         val uniqueEmail = (for {
@@ -394,7 +394,7 @@ case class User(
     * @param u - The user to request a relationship from
     * @param r - The relationship to request
     */
-  def requestFriendship(u: User, r: Relationship): Unit = Db withSession {
+  def requestFriendship(u: User, r: Relationship): Unit = Db withTransaction {
     // Only send request if this is a new relationship
     if (!(isFriend(u) && friends.get(u) == Some(r)) &&
         u.id != id) {
@@ -528,7 +528,7 @@ case class User(
     *
     * @throws InvalidHobbyException
     */
-  def addHobby(h: String): Unit = Db withSession {
+  def addHobby(h: String): Unit = Db withTransaction {
     if (!validHobby(h)) throw new InvalidHobbyException
 
     if (!hasHobby(h)) {
@@ -552,7 +552,7 @@ case class User(
     *
     * @throws InvalidHobbyException
     */
-  def removeHobby(h: String): Unit = Db withSession {
+  def removeHobby(h: String): Unit = Db withTransaction {
     if (!validHobby(h)) throw new InvalidHobbyException
 
     val hobby = for {

@@ -37,16 +37,20 @@ class DbWorker extends Actor with ActorLogging with DbAccess {
   private def cleanConfirmations(): Unit = Db withSession {
     val expTime = System.currentTimeMillis() - confirmationTimeout * 60000
     val exp = new Timestamp(expTime)
+    
+    val cs = for { // If you get users directly, it will fail due to what seems to be a slick bug
+      c <- EmailConfirmations if c.timestamp <= exp 
+    } yield c
 
-    val us = for {
-      c <- EmailConfirmations if c.timestamp <= exp
-      u <- Users if u.id === c.userId
-    } yield u
-
-    val count = us.list.length
-    if (count > 0) log.info(s"Deleting $count EmailConfirmations (Expired)")
-
-    us delete;
+    val csList = cs.list
+    val count = csList.length
+    if (count > 0) {
+      log.info(s"Deleting $count EmailConfirmations (Expired)")
+      val us = for {
+        u <- Users if cs.where (c => c.userId === u.id).length > 0
+      } yield u
+      us delete
+    }
   }
 
   private def cleanSessions(): Unit = Db withSession {

@@ -61,7 +61,7 @@ case class Session(
     * @param key - The form key to check
     * @return True if the form key is valid, false otherwise
     */
-  def checkFormKey(formKey: UUID): Boolean = Db withSession {
+  def checkFormKey(formKey: UUID): Boolean = Db withTransaction {
     import java.sql.Timestamp
 
     val now = System.currentTimeMillis()
