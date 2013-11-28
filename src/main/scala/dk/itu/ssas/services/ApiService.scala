@@ -2,7 +2,7 @@ package dk.itu.ssas.services
 
 import dk.itu.ssas.model.UserExceptions
 
-object ApiService extends SsasService with UserExceptions {
+trait ApiService extends SsasService with UserExceptions {
   import dk.itu.ssas.model._
   import dk.itu.ssas.Validate._
   import java.util.UUID
@@ -12,7 +12,7 @@ object ApiService extends SsasService with UserExceptions {
   import spray.routing._
   import spray.routing.HttpService._
 
-  object SSASJsonProtocol extends DefaultJsonProtocol {
+  private object SSASJsonProtocol extends DefaultJsonProtocol {
     implicit object UserFormat extends RootJsonFormat[User] {
       def write(u: User): JsValue = JsObject(
         ("id", u.id.toJson), 
@@ -32,7 +32,7 @@ object ApiService extends SsasService with UserExceptions {
 
   import SSASJsonProtocol._
 
-  def userRoute(key: String) = pathPrefix("user") {
+  private def userRoute(key: String) = pathPrefix("user") {
     path("search") {
       post {
         entity(as[String]) { searchTerm =>
@@ -61,7 +61,7 @@ object ApiService extends SsasService with UserExceptions {
     }
   }
 
-  def route = {
+  def apiRoute = {
     pathPrefix("api") {
       respondWithMediaType(MediaTypes.`application/json`) {
         headerValueByName("Authorization") { key =>

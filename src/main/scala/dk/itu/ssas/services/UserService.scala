@@ -8,7 +8,7 @@ trait UserService extends SsasService with UserExceptions with Actor {
   import dk.itu.ssas.page._
   import dk.itu.ssas.page.request._
   import dk.itu.ssas.remotes._
-  import dk.itu.ssas.Settings.baseUrl
+  import dk.itu.ssas.Settings.{ baseUrl, remoteTimeout }
   import dk.itu.ssas.Validate._
   import scala.concurrent.{ Await, Future }
   import scala.concurrent.duration._
@@ -308,7 +308,7 @@ trait UserService extends SsasService with UserExceptions with Actor {
                     complete {
                       val remoteUsers: Map[String, List[RemoteUser]] = (for ((site, search) <- remoteSearches) yield {
                         try {
-                          site.name -> Await.result(search, 2 seconds)
+                          site.name -> Await.result(search, remoteTimeout seconds)
                         } catch {
                           case x: Throwable => {
                             log.error(s"Request ${site.name} failed")

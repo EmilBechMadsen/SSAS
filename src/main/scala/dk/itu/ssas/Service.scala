@@ -6,11 +6,13 @@ import spray.routing._
 import spray.http._
 import spray.httpx.SprayJsonSupport
 
-/** Exposes webservices provided by clireSkies */
 class Service
   extends Actor
   with HttpService
+  with PublicService
   with UserService
+  with AdminService
+  with ApiService
   with SprayJsonSupport {
 
   import akka.util.Timeout
@@ -35,9 +37,9 @@ class Service
 
   val route = {
       redirects ~
-      PublicService.route ~ 
+      publicRoute ~ 
       userRoute ~ 
-      AdminService.route ~
-      ApiService.route  
+      adminRoute ~
+      apiRoute  
    }
  }

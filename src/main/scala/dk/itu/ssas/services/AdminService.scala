@@ -2,7 +2,7 @@ package dk.itu.ssas.services
 
 import dk.itu.ssas.model.UserExceptions
 
-object AdminService extends SsasService with UserExceptions {
+trait AdminService extends SsasService with UserExceptions {
   import dk.itu.ssas.model._
   import dk.itu.ssas.page._
   import dk.itu.ssas.page.request._
@@ -12,7 +12,7 @@ object AdminService extends SsasService with UserExceptions {
   import spray.routing._
   import spray.routing.HttpService._
 
-  def route = {
+  def adminRoute = {
     pathPrefix("admin") {
       pathEnd {
         withSession { s =>
