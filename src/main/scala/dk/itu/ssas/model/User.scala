@@ -68,40 +68,45 @@ object User extends UserExceptions with DbAccess {
     * @throws InvalidAddressException
     * @throws ExistingEmailException
     */
-  def create(name: String, address: Option[String], email: String, password: String, confirmed: Boolean = false): Option[User] = Db withTransaction {
-    Db withSession {
-      (validEmail(email), validName(name), validPassword(password), validAddress(address)) match {
-        case (true, true, true, true) => {
-          val uniqueEmail = (for {
-            u <- Users if u.email === email
-          } yield u).firstOption.isEmpty
+  def create(name: String, address: Option[String], email: String, password: String, confirmed: Boolean = false): Option[User] = Db withSession {
+    (validEmail(email), validName(name), validPassword(password), validAddress(address)) match {
+      case (true, true, true, true) => {
+        val uniqueEmail = (for {
+          u <- Users if u.email === email
+        } yield u).firstOption.isEmpty
 
-          if (uniqueEmail) {
-            val (hashedPw, salt) = Security.newPassword(password)
-            val user = (name, address, email, hashedPw, salt)
-            val id = Users.forInsert returning Users.id insert user
+        if (uniqueEmail) {
+          val (hashedPw, salt) = Security.newPassword(password)
+          val user = (name, address, email, hashedPw, salt)
 
-            if (!confirmed) {
-              val key = UUID.randomUUID()
+          val i = if (!confirmed) {
+            val key = UUID.randomUUID()
 
-              val ec = EmailConfirmation (key.toString(), id, new Timestamp(Calendar.getInstance.getTimeInMillis()))
+            val ts = new Timestamp(Calendar.getInstance.getTimeInMillis())
+
+            val id = threadLocalSession.withTransaction {
+              val id = Users.forInsert returning Users.id insert user
+              val ec = EmailConfirmation (key.toString(), id, ts)
               EmailConfirmations insert ec
-
-              mailer ! ConfirmationMail(email, name, key)
+              id
             }
-            
-            User(id)
+
+            mailer ! ConfirmationMail(email, name, key)
+            id
           } else {
-            throw new ExistingEmailException
+            Users.forInsert returning Users.id insert user
           }
+          
+          User(i)
+        } else {
+          throw new ExistingEmailException
         }
-        // FIXME: What about combinations?
-        case (false, _, _, _) => throw new InvalidEmailException
-        case (_, false, _, _) => throw new InvalidNameException
-        case (_, _, false, _) => throw new InvalidPasswordException
-        case (_, _, _, false) => throw new InvalidAddressException
-        case _                => None
       }
+      // FIXME: What about combinations?
+      case (false, _, _, _) => throw new InvalidEmailException
+      case (_, false, _, _) => throw new InvalidNameException
+      case (_, _, false, _) => throw new InvalidPasswordException
+      case (_, _, _, false) => throw new InvalidAddressException
     }
   }
 
