@@ -10,12 +10,12 @@ import dk.itu.ssas._
 class ServiceTests extends FunSuite with ScalatestRouteTest with HttpService {
 	val actorRef = TestActorRef[Service]
 	val actor = actorRef.underlyingActor
-
+	val actorRefFactory = system
   val route = actor.route
 
 	test("Admin rejects unauthorized access attempts") {
 		Get("/admin") ~> route ~> check { 
-			assert(response.status === StatusCodes.InternalServerError)
+			assert(response.status === StatusCodes.Unauthorized)
 		}
 	}
 }
