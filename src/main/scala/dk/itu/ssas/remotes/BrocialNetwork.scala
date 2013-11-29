@@ -25,7 +25,7 @@ class BrocialNetwork(private val s: ActorSystem) extends RemoteSite {
   val baseUrl = "https://192.237.201.151/ssase13"
   val apiKey = "QWxhZGRpbjpTZXNhbSwgbHVrIGRpZyAwcCE="
 
-  case class BrocialUser(url: String, hobbies: String, id: String, name: String)
+  case class BrocialUser(url: String, hobbies: List[String], id: Int, name: String)
 
   object BrocialUserJsonProtocol extends DefaultJsonProtocol {
     implicit val brocialUserFormat = jsonFormat4(BrocialUser)
