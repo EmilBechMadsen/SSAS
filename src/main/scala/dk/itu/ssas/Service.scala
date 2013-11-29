@@ -23,7 +23,7 @@ class Service
   def actorRefFactory = context
   def receive = runRoute(route)
 
-  def redirects = 
+  val redirects = 
     path("") {
       get {
         redirect("/signup", StatusCodes.Found)

@@ -12,18 +12,14 @@ trait AdminService extends SsasService with UserExceptions {
   import spray.routing._
   import spray.routing.HttpService._
 
-  def adminRoute = {
+  val adminRoute = {
     pathPrefix("admin") {
       pathEnd {
-        withSession { s =>
-          withUser(s) { u =>
-            withAdmin(u) {
-              get {
-                html(s) { (s, formKey) =>
-                  complete {
-                    AdminPage.render("Admin Area", formKey, Some(u), NoRequest())
-                  }
-                }
+        withAdmin { (s, u) =>
+          get {
+            html(s) { formKey =>
+              complete {
+                AdminPage.render("Admin Area", formKey, Some(u), NoRequest())
               }
             }
           }
@@ -31,28 +27,29 @@ trait AdminService extends SsasService with UserExceptions {
       } ~
       path("createUser") {
         post {
-          withSession { s =>
-            withUser(s) { u =>
-              withAdmin(u) {
-                withFormKey(s) {
-                  formFields('signupEmail, 'signupName, 'signupPassword, 'signupPasswordConfirm) {
-                    (email, name, pass1, pass2) =>
-                    if (pass1 == pass2 && validEmail(email) && validName(name) && validPassword(pass1)) {
-                      try {
-                        User.create(name, None, email, pass1, true) match {
-                          case Some(u) =>
-                            redirect(s"$baseUrl/admin", StatusCodes.SeeOther)
-                          case None    => complete {
-                            HttpResponse(StatusCodes.InternalServerError)
-                          }
-                        } 
-                      } catch {
-                        case eee: ExistingEmailException => complete { HttpResponse(StatusCodes.BadRequest, "User with that email already exists.") }
+          withAdmin { (s, u) =>
+            withFormKey(s) {
+              formFields('signupEmail, 'signupName, 'signupPassword, 'signupPasswordConfirm) {
+                (email, name, pass1, pass2) =>
+                if (pass1 == pass2 && 
+                    validEmail(email) && 
+                    validName(name) && 
+                    validPassword(pass1)) {
+                  try {
+                    User.create(name, None, email, pass1, true) match {
+                      case Some(u) =>
+                        redirect(s"$baseUrl/admin", StatusCodes.SeeOther)
+                      case None    => complete {
+                        HttpResponse(StatusCodes.InternalServerError)
                       }
-                    } else complete {
-                      HttpResponse(StatusCodes.BadRequest, "Invalid information.")
+                    } 
+                  } catch {
+                    case eee: ExistingEmailException => complete { 
+                      HttpResponse(StatusCodes.BadRequest, "That email is already used.")
                     }
                   }
+                } else complete {
+                  HttpResponse(StatusCodes.BadRequest, "Invalid information.")
                 }
               }
             }
@@ -61,32 +58,32 @@ trait AdminService extends SsasService with UserExceptions {
       }~
       path("toggleAdmin" / IntNumber) { userId =>
         post {
-          withSession { s =>
-            withUser(s) { u =>
-              withAdmin(u) {
-                withFormKey(s) {
-                  try {
-                    User(userId) match {
-                      case Some(other) => {
-                        if (other.admin) {
-                          other.admin = false
-                        } else {
-                          other.admin = true
-                        }
-
-                        log.info(s"User $userId promoted")
-                        redirect(s"$baseUrl/admin", StatusCodes.SeeOther)
-                      }
-                      case None => {
-                        complete {
-                          HttpResponse(spray.http.StatusCodes.BadRequest, "That user does not exist.")
-                        }
-                      }
+          withAdmin { (s, u) =>
+            withFormKey(s) {
+              try {
+                User(userId) match {
+                  case Some(other) => {
+                    if (other.admin) {
+                      other.admin = false
+                    } else {
+                      other.admin = true
                     }
-                  } catch {
-                    case dbe: DbError => complete { HttpResponse(StatusCodes.InternalServerError, "Database error.") }
-                    case ue: UserException => complete { HttpResponse(StatusCodes.BadRequest, "Invalid info.") }
+
+                    log.info(s"User $userId promoted")
+                    redirect(s"$baseUrl/admin", StatusCodes.SeeOther)
                   }
+                  case None => {
+                    complete {
+                      HttpResponse(StatusCodes.BadRequest, "That user does not exist.")
+                    }
+                  }
+                }
+              } catch {
+                case dbe: DbError => complete {
+                  HttpResponse(StatusCodes.InternalServerError, "Database error.")
+                }
+                case ue: UserException => complete {
+                  HttpResponse(StatusCodes.BadRequest, "Invalid info.")
                 }
               }
             }
@@ -95,18 +92,16 @@ trait AdminService extends SsasService with UserExceptions {
       } ~
       path("delete" / IntNumber) { userId =>
         post {
-          withSession { s =>
-            withUser(s) { u =>
-              withAdmin(u) {
-                withFormKey(s) {
-                  User(userId) match {
-                    case Some(deleteUser) => {
-                      deleteUser.delete()
-                      log.warn(s"User $userId deleted")
-                      redirect(s"${baseUrl}/admin", StatusCodes.SeeOther)
-                    }
-                    case None => complete { HttpResponse(StatusCodes.NotFound, "User not found.") }
-                  }
+          withAdmin { (s, u) =>
+            withFormKey(s) {
+              User(userId) match {
+                case Some(deleteUser) => {
+                  deleteUser.delete()
+                  log.warn(s"User $userId deleted")
+                  redirect(s"${baseUrl}/admin", StatusCodes.SeeOther)
+                }
+                case None => complete { 
+                  HttpResponse(StatusCodes.NotFound, "User not found.")
                 }
               }
             }
@@ -115,21 +110,17 @@ trait AdminService extends SsasService with UserExceptions {
       }~
       path("revoke" / JavaUUID) { key =>
         post {
-          withSession { s =>
-            withUser(s) { u =>
-              withAdmin(u) {
-                withFormKey(s) {
-                  ApiKey(key) match {
-                    case Some(apiKey) => {
-                      apiKey.revoked = true
-                      log.info(s"API key $key revoked")
-                      redirect(s"${baseUrl}/admin", StatusCodes.SeeOther)
-                    }
-                    case None => complete {
-                      log.warn(s"API key $key could not be found to be revoked")
-                      HttpResponse(StatusCodes.NotFound, "API key not found")
-                    }
-                  }
+          withAdmin { (s, u) =>
+            withFormKey(s) {
+              ApiKey(key) match {
+                case Some(apiKey) => {
+                  apiKey.revoked = true
+                  log.info(s"API key $key revoked")
+                  redirect(s"${baseUrl}/admin", StatusCodes.SeeOther)
+                }
+                case None => complete {
+                  log.warn(s"API key $key could not be found to be revoked")
+                  HttpResponse(StatusCodes.NotFound, "API key not found")
                 }
               }
             }
@@ -138,14 +129,10 @@ trait AdminService extends SsasService with UserExceptions {
       }~
       path("createAPIKey") {
         post {
-          withSession { s =>
-            withUser(s) { u =>
-              withAdmin(u) {
-                withFormKey(s) {
-                  ApiKey.create()
-                  redirect(s"${baseUrl}/admin", StatusCodes.SeeOther)
-                }
-              }
+          withAdmin { (s, u) =>
+            withFormKey(s) {
+              ApiKey.create()
+              redirect(s"${baseUrl}/admin", StatusCodes.SeeOther)
             }
           }
         }

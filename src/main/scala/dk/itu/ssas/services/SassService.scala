@@ -15,6 +15,8 @@ trait SsasService {
 
   val log = Logger.getLogger("Service")
 
+  type ReqCon = RequestContext => Unit
+
   def setSessionCookie(session: UUID): Directive0 = {
     setCookie(HttpCookie(sessionCookieName, 
       session.toString(),
@@ -23,8 +25,8 @@ trait SsasService {
       secure = Settings.security.ssl))
   }
 
-  protected def withSession(c: Session => RequestContext => Unit): RequestContext => Unit = {
-    def runWithSession(c: Session => RequestContext => Unit): RequestContext => Unit = {
+  protected def withSession(c: Session => ReqCon): ReqCon = {
+    def runWithSession(c: Session => ReqCon): ReqCon = {
       val s = Session()
       setSessionCookie(s.key) {
         c(s)
@@ -38,7 +40,8 @@ trait SsasService {
             Session(UUID.fromString(sessionCookie.content)) match {
               case Some(s) => c(s)
               case None    => {
-                log.warn(s"Client had session cookie, but session was invalid (session: ${sessionCookie.content})")
+                val s = sessionCookie.content
+                log.warn(s"Client had session cookie, but session was invalid (session: $s)")
                 runWithSession(c)
               }
             }
@@ -54,12 +57,12 @@ trait SsasService {
     }
   }
 
-  protected def newFormKey(s: Session)(c: String => RequestContext => Unit): RequestContext => Unit = {
+  protected def newFormKey(s: Session)(c: String => ReqCon): ReqCon = {
     val formKey = s.newFormKey()
     c(formKey.toString())
   }
 
-  protected def withFormKey(s: Session)(c: RequestContext => Unit): RequestContext => Unit = {
+  protected def withFormKey(s: Session)(c: ReqCon): ReqCon = {
     formField('formkey) { formKey =>
       try {
         if (s.checkFormKey(UUID.fromString(formKey))) {
@@ -78,7 +81,15 @@ trait SsasService {
     }
   }
 
-  protected def withUser(s: Session)(c: User => RequestContext => Unit): RequestContext => Unit = {
+  protected def withUser(c: (Session, User) => ReqCon): ReqCon = {
+    withSession { s =>
+      withUser(s) { u =>
+        c(s, u)
+      }
+    }
+  }
+
+  protected def withUser(s: Session)(c: User => ReqCon): ReqCon = {
     s.user match {
       case Some(user) => c(user)
       case None => complete {
@@ -88,28 +99,40 @@ trait SsasService {
     }
   }
 
-  protected def withAdmin(u: User)(c: RequestContext => Unit): RequestContext => Unit = {
+  protected def withAdmin(c: (Session, User) => ReqCon): ReqCon = {
+    withSession { s =>
+      withUser(s) { u =>
+        withAdmin(u) {
+          c(s, u)
+        }
+      }
+    }
+  }
+
+  protected def withAdmin(u: User)(c: ReqCon): ReqCon = {
     u.admin match {
       case true  => c
       case false => complete {
         log.warn(s"Non admin ${u.id} trying to access admin area")
-        HttpResponse(spray.http.StatusCodes.Forbidden, "You must be an admin to enter this area.")
+        HttpResponse(StatusCodes.Forbidden, "You must be an admin to enter this area.")
       }
     }
   }
 
   protected def withApiKey(key: String): Directive0 = {
+    import AuthenticationFailedRejection.CredentialsRejected
+
     try {
       ApiKey(UUID.fromString(key)) match {
         case None => reject {
           log.warn(s"API request with invalid key, $key")
-          AuthenticationFailedRejection(AuthenticationFailedRejection.CredentialsRejected, List())
+          AuthenticationFailedRejection(CredentialsRejected, List())
         }
         case Some(apiKey) => {
           if (apiKey.revoked) {
             reject {
               log.warn(s"API request with revoked key, $key")
-              AuthenticationFailedRejection(AuthenticationFailedRejection.CredentialsRejected, List())
+              AuthenticationFailedRejection(CredentialsRejected, List())
             }
           } 
           else {
@@ -120,15 +143,15 @@ trait SsasService {
     } catch {
       case e: IllegalArgumentException => reject {
         log.error(s"Key $key could not be deserialized")
-        AuthenticationFailedRejection(AuthenticationFailedRejection.CredentialsRejected, List())
+        AuthenticationFailedRejection(CredentialsRejected, List())
       }
     }
   }
 
-  protected def html(s: Session)(c: (Session, String) => RequestContext => Unit): RequestContext => Unit = {
+  protected def html(s: Session)(c: String => ReqCon): ReqCon = {
     respondWithMediaType(MediaTypes.`text/html`) {
       newFormKey(s) { key =>
-        c(s, key)
+        c(key)
       }
     }
   }

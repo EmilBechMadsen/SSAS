@@ -13,13 +13,13 @@ trait PublicService extends SsasService with UserExceptions {
   import spray.routing._
   import spray.routing.HttpService._
 
-  def publicRoute = {
+  val publicRoute = {
     path("signup") {
       get {
         withSession { s =>
           s.userId match {
             case Some(id) => redirect(s"/profile/$id", StatusCodes.SeeOther)
-            case None     => html(s) { (s, formKey) =>
+            case None     => html(s) { formKey =>
               complete {
                 SignupPage.render("Sign up", formKey, None, NoRequest())
               }
@@ -32,7 +32,10 @@ trait PublicService extends SsasService with UserExceptions {
           withFormKey(s) {
             formFields('signupEmail, 'signupName, 'signupPassword, 'signupPasswordConfirm) {
               (email, name, pass1, pass2) =>
-              if (pass1 == pass2 && validEmail(email) && validName(name) && validPassword(pass1)) {
+              if (pass1 == pass2 &&
+                  validEmail(email) &&
+                  validName(name) &&
+                  validPassword(pass1)) {
                 User.create(name, None, email, pass1) match {
                   case Some(u) => complete {
                     log.info(s"User ${u.id} created")
@@ -54,9 +57,10 @@ trait PublicService extends SsasService with UserExceptions {
       get {
         withSession { s =>
           User(token) match {
-            case Some(user) => html(s) { (s, formKey) =>
+            case Some(user) => html(s) { formKey =>
               complete {
-                EmailConfirmationPage.render("Confirm account", formKey, None, EmailConfirmationPageRequest(token))
+                val req = EmailConfirmationPageRequest(token)
+                EmailConfirmationPage.render("Confirm account", formKey, None, req)
               }
             }
             case None => complete {

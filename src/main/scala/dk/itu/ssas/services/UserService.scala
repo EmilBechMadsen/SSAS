@@ -23,54 +23,55 @@ trait UserService extends SsasService with UserExceptions with Actor {
   val remotes: List[RemoteSite] = List(new BrocialNetwork(context.system))
   private implicit val executionContext = context.system.dispatcher
 
-  def userRoute = {
+  val userRoute = {
     path("requests") {
       get {
-        withSession { s =>
-          withUser(s) { u =>
-            html(s) { (s, formKey) =>
-              complete {
-                log.debug(s"Showing friend requests for user $u with session $s")
-                ViewRequestsPage.render("Your friend requests", formKey, Some(u), NoRequest())
-              }
+        withUser { (s, u) =>
+          html(s) { formKey =>
+            complete {
+              log.debug(s"Showing friend requests for user $u with session $s")
+              ViewRequestsPage.render("Your friend requests", formKey, Some(u), NoRequest())
             }
           }
         }
       } ~
       post {
-        withSession { s =>
-          withUser(s) { u =>
-            withFormKey(s) {
-              formFields('friendRequestId, 'friendRequestKind, 'friendRequestAccept ?, 'friendRequestReject ?) {
-                (friendId, requestKind, accept, reject) =>
-                User(friendId.toInt) match {
-                  case Some(otherUser) =>
-                    try {
-                      (accept, reject) match {
-                        case (Some(_), None) => {
-                          log.debug(s"User $u with session $s accepted friend request from user $otherUser")
-                          val k = u.acceptFriendRequest(otherUser, Relationship(requestKind))
-                        }
-                        case (None, Some(_)) => {
-                          log.debug(s"User $u with session $s rejected friend request from user $otherUser")
-                          val k = u.rejectFriendRequest(otherUser, Relationship(requestKind))
-                        }
-                        case (_,_) => {
-                          log.warn(s"Invalid friend request attempted by user $u with session $s")
-                          complete { HttpResponse(StatusCodes.BadRequest, "Both or neither accept and reject was pushed.") }
-                        }
+        withUser { (s, u) =>
+          withFormKey(s) {
+            val fields = ('friendRequestId, 'friendRequestKind, 
+                          'friendRequestAccept ?, 'friendRequestReject ?)
+
+            formFields(fields) {
+              (friendId, requestKind, accept, reject) =>
+              User(friendId.toInt) match {
+                case Some(otherUser) =>
+                  try {
+                    (accept, reject) match {
+                      case (Some(_), None) => {
+                        log.debug(s"User $u with session $s accepted friend request from user $otherUser")
+                        val k = u.acceptFriendRequest(otherUser, Relationship(requestKind))
                       }
-                      redirect(s"$baseUrl/requests", StatusCodes.SeeOther)
-                    } catch {
-                      case rde: RelationshipDeserializationException => complete {
-                        log.error(s"Invalid reationship sent by user $u with session $s")
-                        HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.") 
+                      case (None, Some(_)) => {
+                        log.debug(s"User $u with session $s rejected friend request from user $otherUser")
+                        val k = u.rejectFriendRequest(otherUser, Relationship(requestKind))
+                      }
+                      case (_,_) => {
+                        log.warn(s"Invalid friend request attempted by user $u with session $s")
+                        complete {
+                          HttpResponse(StatusCodes.BadRequest, "Both or neither accept and reject was pushed.")
+                        }
                       }
                     }
-                  case None => complete { 
-                    log.error(s"User $u with session $s tried to accept or reject request from nonexistant user $friendId")
-                    HttpResponse(StatusCodes.BadRequest, "User not found.") 
+                    redirect(s"$baseUrl/requests", StatusCodes.SeeOther)
+                  } catch {
+                    case rde: RelationshipDeserializationException => complete {
+                      log.error(s"Invalid reationship sent by user $u with session $s")
+                      HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.")
+                    }
                   }
+                case None => complete {
+                  log.error(s"User $u with session $s tried to accept or reject request from nonexistant user $friendId")
+                  HttpResponse(StatusCodes.BadRequest, "User not found.")
                 }
               }
             }
@@ -81,28 +82,27 @@ trait UserService extends SsasService with UserExceptions with Actor {
     pathPrefix("profile" / IntNumber) { id =>
       pathEnd {
         get {
-          withSession { s =>
-            withUser(s) { u =>
-              if (u.id == id) {
-                html(s) { (s, formKey) =>
+          withUser { (s, u) =>
+            if (u.id == id) {
+              html(s) { formKey =>
+                complete {
+                  log.debug(s"Showing own profile for user $u, with session $s")
+                  EditProfilePage.render("Profile: " + u.name, formKey, Some(u), NoRequest())
+                }
+              }
+            } else {
+              val otherUser = User(id)
+              otherUser match {
+                case Some(other) => html(s) { formKey =>
                   complete {
-                    log.debug(s"Showing own profile for user $u, with session $s")
-                    EditProfilePage.render("Profile: " + u.name, formKey, Some(u), NoRequest())
+                    log.debug(s"Showing profile for $other to $u, with session $s")
+                    val req = ProfilePageRequest(other)
+                    ProfilePage.render("Profile: " + other.name, formKey, Some(u), req)
                   }
                 }
-              } else {
-                val otherUser = User(id)
-                otherUser match {
-                  case Some(other) => html(s) { (s, formKey) =>
-                    complete {
-                      log.debug(s"Showing profile for $other to $u, with session $s")
-                      ProfilePage.render("Profile: " + other.name, formKey, Some(u), ProfilePageRequest(other))
-                    }
-                  }
-                  case None => complete {
-                    log.warn(s"User $s with session $s tried to view profile of nonexistant user $id")
-                    HttpResponse(StatusCodes.NotFound, "The requested user does not exist.")
-                  }
+                case None => complete {
+                  log.warn(s"User $s with session $s tried to view profile of nonexistant user $id")
+                  HttpResponse(StatusCodes.NotFound, "The requested user does not exist.")
                 }
               }
             }
@@ -112,61 +112,67 @@ trait UserService extends SsasService with UserExceptions with Actor {
       pathPrefix("edit") {
         path("info") {
           post {
-            withSession { s =>
-              withUser(s) { u =>
-                withFormKey(s) {
-                  if (u.id == id) {
-                    formFields('profileName, 'profileAddress, 'profileCurrentPassword, 'profileNewPassword, 'profileNewPasswordConfirm) {
-                      (name, addr, currentPassword, newPassword, confirmPassword) =>
-                      val nameChanged     = u.name != name
-                      val addressChanged  = u.address != addr
-                      val passwordChanged = newPassword != "" || confirmPassword != ""
-                      try {
-                        if (validPassword(currentPassword)) {
-                          if (u.checkPassword(currentPassword)) {
-                            if (nameChanged) {
-                              if (validName(name)) {
-                                u.name = name
-                              } else complete {
-                                HttpResponse(StatusCodes.BadRequest, "The new name is invalid.")
-                              }
-                            }
+            withUser { (s, u) =>
+              withFormKey(s) {
+                if (u.id == id) {
+                  val fields = ('profileName, 'profileAddress, 
+                                'profileCurrentPassword, 'profileNewPassword, 
+                                'profileNewPasswordConfirm)
 
-                            if (addr.isEmpty) {
-                              u.address = None
-                            } else {
-                              if (addressChanged) {
-                                if (validAddress(Some(addr))) {
-                                  u.address = Some(addr)
-                                } else complete {
-                                  HttpResponse(StatusCodes.BadRequest, "The new address is invalid.")
-                                }
-                              }
+                  formFields(fields) {
+                    (name, addr, currentPassword, newPassword, confirmPassword) =>
+                    val nameChanged     = u.name != name
+                    val addressChanged  = u.address != addr
+                    val passwordChanged = newPassword != "" || confirmPassword != ""
+                    try {
+                      if (validPassword(currentPassword)) {
+                        if (u.checkPassword(currentPassword)) {
+                          if (nameChanged) {
+                            if (validName(name)) {
+                              u.name = name
+                            } else complete {
+                              HttpResponse(StatusCodes.BadRequest, "The new name is invalid.")
                             }
-
-                            if (passwordChanged) {
-                              if (newPassword == confirmPassword && validPassword(newPassword)) {
-                                u.password = newPassword
-                              } else complete {
-                                HttpResponse(StatusCodes.BadRequest, "The password could not be changed.")
-                              }
-                            }
-
-                            redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
-                          } else complete {
-                            HttpResponse(StatusCodes.Unauthorized, "You do not have permission to edit this profile.")
                           }
+
+                          if (addr.isEmpty) {
+                            u.address = None
+                          } else {
+                            if (addressChanged) {
+                              if (validAddress(Some(addr))) {
+                                u.address = Some(addr)
+                              } else complete {
+                                HttpResponse(StatusCodes.BadRequest, "The new address is invalid.")
+                              }
+                            }
+                          }
+
+                          if (passwordChanged) {
+                            if (newPassword == confirmPassword && validPassword(newPassword)) {
+                              u.password = newPassword
+                            } else complete {
+                              HttpResponse(StatusCodes.BadRequest, "The password could not be changed.")
+                            }
+                          }
+
+                          redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
                         } else complete {
-                          HttpResponse(StatusCodes.BadRequest, "Invalid password.")      
+                          HttpResponse(StatusCodes.Unauthorized, "You do not have permission to edit this profile.")
                         }
-                      } catch {
-                        case dbe: DbError => complete { HttpResponse(StatusCodes.InternalServerError, "Database error.") }
-                        case ue: UserException => complete { HttpResponse(StatusCodes.BadRequest, "Invalid info.") }
-                     }
-                    }
-                  } else complete {
-                      HttpResponse(StatusCodes.Unauthorized, "You cannot edit another person's profile.")
+                      } else complete {
+                        HttpResponse(StatusCodes.BadRequest, "Invalid password.")      
+                      }
+                    } catch {
+                      case dbe: DbError => complete {
+                        HttpResponse(StatusCodes.InternalServerError, "Database error.")
+                      }
+                      case ue: UserException => complete {
+                        HttpResponse(StatusCodes.BadRequest, "Invalid info.")
+                      }
+                   }
                   }
+                } else complete {
+                    HttpResponse(StatusCodes.Unauthorized, "You cannot edit another person's profile.")
                 }
               }
             }
@@ -175,26 +181,28 @@ trait UserService extends SsasService with UserExceptions with Actor {
         pathPrefix("hobby") {
           path("add") {
             post {
-              withSession { s =>
-                withUser(s) { u =>
-                  withFormKey(s) {
-                    if (u.id == id) {
-                      formFields('profileNewHobby) { hobby =>
-                        try {
-                          if (validHobby(hobby)) {
-                            u.addHobby(hobby)
-                            redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
-                          } else complete {
-                            HttpResponse(StatusCodes.BadRequest, "Invalid hobby.")
-                          }
-                        } catch {
-                          case dbe: DbError => complete { HttpResponse(StatusCodes.InternalServerError, "Database error.") }
-                          case ue: UserException => complete { HttpResponse(StatusCodes.BadRequest, "Invalid info.") }
+              withUser { (s, u) =>
+                withFormKey(s) {
+                  if (u.id == id) {
+                    formFields('profileNewHobby) { hobby =>
+                      try {
+                        if (validHobby(hobby)) {
+                          u.addHobby(hobby)
+                          redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
+                        } else complete {
+                          HttpResponse(StatusCodes.BadRequest, "Invalid hobby.")
+                        }
+                      } catch {
+                        case dbe: DbError => complete {
+                          HttpResponse(StatusCodes.InternalServerError, "Database error.")
+                        }
+                        case ue: UserException => complete {
+                          HttpResponse(StatusCodes.BadRequest, "Invalid info.")
                         }
                       }
-                    } else complete {
-                      HttpResponse(StatusCodes.Unauthorized, "You cannot edit another person's profile.")
                     }
+                  } else complete {
+                    HttpResponse(StatusCodes.Unauthorized, "You cannot edit another person's profile.")
                   }
                 }
               }
@@ -202,27 +210,29 @@ trait UserService extends SsasService with UserExceptions with Actor {
           }~
           path("remove") {
             post {
-              withSession { s =>
-                withUser(s) { u =>
-                  withFormKey(s) {
-                    if (u.id == id) {
-                      formFields('profileHobby) { hobby =>
-                        try {
-                          if (validHobby(hobby)) {
-                            if (u.hobbies.exists { h => h == hobby }) {
-                              u.removeHobby(hobby)
-                              redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
-                            }
+              withUser { (s, u) =>
+                withFormKey(s) {
+                  if (u.id == id) {
+                    formFields('profileHobby) { hobby =>
+                      try {
+                        if (validHobby(hobby)) {
+                          if (u.hobbies.exists { h => h == hobby }) {
+                            u.removeHobby(hobby)
+                            redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
                           }
-                          redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
-                        } catch {
-                          case dbe: DbError => complete { HttpResponse(StatusCodes.InternalServerError, "Database error.") }
-                          case ue: UserException => complete { HttpResponse(StatusCodes.BadRequest, "Invalid info.") }
+                        }
+                        redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
+                      } catch {
+                        case dbe: DbError => complete {
+                          HttpResponse(StatusCodes.InternalServerError, "Database error.")
+                        }
+                        case ue: UserException => complete {
+                          HttpResponse(StatusCodes.BadRequest, "Invalid info.")
                         }
                       }
-                    } else complete {
-                      HttpResponse(StatusCodes.Unauthorized, "You cannot edit another person's profile.")              
                     }
+                  } else complete {
+                    HttpResponse(StatusCodes.Unauthorized, "You cannot edit another person's profile.")              
                   }
                 }
               }
@@ -232,29 +242,27 @@ trait UserService extends SsasService with UserExceptions with Actor {
       } ~
       path("request") {
         post {
-          withSession { s =>
-            withUser(s) { u =>  
-              withFormKey(s) {
-                if (u.id == id) {
-                  complete {
-                    HttpResponse(StatusCodes.BadRequest, "Sorry, you cannot have a relationship with yourself.")
-                  }
-                } else {
-                  formFields('relationship) { relationship =>
-                    try {
-                      val otherUser = User(id)
-                      otherUser match {
-                        case Some(other) =>
-                          u.requestFriendship(other, Relationship(relationship))
-                          redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
-                        case None => complete {
-                          HttpResponse(StatusCodes.BadRequest, "User does not exist.")  
-                        }
+          withUser { (s, u) =>  
+            withFormKey(s) {
+              if (u.id == id) {
+                complete {
+                  HttpResponse(StatusCodes.BadRequest, "Sorry, you cannot have a relationship with yourself.")
+                }
+              } else {
+                formFields('relationship) { relationship =>
+                  try {
+                    val otherUser = User(id)
+                    otherUser match {
+                      case Some(other) =>
+                        u.requestFriendship(other, Relationship(relationship))
+                        redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
+                      case None => complete {
+                        HttpResponse(StatusCodes.BadRequest, "User does not exist.")  
                       }
-                    } catch {
-                      case e: RelationshipDeserializationException => complete {
-                        HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.")
-                      }
+                    }
+                  } catch {
+                    case e: RelationshipDeserializationException => complete {
+                      HttpResponse(StatusCodes.InternalServerError, "Invalid relationship.")
                     }
                   }
                 }
@@ -266,28 +274,24 @@ trait UserService extends SsasService with UserExceptions with Actor {
     } ~
     path("friends") {
       get {
-        withSession { s =>
-          withUser(s) { u =>
-            html(s) { (s, formKey) =>
-              complete {
-                FriendsPage.render("Your friends", formKey, Some(u), NoRequest())
-              }
+        withUser { (s, u) =>
+          html(s) { formKey =>
+            complete {
+              FriendsPage.render("Your friends", formKey, Some(u), NoRequest())
             }
           }
         }
       } ~
       post {
-        withSession { s =>
-          withUser(s) { u =>
-            withFormKey(s) {
-              formFields('friendRemoveId) { friendId =>
-                User(friendId.toInt) match {
-                  case Some(otherUser) =>
-                    u.removeFriend(otherUser)
-                    redirect(s"$baseUrl/friends", StatusCodes.SeeOther)
-                  case None =>
-                    complete { HttpResponse(StatusCodes.BadRequest, "User not found.") }
-                }
+        withUser { (s, u) =>
+          withFormKey(s) {
+            formFields('friendRemoveId) { friendId =>
+              User(friendId.toInt) match {
+                case Some(otherUser) =>
+                  u.removeFriend(otherUser)
+                  redirect(s"$baseUrl/friends", StatusCodes.SeeOther)
+                case None =>
+                  complete { HttpResponse(StatusCodes.BadRequest, "User not found.") }
               }
             }
           }
@@ -296,33 +300,36 @@ trait UserService extends SsasService with UserExceptions with Actor {
     } ~
     path("search") {
       post {
-        withSession { s =>
-          withUser(s) { u =>
-            withFormKey(s) {
-              formFields('searchTerm) { searchTerm =>
-                if (validHobby(searchTerm) || validEmail(searchTerm)) {
-                  val remoteSearches = for (r <- remotes) yield (r, r.search(searchTerm))
-                  val localUsers = u search searchTerm
+        withUser { (s, u) =>
+          withFormKey(s) {
+            formFields('searchTerm) { searchTerm =>
+              if (validHobby(searchTerm) || validEmail(searchTerm)) {
+                val remoteSearches = for (r <- remotes) yield (r, r.search(searchTerm))
+                val localUsers = u search searchTerm
 
-                  html(s) { (s, formKey) =>
-                    complete {
-                      val remoteUsers: Map[String, List[RemoteUser]] = (for ((site, search) <- remoteSearches) yield {
+                html(s) { formKey =>
+                  complete {
+                    val remoteUsers: Map[String, List[RemoteUser]] = {
+                      for ((site, search) <- remoteSearches) yield {
                         try {
                           site.name -> Await.result(search, remoteTimeout seconds)
                         } catch {
-                          case x: Throwable => {
-                            log.error(s"Request ${site.name} failed")
+                          case e: Throwable => {
+                            log.error(s"Request to ${site.name} failed: ${e}")
                             site.name -> List()
                           }
                         }
-                      }).toMap
-                      
-                      SearchPage.render("Search results", formKey, Some(u), SearchPageRequest(localUsers, remoteUsers))
-                    }
+                      }
+                    } toMap
+                    
+                    val req = SearchPageRequest(localUsers, remoteUsers)
+                    SearchPage.render("Search results", formKey, Some(u), req)
                   }
                 }
-                else {
-                  complete { HttpResponse(StatusCodes.BadRequest, "Search term is improperly formatted") }
+              }
+              else {
+                complete {
+                  HttpResponse(StatusCodes.BadRequest, "Search term is improperly formatted")
                 }
               }
             }
@@ -333,14 +340,12 @@ trait UserService extends SsasService with UserExceptions with Actor {
     pathPrefix("hugs") {
       pathEnd {
         get {
-          withSession { s =>
-            withUser(s) { u =>
-              html(s) { (s, formKey) =>
-                complete {
-                  val site = HugsPage.render("Your hugs", formKey, Some(u), NoRequest())
-                  u.seenHugs
-                  site
-                }
+          withUser { (s, u) =>
+            html(s) { formKey =>
+              complete {
+                val site = HugsPage.render("Your hugs", formKey, Some(u), NoRequest())
+                u.seenHugs
+                site
               }
             }
           }
@@ -348,12 +353,10 @@ trait UserService extends SsasService with UserExceptions with Actor {
       }~
       path("seen") {
         post { 
-          withSession { s =>
-            withUser(s) { u =>
-              withFormKey(s) {
-                u.seenHugs
-                complete{ HttpResponse(StatusCodes.OK) }
-              }
+          withUser { (s, u) =>
+            withFormKey(s) {
+              u.seenHugs
+              complete{ HttpResponse(StatusCodes.OK) }
             }
           }
         }
@@ -361,24 +364,26 @@ trait UserService extends SsasService with UserExceptions with Actor {
     }~
     path("hug" / IntNumber) { id =>
       post { 
-        withSession { s =>
-          withUser(s) { u =>
-            withFormKey(s) {
-              User(id) match {
-                case Some(user) => 
-                  if(u.friends contains user) {
-                    try {
-                      u hug user
-                    } catch {
-                      case se: StrangerException => 
-                        complete { HttpResponse(StatusCodes.Unauthorized, "You can only hug your friends.") }
+        withUser { (s, u) =>
+          withFormKey(s) {
+            User(id) match {
+              case Some(user) => 
+                if(u.friends contains user) {
+                  try {
+                    u hug user
+                  } catch {
+                    case se: StrangerException => complete {
+                      HttpResponse(StatusCodes.Unauthorized, "You can only hug your friends.")
                     }
-                    redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
-                  } else {
-                    complete { HttpResponse(StatusCodes.Unauthorized, "You can only hug your friends.") }
                   }
-                case None =>
-                  complete { HttpResponse(StatusCodes.BadRequest, "User not found.") }
+                  redirect(s"$baseUrl/profile/${u.id}", StatusCodes.SeeOther)
+                } else {
+                  complete {
+                    HttpResponse(StatusCodes.Unauthorized, "You can only hug your friends.")
+                  }
+                }
+              case None => complete {
+                HttpResponse(StatusCodes.BadRequest, "User not found.")
               }
             }
           }

@@ -61,7 +61,7 @@ trait ApiService extends SsasService with UserExceptions {
     }
   }
 
-  def apiRoute = {
+  val apiRoute = {
     pathPrefix("api") {
       respondWithMediaType(MediaTypes.`application/json`) {
         headerValueByName("Authorization") { key =>
