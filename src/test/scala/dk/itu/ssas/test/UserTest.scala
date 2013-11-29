@@ -344,20 +344,7 @@ class UserTest extends FunSuite
     assert(allAdminsAfter exists { u => u == user2 })
     assert(allAdminsAfter.length === allAdminsBefore.length+2)
   }
-
-  test("XSS attack in hobbies") {
-    val user = confirmedUsers.head
-    intercept[InvalidHobbyException] {
-      user.addHobby("""<script>alert("ALERT")</script>""")
-    }
-  }
-
-  test("XSS attack in name") {
-    intercept[InvalidNameException] {
-      User.create("""<script>alert("ALERT")</script>""", None, randomEmail, randomPassword, true)
-    }
-  }
-
+  
   test("Create ApiKey") {
     val n = ApiKey.list.length
 

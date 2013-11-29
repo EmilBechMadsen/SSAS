@@ -3,6 +3,19 @@ package dk.itu.ssas.test
 import dk.itu.ssas.db.DbAccess
 import org.scalatest.{ BeforeAndAfterAll, FunSuite }
 
+object DatabaseLock {
+  var notRun = true
+
+  def apply(): Boolean = {
+    if (notRun) {
+      notRun = false
+      true
+    } else {
+      notRun
+    }
+  }
+}
+
 trait DatabaseTests extends FunSuite with BeforeAndAfterAll with DbAccess {
   import scala.language.postfixOps
   import scala.slick.driver.MySQLDriver.simple._
@@ -28,11 +41,11 @@ trait DatabaseTests extends FunSuite with BeforeAndAfterAll with DbAccess {
   }
 
   override def beforeAll = Db withSession {
-    dk.itu.ssas.Server.main(Array[String]())
-    resetDb()
-  }
-
-  override def afterAll = Db withSession {
-    dropStmts foreach (s => (Q.u + s).execute)
+    DatabaseLock.synchronized {
+      if (DatabaseLock()) {
+        resetDb()
+        dk.itu.ssas.Server.main(Array[String]())
+      }
+   } 
   }
 }
