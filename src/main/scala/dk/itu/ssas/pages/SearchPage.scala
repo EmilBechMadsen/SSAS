@@ -12,22 +12,22 @@ object SearchPage extends WebPage {
     s"""
     <tr class="listEntryRow">
       <td class="searchListEntry">
-        <a href="$url">${name.html}</a>
+        <a href="$url">$name</a>
       </td>
     </tr>
     """
   }
 
   private def searchResult(result: List[User]): HTML = {
-    result map { u => searchResultEntry(s"$baseUrl/profile/${u.id}", u.name) } mkString("\n")
+    result map { u => searchResultEntry(s"$baseUrl/profile/${u.id}", u.name.html) } mkString("\n")
   }
 
   private def remoteSearchResult(remoteResult: Map[String, List[RemoteUser]]): HTML = {
    (for ((name, result) <- remoteResult) yield if(result.length > 0) {
       s"""
-      <h3>$name</h3>
+      <h3>${name.html}</h3>
       <table cellspacing="0" style="padding-top: 10px; padding-bottom: 10px;">
-          ${result map { u => searchResultEntry(u.url, u.name) } mkString("\n")}
+          ${result map { u => searchResultEntry(u.url.html, u.name.html) } mkString("\n")}
       </table>"""
    }).mkString("\n")
   }
