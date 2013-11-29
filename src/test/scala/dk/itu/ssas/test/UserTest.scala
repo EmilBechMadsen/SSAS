@@ -18,15 +18,9 @@ class UserTest extends FunSuite
   var users: List[User] = _
   var confirmedUsers: List[User] = _
 
-  //override def beforeEach() {
   before {
     users = randomUsers(2, true, false) map { p => p._1 } // with address, not confirmed
     confirmedUsers = randomUsers(2, true, true) map { p => p._1 }
-  }
-
-  //override def afterEach() {
-  after {
-    resetDb()
   }
 
   test("Creating user") {
@@ -108,12 +102,10 @@ class UserTest extends FunSuite
     val user2 = confirmedUsers.tail.head
 
     val search1 = user2 search (user1.name)
-    assert(search1.length === 1)
-    assert(search1.exists { u => u.id == user1.id })
+    assert(search1 exists { u => u.id == user1.id })
 
     val search2 = user1 search (user2.name)
-    assert(search2.length === 1)
-    assert(search2.exists { u => u.id == user2.id })
+    assert(search2 exists { u => u.id == user2.id })
   }
 
   test("You cannot hug a stranger") {
@@ -154,43 +146,49 @@ class UserTest extends FunSuite
     val (u1, u2) = createFriends
     u1 hug u2
     u1 hug u2
-    u2 seenHug 1
-    assert(u2.unseenHugs === 1)
+    val unseenBefore = u2.hugs._1
+    u2 seenHug unseenBefore.head.id
+    val unseenAfter = u2.hugs._1
+    assert(unseenAfter.length === unseenBefore.length-1)
+    assert(unseenAfter forall { h => unseenBefore exists { h1 => h == h1 } })
   }
 
   test("You can see unseen and seen hugs") {
     val (u1, u2) = createFriends
     u1 hug u2
     u1 hug u2
-    u2 seenHug 1
 
-    val (unseen, seen) = u2 hugs
+    val (unseenBefore, seenBefore) = u2 hugs
 
-    assert(unseen.length === 1)
-    assert(unseen.head.id === 2)
-    assert(seen.length === 1)
-    assert(seen.head.id === 1)
+    u2 seenHug unseenBefore.head.id
+
+    val (unseenAfter, seenAfter) = u2 hugs
+
+    assert(unseenBefore.length === unseenAfter.length+1)
+    assert(unseenAfter forall { h => unseenBefore exists { h1 => h == h1 } })
   }
 
   test("seenHugs marks all hugs as seen") {
     val (user1, user2) = createFriends
 
-    def seen = user2.hugs._2.length
-    def unseen = user2.hugs._1.length
-
-    assert(unseen === 0)
-    assert(seen === 0)
+    val (unseenBefore, seenBefore) = user2.hugs
 
     user1 hug user2
     user1 hug user2
 
-    assert(unseen === 2)
-    assert(seen === 0)
+    val (unseenIntermediate, seenIntermediate) = user2.hugs
+
+    assert(unseenIntermediate.length === unseenBefore.length+2)
+    assert(unseenBefore forall { h => unseenIntermediate exists { h1 => h == h1 } })
+    assert(seenBefore === seenIntermediate)
 
     user2.seenHugs
 
-    assert(unseen === 0)
-    assert(seen === 2)
+    val (unseenAfter, seenAfter) = user2.hugs
+
+    assert(unseenAfter.isEmpty)
+    assert(seenAfter.length === seenBefore.length+2)
+    assert(unseenBefore forall { h => seenAfter exists { h1 => h == h1 } })
   }
 
   test("User can add hobbies") {
@@ -328,22 +326,23 @@ class UserTest extends FunSuite
     val f : User => Boolean = { u => allUsers exists { v => u == v }}
     assert(users forall f)
     assert(confirmedUsers forall f)
-    assert(allUsers.length == users.length + confirmedUsers.length)
   }
 
   test("List all admins") {
     val user1 = confirmedUsers.head
     val user2 = confirmedUsers.tail.head
 
+    val allAdminsBefore = User.allAdmins
+
     user1.admin = true
     assert(user1.admin)
     user2.admin = true
     assert(user2.admin)
 
-    val allAdmins = User.allAdmins
-    assert(allAdmins exists { u => u == user1 })
-    assert(allAdmins exists { u => u == user2 })
-    assert(allAdmins.length === 2)
+    val allAdminsAfter = User.allAdmins
+    assert(allAdminsAfter exists { u => u == user1 })
+    assert(allAdminsAfter exists { u => u == user2 })
+    assert(allAdminsAfter.length === allAdminsBefore.length+2)
   }
 
   test("XSS attack in hobbies") {
