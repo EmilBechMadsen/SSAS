@@ -7,6 +7,7 @@ sealed abstract class Request
 //case class AdminPageRequest(user: User) extends Request
 //case class EditProfilePageRequest(user: User) extends Request
 case class EmailConfirmationPageRequest(token: UUID) extends Request
+case class ErrorRequest(msg: String) extends Request
 //case class FriendsPageRequest(user: User) extends Request
 case class NoRequest() extends Request
 case class ProfilePageRequest(other: User) extends Request
