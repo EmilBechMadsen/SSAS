@@ -7,6 +7,7 @@ class BrocialNetwork(private val s: ActorSystem) extends RemoteSite {
   import akka.pattern.ask
   import akka.util.Timeout
   import dk.itu.ssas.model.RemoteUser
+  import java.net.URLEncoder
   import scala.concurrent.duration.Duration
   import scala.concurrent.Future
   import spray.can.client.HostConnectorSettings
@@ -52,15 +53,21 @@ class BrocialNetwork(private val s: ActorSystem) extends RemoteSite {
   val name = "The Brocial Network"
 
   def search(s: String): Future[List[RemoteUser]] = {
-    val request = Get(s"$baseUrl/api/users/$s/?page=1")
+    val request = Get(s"$baseUrl/api/users/${encode(s)}/?page=1")
     pipelineList(request).map(l => l.map(b => brocialUser2RemoteUser(b)))
   }
 
   def get(id: IdType): Future[RemoteUser] = {
-    pipelineSingle(Get(s"$baseUrl/api/user/$id/")).map(b => brocialUser2RemoteUser(b))
+    val request = Get(s"$baseUrl/api/user/$id/")
+    pipelineSingle(request).map(b => brocialUser2RemoteUser(b))
   } 
 
   def all: Future[List[RemoteUser]] = {
-    pipelineList(Get(s"""$baseUrl/api/users/""/?page=1""")).map(l => l.map(b => brocialUser2RemoteUser(b)))
+    val request = Get(s"""$baseUrl/api/users/""/?page=1""")
+    pipelineList(request).map(l => l.map(b => brocialUser2RemoteUser(b)))
+  }
+
+  private def encode(s: String): String = {
+    URLEncoder.encode(s, "UTF-8")
   }
 }
