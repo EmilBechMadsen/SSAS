@@ -4,6 +4,8 @@ import spray.routing._
 
 trait SsasService {
   import dk.itu.ssas.model._
+  import dk.itu.ssas.page.ErrorPage
+  import dk.itu.ssas.page.request.ErrorRequest
   import dk.itu.ssas.Settings
   import java.util.UUID
   import org.apache.log4j.Logger
@@ -17,7 +19,27 @@ trait SsasService {
 
   type ReqCon = RequestContext => Unit
 
-  def setSessionCookie(session: UUID): Directive0 = {
+  private case class SessionUser(session: Session, user: User) {
+    def s: Session = session
+    def u: User    = user
+  }
+
+  protected implicit def SessionUserToSession(implicit su: SessionUser): Session = {
+    su.session
+  }
+
+  protected implicit def SessionUserToUser(implicit su: SessionUser): User = {
+    su.user
+  }
+
+  protected implicit def SessionUserToOptionUser(implicit su: SessionUser): Option[User] = {
+    Some(su.user)
+  }
+
+  protected def u(implicit u: User): User = u
+  protected def s(implicit s: Session): Session = s
+
+  protected def setSessionCookie(session: UUID): Directive0 = {
     setCookie(HttpCookie(sessionCookieName, 
       session.toString(),
       path = Some("/"),
@@ -57,12 +79,16 @@ trait SsasService {
     }
   }
 
-  protected def newFormKey(s: Session)(c: String => ReqCon): ReqCon = {
+  protected def newFormKey(c: String => ReqCon)(implicit s: Session): ReqCon = {
     val formKey = s.newFormKey()
     c(formKey.toString())
   }
+  
+  protected def withFormKey(c: ReqCon)(implicit s: Session): ReqCon = {
+    withFormKey(s)(c)
+  }
 
-  protected def withFormKey(s: Session)(c: ReqCon): ReqCon = {
+  private def withFormKey(s: Session)(c: ReqCon): ReqCon = {
     formField('formkey) { formKey =>
       try {
         if (s.checkFormKey(UUID.fromString(formKey))) {
@@ -81,40 +107,42 @@ trait SsasService {
     }
   }
 
-  protected def withUser(c: (Session, User) => ReqCon): ReqCon = {
+  protected def withUser(c: (SessionUser) => ReqCon): ReqCon = {
     withSession { s =>
       withUser(s) { u =>
-        c(s, u)
+        c(SessionUser(s, u))
       }
     }
   }
 
-  protected def withUser(s: Session)(c: User => ReqCon): ReqCon = {
+  private def withUser(s: Session)(c: User => ReqCon): ReqCon = {
     s.user match {
       case Some(user) => c(user)
-      case None => complete {
+      case None => {
         log.warn(s"Unauthorized user trying to access user area")
-        HttpResponse(StatusCodes.Unauthorized, "You need to be logged in to access this page")
+        error(StatusCodes.Unauthorized, 
+              "You need to be logged in to access this page")(s)
       }
     }
   }
 
-  protected def withAdmin(c: (Session, User) => ReqCon): ReqCon = {
+  protected def withAdmin(c: SessionUser => ReqCon): ReqCon = {
     withSession { s =>
       withUser(s) { u =>
-        withAdmin(u) {
-          c(s, u)
+        withAdmin(s, u) {
+          c(SessionUser(s, u))
         }
       }
     }
   }
 
-  protected def withAdmin(u: User)(c: ReqCon): ReqCon = {
+  private def withAdmin(s:Session, u: User)(c: ReqCon): ReqCon = {
     u.admin match {
       case true  => c
-      case false => complete {
+      case false => {
         log.warn(s"Non admin ${u.id} trying to access admin area")
-        HttpResponse(StatusCodes.Forbidden, "You must be an admin to enter this area.")
+        error(StatusCodes.Forbidden, 
+              "You must be an admin to enter this area.")(s)
       }
     }
   }
@@ -148,10 +176,20 @@ trait SsasService {
     }
   }
 
-  protected def html(s: Session)(c: String => ReqCon): ReqCon = {
+  protected def html(c: String => ReqCon)(implicit s: Session): ReqCon = {
     respondWithMediaType(MediaTypes.`text/html`) {
-      newFormKey(s) { key =>
+      newFormKey { key =>
         c(key)
+      }
+    }
+  }
+
+  protected def error(statusCode: StatusCode, 
+    error: String = "Internal server error")(implicit s: Session) = {
+    html { formKey =>
+      complete {
+        val p = ErrorPage.render("Error", formKey, s.user, ErrorRequest(error))
+        HttpResponse(statusCode, p)
       }
     }
   }

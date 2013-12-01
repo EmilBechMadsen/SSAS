@@ -16,147 +16,135 @@ trait PublicService extends SsasService with UserExceptions {
   val publicRoute = {
     path("signup") {
       get {
-        withSession { s =>
-          s.userId match {
-            case Some(id) => redirect(s"/profile/$id", StatusCodes.SeeOther)
-            case None     => html(s) { formKey =>
-              complete {
-                SignupPage.render("Sign up", formKey, None, NoRequest())
-              }
-            }
-          }
-        }
+        getSignup()
       } ~
       post {
-        withSession { s =>
-          withFormKey(s) {
-            formFields('signupEmail, 'signupName, 'signupPassword, 'signupPasswordConfirm) {
-              (email, name, pass1, pass2) =>
-              if (pass1 == pass2 &&
-                  validEmail(email) &&
-                  validName(name) &&
-                  validPassword(pass1)) {
-                try {
-                  User.create(name, None, email, pass1) match {
-                    case Some(u) => complete {
-                      log.info(s"User ${u.id} created")
-                      "Check your email for confirmation!"
-                    }
-                    case None    => complete {
-                      HttpResponse(StatusCodes.InternalServerError)
-                    }
-                  }
-                } catch {
-                  case e: ExistingEmailException => complete {
-                    HttpResponse(StatusCodes.BadRequest, e.s)
-                  }
-                  case e: InvalidEmailException => complete {
-                    HttpResponse(StatusCodes.BadRequest, e.s)
-                  }
-                  case e: InvalidNameException => complete {
-                    HttpResponse(StatusCodes.BadRequest, e.s)
-                  }
-                  case e: InvalidPasswordException => complete {
-                    HttpResponse(StatusCodes.BadRequest, e.s) 
-                  }
-                  case e: InvalidAddressException => complete {
-                    HttpResponse(StatusCodes.BadRequest, e.s)
-                  }
-                }
-              } else complete {
-                HttpResponse(StatusCodes.BadRequest, "Invalid information.")
-              }
-            }
-          }
-        }
+        postSignup()
       }
     } ~
     path("confirm" / JavaUUID) { token =>
       get {
-        withSession { s =>
-          User(token) match {
-            case Some(user) => html(s) { formKey =>
-              complete {
-                val req = EmailConfirmationPageRequest(token)
-                EmailConfirmationPage.render("Confirm account", formKey, None, req)
-              }
-            }
-            case None => complete {
-              HttpResponse(StatusCodes.BadRequest, "Confirmation id was invalid.")
-            }
-          }
-        }
+        getConfirm(token)
       } ~
       post {
-        withSession { s =>
-          withFormKey(s) {
-            formFields('emailConfirmationPassword) { password =>
-              User(token) match {
-                case Some(user) => {
-                  if (user.checkPassword(password)) {
-                    user.confirm(token)
-                    log.info(s"User ${user.id} confirmed")
-                    User.login(user.email, password, s.key)
-
-                    user.session match {
-                      case Some(session) => setCookie(HttpCookie(sessionCookieName, 
-                                         session.toString,
-                                         path = Some("/"),
-                                         httpOnly = true,
-                                         secure = true)) {
-                        redirect(s"$baseUrl/profile/${user.id}", StatusCodes.SeeOther)
-                      }
-                      case None => redirect(s"$baseUrl/signup", StatusCodes.SeeOther)
-                    }
-                  } else complete {
-                    HttpResponse(StatusCodes.Unauthorized, "Incorrect username or password.")
-                  }
-                }
-                case None => complete {
-                  HttpResponse(StatusCodes.BadRequest, "Confirmation id was invalid.")
-                } 
-              }
-            }
-          }
-        }
+        postConfirm(token)
       }
     } ~
     path("login") {
       post {
-        withSession { s =>
-          withFormKey(s) {
-            formFields('loginEmail, 'loginPassword) { (email, password) =>
-              User.login(email, password, s.key) match {
-                case Some(user) => user.session match {
-                  case Some(session) => setSessionCookie(session) {
-                    redirect(s"$baseUrl/profile/${user.id}", StatusCodes.SeeOther)
-                  }
-                  case None =>
-                    redirect(s"$baseUrl/signup", StatusCodes.SeeOther)
-                }
-                case None => 
-                  redirect(s"$baseUrl/signup", StatusCodes.SeeOther)
-              }
-            }
-          }
-        }
+        login()
       }
     } ~
     path("logout") {
       post {
-          withSession { s =>
-          cookie(sessionCookieName) { cookie =>
-            User(UUID.fromString(cookie.content)) match {
-              case Some(u) => {
-                deleteCookie(cookie) {
-                  u.logout()
-                  redirect(s"/signup", StatusCodes.SeeOther)
-                } 
-              }
-              case None => complete { HttpResponse(StatusCodes.InternalServerError) } 
-            }
-          }
+        logout()
+      }
+    }
+  }
+
+  private def getSignup(): ReqCon = withSession { implicit s =>
+    s.userId match {
+      case Some(id) => redirect(s"/profile/$id", StatusCodes.SeeOther)
+      case None     => html { implicit formKey =>
+        complete {
+          SignupPage("Sign up", NoRequest())
         }
+      }
+    }
+  }
+
+  private def postSignup(): ReqCon = withSession { implicit s =>
+    withFormKey {
+      formFields('signupEmail, 'signupName, 'signupPassword, 'signupPasswordConfirm) {
+        (email, name, pass1, pass2) =>
+        if (pass1 == pass2 &&
+            validEmail(email) &&
+            validName(name) &&
+            validPassword(pass1)) {
+          try {
+            User.create(name, None, email, pass1) match {
+              case Some(u) => complete {
+                log.info(s"User ${u.id} created")
+                "Check your email for confirmation!"
+              }
+              case None    => error(StatusCodes.InternalServerError)
+            }
+          } catch {
+            case e: UserException => error(StatusCodes.BadRequest, e.getMessage())
+          }
+        } else error(StatusCodes.BadRequest, "Invalid information.")
+      }
+    }
+  }
+
+  private def getConfirm(token: UUID): ReqCon = withSession { implicit s =>
+    User(token) match {
+      case Some(user) => html { implicit formKey =>
+        complete {
+          val req = EmailConfirmationPageRequest(token)
+          EmailConfirmationPage("Confirm account", req)
+        }
+      }
+      case None => error(StatusCodes.BadRequest, "Confirmation id was invalid.")
+    }
+  }
+
+  private def postConfirm(token: UUID) = withSession { implicit s =>
+    withFormKey {
+      formFields('emailConfirmationPassword) { password =>
+        User(token) match {
+          case Some(user) => {
+            if (user.checkPassword(password)) {
+              user.confirm(token)
+              log.info(s"User ${user.id} confirmed")
+              User.login(user.email, password, s.key)
+
+              user.session match {
+                case Some(session) => setCookie(HttpCookie(sessionCookieName, 
+                                   session.toString,
+                                   path = Some("/"),
+                                   httpOnly = true,
+                                   secure = true)) {
+                  redirect(s"$baseUrl/profile/${user.id}", StatusCodes.SeeOther)
+                }
+                case None => redirect(s"$baseUrl/signup", StatusCodes.SeeOther)
+              }
+            } else error(StatusCodes.Unauthorized, "Incorrect username or password.")
+          }
+          case None => error(StatusCodes.BadRequest, "Confirmation id was invalid.")
+        }
+      }
+    }
+  }
+
+  private def login(): ReqCon = withSession { implicit s =>
+    withFormKey {
+      formFields('loginEmail, 'loginPassword) { (email, password) =>
+        User.login(email, password, s.key) match {
+          case Some(user) => user.session match {
+            case Some(session) => setSessionCookie(session) {
+              redirect(s"$baseUrl/profile/${user.id}", StatusCodes.SeeOther)
+            }
+            case None =>
+              redirect(s"$baseUrl/signup", StatusCodes.SeeOther)
+          }
+          case None => 
+            redirect(s"$baseUrl/signup", StatusCodes.SeeOther)
+        }
+      }
+    }
+  }
+
+  private def logout(): ReqCon = withSession { implicit s =>
+    cookie(sessionCookieName) { cookie =>
+      User(UUID.fromString(cookie.content)) match {
+        case Some(u) => {
+          deleteCookie(cookie) {
+            u.logout()
+            redirect(s"/signup", StatusCodes.SeeOther)
+          } 
+        }
+        case None => error(StatusCodes.InternalServerError)
       }
     }
   }
