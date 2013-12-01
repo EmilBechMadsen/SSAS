@@ -23,13 +23,15 @@ object SearchPage extends WebPage {
   }
 
   private def remoteSearchResult(remoteResult: Map[String, List[RemoteUser]]): HTML = {
-   (for ((name, result) <- remoteResult) yield if(result.length > 0) {
+   val s = (for ((name, result) <- remoteResult) yield if(result.length > 0) {
       s"""
       <h3>${name.html}</h3>
       <table cellspacing="0" style="padding-top: 10px; padding-bottom: 10px;">
           ${result map { u => searchResultEntry(u.url.html, u.name.html) } mkString("\n")}
       </table>"""
    }).mkString("\n")
+
+   if (s == "()") "" else s // Don't write out "()" if there aren't any results
   }
 
   def content(request: SearchPageRequest, u: Option[User], key: Key): HTML = {
