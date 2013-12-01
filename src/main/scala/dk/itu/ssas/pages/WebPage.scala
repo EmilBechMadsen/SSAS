@@ -20,6 +20,12 @@ trait WebPage extends HTMLElement {
     """
   }
 
+  def apply(title: String, 
+    request: RequestType)
+    (implicit key: Key, user: Option[User] = None): HTML = {
+    render(title, key, user, request)
+  }
+
   def render(title: String, key: Key, user: Option[User], request: RequestType): HTML = {
   	val page = new StringBuilder()
   	val head =
