@@ -36,15 +36,33 @@ trait PublicService extends SsasService with UserExceptions {
                   validEmail(email) &&
                   validName(name) &&
                   validPassword(pass1)) {
-                User.create(name, None, email, pass1) match {
-                  case Some(u) => complete {
-                    log.info(s"User ${u.id} created")
-                    "Check your email for confirmation!"
+                try {
+                  User.create(name, None, email, pass1) match {
+                    case Some(u) => complete {
+                      log.info(s"User ${u.id} created")
+                      "Check your email for confirmation!"
+                    }
+                    case None    => complete {
+                      HttpResponse(StatusCodes.InternalServerError)
+                    }
                   }
-                  case None    => complete {
-                    HttpResponse(StatusCodes.InternalServerError)
+                } catch {
+                  case e: ExistingEmailException => complete {
+                    HttpResponse(StatusCodes.BadRequest, e.s)
                   }
-                } 
+                  case e: InvalidEmailException => complete {
+                    HttpResponse(StatusCodes.BadRequest, e.s)
+                  }
+                  case e: InvalidNameException => complete {
+                    HttpResponse(StatusCodes.BadRequest, e.s)
+                  }
+                  case e: InvalidPasswordException => complete {
+                    HttpResponse(StatusCodes.BadRequest, e.s) 
+                  }
+                  case e: InvalidAddressException => complete {
+                    HttpResponse(StatusCodes.BadRequest, e.s)
+                  }
+                }
               } else complete {
                 HttpResponse(StatusCodes.BadRequest, "Invalid information.")
               }
