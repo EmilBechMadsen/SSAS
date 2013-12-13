@@ -37,7 +37,7 @@ trait TestData extends DbAccess with UserExceptions {
     val minHobby = Settings.security.minHobby
     val maxHobby = Settings.security.maxHobby
     val length = Random.nextInt(maxHobby-minHobby)+minHobby
-    val result = Random.nextString(length)
+    val result = Random.alphanumeric.take(length).mkString // Fix me --- should be any string, not jsut alphanumeric.
     if (validHobby(result)) result else randomHobby
   }
 
@@ -66,6 +66,17 @@ trait TestData extends DbAccess with UserExceptions {
     n match {
       case 0      => List()
       case m: Int => randomUser(withAddress, confirmed) :: randomUsers(m-1, withAddress, confirmed)
+    }
+  }
+
+  def randomLoggedInUser(withAddress: Boolean, confirmed: Boolean, admin: Boolean = false): (User, String) = {
+    val (user, password) = randomUser(withAddress, confirmed)
+    val s = Session()
+    User.login(user.email, password, s.key) match {
+      case Some(u) => 
+        u.admin = admin
+        (u, password)
+      case None    => throw DbError("Test user could not be created")
     }
   }
 
